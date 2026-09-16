@@ -1,4 +1,5 @@
 /** Util murni untuk modul Finance — kalkulasi umur hutang/piutang, bucket, dan proyeksi. */
+import { chartColors } from '@/lib/theme'
 
 export type Tone = 'slate' | 'emerald' | 'amber' | 'orange' | 'red' | 'blue' | 'zinc'
 
@@ -72,7 +73,7 @@ export function rekomendasiTindakLanjut(days: number | null): string {
   return 'Eskalasi ke penagihan hukum / kolektor'
 }
 
-export const CHART_COLORS = {
-  masuk: '#16A34A', keluar: '#E11D48', primary: '#1B8A92', accent: '#F5A524',
-  teal: '#3AA3AA', amber: '#F59E0B', slate: '#64748B',
+export const CHART_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { masuk: c.success, keluar: c.danger, primary: c.primary, accent: c.accent, teal: c.primarySoft, amber: c.warning, slate: c.neutral }
 }

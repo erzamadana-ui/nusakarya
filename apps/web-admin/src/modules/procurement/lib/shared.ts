@@ -1,4 +1,5 @@
 /** Konstanta & util bersama modul Procurement. */
+import { chartSeries } from '@/lib/theme'
 
 export const VENDOR_TYPES = [
   { value: 'material', label: 'Material' },
@@ -80,4 +81,4 @@ export function agingLabel(days: number) {
   return `${Math.abs(days)} hari lagi`
 }
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
+export const CHART_COLORS = () => chartSeries()

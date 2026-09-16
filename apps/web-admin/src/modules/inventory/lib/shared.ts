@@ -1,4 +1,5 @@
 /** Konstanta & util bersama modul Inventory & Inventory Aset. */
+import { chartSeries } from '@/lib/theme'
 
 export const ITEM_CATEGORY = [
   { value: 'NTE', label: 'NTE' },
@@ -126,4 +127,4 @@ export function dueTone(nextDueDate?: string | null): { tone: string; label: str
   return { tone: 'emerald', label: `Terjadwal (${days} hari lagi)` }
 }
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
+export const CHART_COLORS = () => chartSeries()

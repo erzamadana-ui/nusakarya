@@ -11,14 +11,14 @@ import Invoice from './pages/Invoice'
 import Penalti from './pages/Penalti'
 
 const routes: AppRoute[] = [
-  { path: '/commerce/dashboard', module: 'COMMERCE', element: <DashboardCommerce /> },
-  { path: '/commerce/pelanggan', module: 'COMMERCE', element: <Pelanggan /> },
-  { path: '/commerce/kontrak', module: 'COMMERCE', element: <Kontrak /> },
-  { path: '/commerce/price-list', module: 'COMMERCE', element: <PriceList /> },
-  { path: '/commerce/spk', module: 'COMMERCE', element: <Spk /> },
-  { path: '/commerce/klaim', module: 'COMMERCE', element: <Klaim /> },
-  { path: '/commerce/bast', module: 'COMMERCE', element: <Bast /> },
-  { path: '/commerce/invoice', module: 'COMMERCE', element: <Invoice /> },
-  { path: '/commerce/penalti', module: 'COMMERCE', element: <Penalti /> },
+ { path: '/commerce/dashboard', module: 'COMMERCE', element: <DashboardCommerce /> },
+ { path: '/commerce/pelanggan', module: 'COMMERCE', element: <Pelanggan /> },
+ { path: '/commerce/kontrak', module: 'COMMERCE', element: <Kontrak /> },
+ { path: '/commerce/price-list', module: 'COMMERCE', element: <PriceList /> },
+ { path: '/commerce/spk', module: 'COMMERCE', element: <Spk /> },
+ { path: '/commerce/klaim', module: 'COMMERCE', element: <Klaim /> },
+ { path: '/commerce/bast', module: 'COMMERCE', element: <Bast /> },
+ { path: '/commerce/invoice', module: 'COMMERCE', element: <Invoice /> },
+ { path: '/commerce/penalti', module: 'COMMERCE', element: <Penalti /> },
 ]
 export default routes

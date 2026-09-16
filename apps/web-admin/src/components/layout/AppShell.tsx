@@ -1,23 +1,42 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation, Outlet, Link } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
   Settings, Circle, ChevronsLeft, ChevronsRight, Menu, Search, Sun, Moon, Bell, LogOut,
-  CornerDownLeft, AlertTriangle,
+  CornerDownLeft, AlertTriangle, Rocket, Facebook, Instagram, Youtube, Linkedin, X as XIcon,
 } from 'lucide-react'
+import { useAuth, ROLE_LABEL } from '@/lib/auth'
+import { NAV, ALL_ITEMS } from '@/lib/nav'
+import { inisial } from '@/lib/format'
+import { getMode, setMode } from '@/lib/theme'
+import { cx, Badge } from '@/components/ui'
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
   Settings, ChevronsLeft, ChevronsRight, Circle,
 }
-import { useAuth, ROLE_LABEL } from '@/lib/auth'
-import { NAV, ALL_ITEMS } from '@/lib/nav'
-import { inisial } from '@/lib/format'
-import { cx, Badge } from '@/components/ui'
-
 const Icon = ({ name, ...p }: any) => {
   const C = ICONS[name] ?? Circle
   return <C {...p} />
+}
+
+function Footer() {
+  const year = new Date().getFullYear()
+  return (
+    <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 pt-5 text-caption text-ink-400">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        <span className="font-medium text-ink-500">© {year} NUSAKARYA</span>
+        <Link to="/pengaturan/perusahaan" className="hover:text-primary-500">Profil Perusahaan</Link>
+        <Link to="/pengaturan/audit" className="hover:text-primary-500">Log Audit</Link>
+        <Link to="/pengaturan/hak-akses" className="hover:text-primary-500">Hak Akses</Link>
+      </div>
+      <div className="flex items-center gap-3 text-ink-300">
+        {[Facebook, XIcon, Instagram, Youtube, Linkedin].map((I, i) => (
+          <I key={i} size={15} className="hover:text-primary-500 cursor-default" />
+        ))}
+      </div>
+    </footer>
+  )
 }
 
 export default function AppShell() {
@@ -27,12 +46,9 @@ export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false)
   const [cmd, setCmd] = useState(false)
   const [q, setQ] = useState('')
-  const [dark, setDark] = useState(() => localStorage.getItem('nk-theme') === 'dark')
+  const [dark, setDark] = useState(() => getMode() === 'dark')
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    try { localStorage.setItem('nk-theme', dark ? 'dark' : 'light') } catch {}
-  }, [dark])
+  useEffect(() => { setMode(dark ? 'dark' : 'light') }, [dark])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -55,38 +71,62 @@ export default function AppShell() {
   }, [q, profile, can])
 
   const Sidebar = (
-    <aside className={cx('bg-sidebar text-white flex flex-col h-full transition-all duration-200', collapsed ? 'w-[72px]' : 'w-[264px]')}>
-      <div className="flex items-center gap-2.5 h-16 px-4 shrink-0 border-b border-white/10">
-        <div className="w-9 h-9 rounded-md bg-primary-500 grid place-items-center font-display font-extrabold text-[15px] shrink-0">N</div>
+    <aside className={cx('bg-sidebar text-sidebar-fg flex flex-col h-full border-r border-sidebar-border transition-all duration-200',
+      collapsed ? 'w-[76px]' : 'w-[254px]')}>
+      <div className={cx('flex items-center gap-2.5 h-16 shrink-0 px-4', collapsed && 'justify-center px-0')}>
+        <div className="w-9 h-9 rounded-md bg-primary-500 text-white grid place-items-center font-display font-extrabold text-[15px] shrink-0">N</div>
         {!collapsed && <div className="min-w-0">
-          <div className="font-display font-bold text-[15px] leading-tight tracking-tight">NUSAKARYA</div>
-          <div className="text-[10px] text-white/55 truncate">{company?.name ?? 'Operational Control'}</div>
+          <div className="font-display font-extrabold text-[16px] leading-tight tracking-tight text-sidebar-fg">NUSAKARYA</div>
+          <div className="text-[10px] text-sidebar-muted truncate">{company?.name ?? 'Operational Control'}</div>
         </div>}
       </div>
-      <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-4">
+
+      <nav className="flex-1 overflow-y-auto py-2 px-3 space-y-5">
         {groups.map(g => (
           <div key={g.key}>
-            {!collapsed && <div className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-[.08em] text-white/40">{g.label}</div>}
+            {!collapsed && <div className="px-2.5 mb-1.5 text-[10px] font-bold uppercase tracking-[.09em] text-sidebar-muted">{g.label}</div>}
             <div className="space-y-0.5">
               {g.items.map(i => (
                 <NavLink key={i.path} to={i.path} title={i.label}
-                  className={({ isActive }) => cx('flex items-center gap-2.5 h-9 px-2.5 rounded-sm text-[13px] font-medium transition-colors',
-                    isActive ? 'bg-sidebar-active text-white' : 'text-white/70 hover:bg-sidebar-hover hover:text-white',
-                    collapsed && 'justify-center')}>
-                  <Icon name={g.icon} size={16} className="shrink-0 opacity-90" />
+                  className={({ isActive }) => cx(
+                    'flex items-center gap-2.5 h-10 px-2.5 rounded-sm text-[13px] font-semibold transition-colors',
+                    isActive
+                      ? 'bg-sidebar-active text-sidebar-onactive shadow-e1'
+                      : 'text-sidebar-fg/85 hover:bg-sidebar-hover hover:text-sidebar-fg',
+                    collapsed && 'justify-center px-0')}>
+                  <Icon name={g.icon} size={17} className="shrink-0" />
                   {!collapsed && <span className="truncate">{i.label}</span>}
                 </NavLink>))}
             </div>
           </div>))}
       </nav>
-      <button onClick={() => setCollapsed(c => !c)} className="hidden lg:flex items-center gap-2 h-11 px-4 text-[12px] text-white/50 hover:text-white border-t border-white/10">
-        <Icon name={collapsed ? 'ChevronsRight' : 'ChevronsLeft'} size={15} />{!collapsed && 'Ciutkan menu'}
-      </button>
+
+      {!collapsed && (
+        <div className="mx-3 mb-3 rounded-md bg-primary-50 p-4 text-center">
+          <div className="mx-auto mb-2 w-10 h-10 rounded-md bg-primary-500 text-white grid place-items-center"><Rocket size={18} /></div>
+          <div className="text-[11px] font-bold uppercase tracking-wide text-primary-700">Template Operations</div>
+          <p className="mt-1 text-caption text-ink-500 leading-snug">Ganti tampilan kapan saja di Pengaturan.</p>
+          <button onClick={() => nav('/pengaturan/tampilan')}
+            className="mt-3 w-full h-9 rounded-sm bg-primary-500 text-white text-caption font-semibold hover:bg-primary-600">
+            Atur Tampilan
+          </button>
+        </div>)}
+
+      <div className="border-t border-sidebar-border">
+        <button onClick={() => setCollapsed(c => !c)}
+          className="hidden lg:flex w-full items-center gap-2 h-11 px-4 text-[12px] font-semibold text-sidebar-muted hover:text-sidebar-fg">
+          <Icon name={collapsed ? 'ChevronsRight' : 'ChevronsLeft'} size={15} />{!collapsed && 'Ciutkan menu'}
+        </button>
+        <button onClick={signOut}
+          className={cx('flex w-full items-center gap-2.5 h-12 px-4 text-[13px] font-semibold text-sidebar-fg/85 hover:bg-sidebar-hover', collapsed && 'justify-center px-0')}>
+          <LogOut size={17} />{!collapsed && 'Keluar'}
+        </button>
+      </div>
     </aside>
   )
 
   return (
-    <div className="flex h-screen overflow-hidden bg-ink-50 dark:bg-surface-darker">
+    <div className="flex h-screen overflow-hidden bg-ink-50">
       <div className="hidden lg:block shrink-0">{Sidebar}</div>
       {open && <div className="lg:hidden fixed inset-0 z-40 flex">
         <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
@@ -94,52 +134,59 @@ export default function AppShell() {
       </div>}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-ink-200 dark:border-ink-800 flex items-center gap-3 px-4">
-          <button className="lg:hidden p-2 -ml-2 text-ink-500" onClick={() => setOpen(true)}><Menu size={20} /></button>
+        <header className="h-16 shrink-0 bg-surface border-b border-ink-200 flex items-center gap-3 px-4">
+          <button className="lg:hidden p-2 -ml-1 text-ink-500" onClick={() => setOpen(true)}><Menu size={20} /></button>
           <button onClick={() => setCmd(true)}
-            className="flex items-center gap-2 h-9 px-3 rounded-sm border border-ink-200 dark:border-ink-700 text-ink-400 text-body hover:border-primary-300 min-w-[150px] sm:min-w-[260px]">
-            <Search size={15} /><span className="flex-1 text-left">Cari menu…</span>
-            <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-ink-500">⌘K</kbd>
+            className="flex items-center gap-2 h-10 px-3.5 rounded-lg bg-ink-50 border border-ink-200 text-ink-400 text-body hover:border-primary-300 min-w-[150px] sm:min-w-[300px]">
+            <Search size={16} /><span className="flex-1 text-left">Cari menu…</span>
+            <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-surface border border-ink-200 text-ink-500">⌘K</kbd>
           </button>
           <div className="flex-1" />
-          <button onClick={() => setDark(d => !d)} className="p-2 rounded-sm text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800" title="Ganti tema">
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button onClick={() => nav('/notifikasi')} className="p-2 rounded-sm text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"><Bell size={18} /></button>
-          <div className="flex items-center gap-2.5 pl-3 border-l border-ink-200 dark:border-ink-800">
-            <div className="w-9 h-9 rounded-full bg-primary-500 text-white grid place-items-center text-caption font-semibold shrink-0">{inisial(profile?.full_name)}</div>
+          {[
+            { k: 'tema', icon: dark ? <Sun size={17} /> : <Moon size={17} />, onClick: () => setDark(d => !d), title: 'Ganti mode terang/gelap' },
+            { k: 'notif', icon: <Bell size={17} />, onClick: () => nav('/notifikasi'), title: 'Notifikasi' },
+            { k: 'set', icon: <Settings size={17} />, onClick: () => nav('/pengaturan/tampilan'), title: 'Pengaturan' },
+          ].map(b => (
+            <button key={b.k} title={b.title} onClick={b.onClick}
+              className="w-10 h-10 grid place-items-center rounded-full bg-ink-50 border border-ink-200 text-ink-500 hover:text-primary-600 hover:border-primary-300">
+              {b.icon}
+            </button>))}
+          <div className="flex items-center gap-2.5 pl-2">
+            <div className="w-10 h-10 rounded-full bg-primary-500 text-white grid place-items-center text-caption font-bold shrink-0">{inisial(profile?.full_name)}</div>
             <div className="hidden sm:block leading-tight">
-              <div className="text-body font-medium text-ink-900 dark:text-ink-100 max-w-[150px] truncate">{profile?.full_name}</div>
+              <div className="text-body font-bold text-ink-900 max-w-[160px] truncate">{profile?.full_name}</div>
               <div className="text-[11px] text-ink-400">{ROLE_LABEL[profile?.role ?? ''] ?? profile?.role}</div>
             </div>
-            <button onClick={signOut} title="Keluar" className="p-2 rounded-sm text-ink-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><LogOut size={17} /></button>
           </div>
         </header>
 
         {company?.is_demo && (
-          <div className="shrink-0 bg-accent-50 dark:bg-accent-700/20 border-b border-accent-300/50 px-4 py-1.5 text-caption text-accent-700 dark:text-accent-300 flex items-center gap-2">
+          <div className="shrink-0 bg-accent-50 border-b border-accent-300/50 px-4 py-1.5 text-caption font-medium text-accent-700 flex items-center gap-2">
             <AlertTriangle size={13} /> Data contoh untuk peragaan — bersihkan sebelum dipakai produksi.
           </div>)}
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6"><Outlet /></main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <Outlet />
+          <Footer />
+        </main>
       </div>
 
       {cmd && (
         <div className="fixed inset-0 z-[60] bg-ink-900/40 backdrop-blur-[2px] flex items-start justify-center pt-[12vh] px-4" onClick={() => setCmd(false)}>
-          <div onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-lg shadow-e3 overflow-hidden">
-            <div className="flex items-center gap-2.5 px-4 h-14 border-b border-ink-200 dark:border-ink-800">
+          <div onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-surface rounded-lg shadow-e3 overflow-hidden">
+            <div className="flex items-center gap-2.5 px-4 h-14 border-b border-ink-200">
               <Search size={17} className="text-ink-400" />
               <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Lompat ke menu…"
-                className="flex-1 bg-transparent outline-none text-body-l text-ink-900 dark:text-ink-100" />
-              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-ink-500">ESC</kbd>
+                className="flex-1 bg-transparent outline-none text-body-l text-ink-900" />
+              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-ink-100 text-ink-500">ESC</kbd>
             </div>
             <div className="max-h-[50vh] overflow-y-auto py-1.5">
               {results.length === 0 && <div className="px-4 py-8 text-center text-caption text-ink-400">Tidak ada menu cocok.</div>}
               {results.map(r => (
                 <button key={r.path} onClick={() => { nav(r.path); setQ('') }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink-50 dark:hover:bg-ink-800 text-left">
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink-50 text-left">
                   <CornerDownLeft size={14} className="text-ink-300" />
-                  <span className="flex-1 text-body text-ink-800 dark:text-ink-100">{r.label}</span>
+                  <span className="flex-1 text-body text-ink-800">{r.label}</span>
                   <Badge tone="teal">{r.group}</Badge>
                 </button>))}
             </div>

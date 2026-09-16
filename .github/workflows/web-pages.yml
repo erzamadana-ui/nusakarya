@@ -2,7 +2,7 @@ name: Deploy Web Panel Admin ke GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ['apps/web-admin/**', '.github/workflows/web-pages.yml']
+    paths: ['apps/web-admin/**', 'apps/mobile/**', '.github/workflows/web-pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,18 +14,33 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: apps/web-admin } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: 'npm', cache-dependency-path: apps/web-admin/package-lock.json }
+
+      # Panel admin (Vite)
       - run: npm ci
+        working-directory: apps/web-admin
       - run: npm run build
+        working-directory: apps/web-admin
         env:
           VITE_BASE: /nusakarya/
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://idlhsxamdkipnmyvewbp.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'sb_publishable_-9Cai7RVFQ4UmQjTgjNS8w_Q84U-vc8' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - run: cp dist/index.html dist/404.html
+        working-directory: apps/web-admin
+
+      # Aplikasi Teknisi (Expo web / PWA) — dipasang lewat "Tambahkan ke layar utama" di Chrome Android
+      - run: npm install
+        working-directory: apps/mobile
+      - run: npm run export:web
+        working-directory: apps/mobile
+      - run: |
+          mkdir -p ../web-admin/dist/teknisi
+          cp -r dist/. ../web-admin/dist/teknisi/
+        working-directory: apps/mobile
+
       - uses: actions/upload-pages-artifact@v3
         with: { path: apps/web-admin/dist }
   deploy:

@@ -1,4 +1,5 @@
 /** Konstanta & util bersama modul Design & Deployment (Extended): Perizinan, Punch List, Garansi, Subkon. */
+import { chartSeries } from '@/lib/theme'
 import { list } from '@/lib/db'
 
 export function projectLabel(p: any) {
@@ -6,7 +7,7 @@ export function projectLabel(p: any) {
   return `${p.project_code ?? ''} — ${p.project_name ?? ''}`
 }
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
+export const CHART_COLORS = () => chartSeries()
 
 /* ---------------- Perizinan ---------------- */
 export const PERMIT_TYPES = [

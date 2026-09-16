@@ -64,6 +64,7 @@ export const REVIEW_STATUS_TABS = [
   { value: 'draft', label: 'Draft' },
   { value: 'diajukan', label: 'Diajukan' },
   { value: 'disetujui', label: 'Disetujui' },
+  { value: 'disanggah', label: 'Disanggah' },
   { value: 'semua', label: 'Semua' },
 ]
 export const GRADE_ORDER = ['A', 'B', 'C', 'D', 'E']

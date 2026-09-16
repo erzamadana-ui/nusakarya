@@ -11,14 +11,14 @@ import Payroll from './pages/Payroll'
 import Produktivitas from './pages/Produktivitas'
 
 const routes: AppRoute[] = [
-  { path: '/hr/dashboard', module: 'HR', element: <DashboardHR /> },
-  { path: '/hr/karyawan', module: 'HR', element: <Karyawan /> },
-  { path: '/hr/sertifikasi', module: 'HR', element: <Sertifikasi /> },
-  { path: '/hr/absensi', module: 'HR', element: <Absensi /> },
-  { path: '/hr/roster', module: 'HR', element: <Roster /> },
-  { path: '/hr/cuti', module: 'HR', element: <Cuti /> },
-  { path: '/hr/komponen-gaji', module: 'PAYROLL', element: <KomponenGaji /> },
-  { path: '/hr/payroll', module: 'PAYROLL', element: <Payroll /> },
-  { path: '/hr/produktivitas', module: 'PRODUCTIVITY', element: <Produktivitas /> },
+ { path: '/hr/dashboard', module: 'HR', element: <DashboardHR /> },
+ { path: '/hr/karyawan', module: 'HR', element: <Karyawan /> },
+ { path: '/hr/sertifikasi', module: 'HR', element: <Sertifikasi /> },
+ { path: '/hr/absensi', module: 'HR', element: <Absensi /> },
+ { path: '/hr/roster', module: 'HR', element: <Roster /> },
+ { path: '/hr/cuti', module: 'HR', element: <Cuti /> },
+ { path: '/hr/komponen-gaji', module: 'PAYROLL', element: <KomponenGaji /> },
+ { path: '/hr/payroll', module: 'PAYROLL', element: <Payroll /> },
+ { path: '/hr/produktivitas', module: 'PRODUCTIVITY', element: <Produktivitas /> },
 ]
 export default routes

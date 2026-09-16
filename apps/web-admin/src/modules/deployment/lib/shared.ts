@@ -1,4 +1,5 @@
 /** Konstanta & util bersama modul Design & Deployment. */
+import { chartSeries } from '@/lib/theme'
 
 export const PROJECT_TYPES = [
   { value: 'deployment', label: 'Deployment' },
@@ -96,7 +97,7 @@ export function rfsStepIndex(status: string) {
   return m[status] ?? 0
 }
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
+export const CHART_COLORS = () => chartSeries()
 
 export function projectLabel(p: any) {
   if (!p) return '-'

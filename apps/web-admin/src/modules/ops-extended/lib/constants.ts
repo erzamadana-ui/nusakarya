@@ -1,4 +1,5 @@
 /** Konstanta & referensi statis untuk modul Operations (perluasan: Alarm, SLA, Eskalasi, Pengetahuan). */
+import { chartSeries } from '@/lib/theme'
 
 export type Opt = { value: string; label: string; tone?: string }
 
@@ -71,4 +72,4 @@ export const KA_KATEGORI_DEFAULT: Opt[] = [
   { value: 'lainnya', label: 'Lainnya' },
 ]
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
+export const CHART_COLORS = () => chartSeries()

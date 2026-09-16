@@ -1,4 +1,5 @@
 /** Konstanta & referensi statis untuk modul K3 / HSE. */
+import { chartColors, chartSeries } from '@/lib/theme'
 
 export type Opt = { value: string; label: string; tone?: string }
 
@@ -32,7 +33,10 @@ export const ASPEK_RCA: Opt[] = [
   { value: 'Tools', label: 'Tools' },
   { value: 'Partnership', label: 'Partnership' },
 ]
-export const ASPECT_COLORS: Record<string, string> = { People: '#1B8A92', Process: '#F5A524', Tools: '#3AA3AA', Partnership: '#E11D48' }
+export const ASPECT_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { People: c.primary, Process: c.accent, Tools: c.primarySoft, Partnership: c.danger }
+}
 
 /* ---------------- Inspeksi ---------------- */
 export const INSPECTION_TYPES: Opt[] = [
@@ -102,9 +106,15 @@ export const permitStatusLabel = (v?: string) => PERMIT_STATUSES.find(s => s.val
 export const permitStatusTone = (v?: string) => PERMIT_STATUSES.find(s => s.value === v)?.tone ?? 'slate'
 
 /* ---------------- Umum ---------------- */
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
-export const INCIDENT_TYPE_COLORS: Record<string, string> = { nearmiss: '#3AA3AA', ringan: '#F5A524', sedang: '#F59E0B', berat: '#E11D48', fatal: '#881337' }
-export const RESULT_COLORS: Record<string, string> = { aman: '#16A34A', perlu_perbaikan: '#F59E0B', tidak_aman: '#E11D48' }
+export const CHART_COLORS = () => chartSeries()
+export const INCIDENT_TYPE_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { nearmiss: c.primarySoft, ringan: c.accent, sedang: c.warning, berat: c.danger, fatal: c.danger }
+}
+export const RESULT_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { aman: c.success, perlu_perbaikan: c.warning, tidak_aman: c.danger }
+}
 
 /** Asumsi jam kerja per karyawan aktif per bulan (40 jam/minggu × ~4,33 minggu) — dipakai untuk memperkirakan rasio insiden per juta jam kerja. WAJIB disesuaikan bila kebijakan jam kerja perusahaan berbeda. */
 export const ASSUMED_MONTHLY_WORK_HOURS = 173

@@ -9,12 +9,12 @@ import Penilaian from './pages/Penilaian'
 import Disiplin from './pages/Disiplin'
 
 const routes: AppRoute[] = [
-  { path: '/hr/lembur', module: 'HR', element: <Lembur /> },
-  { path: '/hr/perjalanan', module: 'HR', element: <Perjalanan /> },
-  { path: '/hr/kasbon', module: 'HR', element: <Kasbon /> },
-  { path: '/hr/rekrutmen', module: 'HR', element: <Rekrutmen /> },
-  { path: '/hr/kompetensi', module: 'HR', element: <Kompetensi /> },
-  { path: '/hr/penilaian', module: 'HR', element: <Penilaian /> },
-  { path: '/hr/disiplin', module: 'HR', element: <Disiplin /> },
+ { path: '/hr/lembur', module: 'HR', element: <Lembur /> },
+ { path: '/hr/perjalanan', module: 'HR', element: <Perjalanan /> },
+ { path: '/hr/kasbon', module: 'HR', element: <Kasbon /> },
+ { path: '/hr/rekrutmen', module: 'HR', element: <Rekrutmen /> },
+ { path: '/hr/kompetensi', module: 'HR', element: <Kompetensi /> },
+ { path: '/hr/penilaian', module: 'HR', element: <Penilaian /> },
+ { path: '/hr/disiplin', module: 'HR', element: <Disiplin /> },
 ]
 export default routes

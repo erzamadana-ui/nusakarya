@@ -23,56 +23,59 @@ import opsExtendedRoutes from '@/modules/ops-extended/routes'
 import deployExtendedRoutes from '@/modules/deploy-extended/routes'
 import commerceProcExtendedRoutes from '@/modules/commerce-procurement-extended/routes'
 import coreExtendedRoutes from '@/modules/core-extended/routes'
+import tampilanRoutes from '@/modules/tampilan/routes'
+import morningBmonRoutes from '@/modules/morning-bmon/routes'
 
 export type AppRoute = { path: string; element: React.ReactNode; module: string }
 const ROUTES: AppRoute[] = [
-  ...execRoutes, ...hrRoutes, ...commerceRoutes, ...procurementRoutes, ...financeRoutes,
-  ...inventoryRoutes, ...operationsRoutes, ...deploymentRoutes, ...settingsRoutes,
-  ...hrExtendedRoutes, ...payrollFreelanceRoutes, ...hseRoutes, ...financeExtendedRoutes,
-  ...opsExtendedRoutes, ...deployExtendedRoutes, ...commerceProcExtendedRoutes, ...coreExtendedRoutes,
+ ...execRoutes, ...hrRoutes, ...commerceRoutes, ...procurementRoutes, ...financeRoutes,
+ ...inventoryRoutes, ...operationsRoutes, ...deploymentRoutes, ...settingsRoutes,
+ ...hrExtendedRoutes, ...payrollFreelanceRoutes, ...hseRoutes, ...financeExtendedRoutes,
+ ...opsExtendedRoutes, ...deployExtendedRoutes, ...commerceProcExtendedRoutes, ...coreExtendedRoutes,
+  ...tampilanRoutes, ...morningBmonRoutes,
 ]
 
 function Guard({ module, children }: { module: string; children: React.ReactNode }) {
-  const { can } = useAuth()
-  if (!can(module, 'read')) return <Forbidden module={module} />
-  return <>{children}</>
+ const { can } = useAuth()
+ if (!can(module, 'read')) return <Forbidden module={module} />
+ return <>{children}</>
 }
 
 function Gate() {
-  const { loading, session, profile } = useAuth()
-  if (loading) return (
-    <div className="min-h-screen grid place-items-center bg-ink-50 dark:bg-surface-darker">
-      <div className="w-full max-w-sm space-y-3 px-6">
-        <div className="mx-auto w-11 h-11 rounded-md bg-primary-500 text-white grid place-items-center font-display font-extrabold animate-pulse">N</div>
-        <Skeleton className="h-3 w-3/4 mx-auto" /><Skeleton className="h-3 w-1/2 mx-auto" />
-      </div>
-    </div>)
-  if (!session) return <Login />
-  if (!profile) return (
-    <div className="min-h-screen grid place-items-center p-6 text-center bg-ink-50 dark:bg-surface-darker">
-      <div className="max-w-md">
-        <h2 className="font-display text-xl font-bold">Profil belum disiapkan</h2>
-        <p className="mt-2 text-body text-ink-500">Akun Anda belum ditautkan ke perusahaan mana pun. Hubungi administrator.</p>
-      </div>
-    </div>)
-  return (
-    <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        {ROUTES.map(r => (
-          <Route key={r.path} path={r.path}
-            element={<Guard module={r.module}><Suspense fallback={<Skeleton className="h-64 w-full" />}>{r.element}</Suspense></Guard>} />
-        ))}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Route>
-    </Routes>)
+ const { loading, session, profile } = useAuth()
+ if (loading) return (
+ <div className="min-h-screen grid place-items-center bg-ink-50">
+ <div className="w-full max-w-sm space-y-3 px-6">
+ <div className="mx-auto w-11 h-11 rounded-md bg-primary-500 text-white grid place-items-center font-display font-extrabold animate-pulse">N</div>
+ <Skeleton className="h-3 w-3/4 mx-auto" /><Skeleton className="h-3 w-1/2 mx-auto" />
+ </div>
+ </div>)
+ if (!session) return <Login />
+ if (!profile) return (
+ <div className="min-h-screen grid place-items-center p-6 text-center bg-ink-50">
+ <div className="max-w-md">
+ <h2 className="font-display text-xl font-bold">Profil belum disiapkan</h2>
+ <p className="mt-2 text-body text-ink-500">Akun Anda belum ditautkan ke perusahaan mana pun. Hubungi administrator.</p>
+ </div>
+ </div>)
+ return (
+ <Routes>
+ <Route element={<AppShell />}>
+ <Route index element={<Navigate to="/dashboard" replace />} />
+ {ROUTES.map(r => (
+ <Route key={r.path} path={r.path}
+ element={<Guard module={r.module}><Suspense fallback={<Skeleton className="h-64 w-full" />}>{r.element}</Suspense></Guard>} />
+ ))}
+ <Route path="*" element={<Navigate to="/dashboard" replace />} />
+ </Route>
+ </Routes>)
 }
 
 export default function App() {
-  return (
-    <HashRouter>
-      <ToastProvider>
-        <AuthProvider><Gate /></AuthProvider>
-      </ToastProvider>
-    </HashRouter>)
+ return (
+ <HashRouter>
+ <ToastProvider>
+ <AuthProvider><Gate /></AuthProvider>
+ </ToastProvider>
+ </HashRouter>)
 }

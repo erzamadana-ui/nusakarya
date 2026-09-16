@@ -2,16 +2,197 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
-html.dark { color-scheme: dark; }
+/* =====================================================================
+   TEMA APLIKASI
+   Dua template tersedia. Ganti lewat atribut data-theme pada <html>:
+     data-theme="operations"  -> template Operations (bawaan)
+     data-theme="antarkita"   -> template AntarKita
+   Mode gelap ditambahkan lewat kelas .dark pada <html>.
+   Nilai warna ditulis sebagai komponen RGB agar Tailwind bisa memberi alpha.
+   ===================================================================== */
+
+:root,
+[data-theme='operations'] {
+  --font-display: 'Plus Jakarta Sans';
+  --font-body: 'Plus Jakarta Sans';
+  --font-mono: 'JetBrains Mono';
+
+  --r-xs: 6px;  --r-sm: 10px; --r-md: 14px; --r-lg: 18px; --r-xl: 24px;
+  --sh-1: 0 1px 2px rgba(23, 23, 40, .05);
+  --sh-2: 0 4px 16px rgba(23, 23, 40, .07);
+  --sh-3: 0 16px 40px rgba(23, 23, 40, .12);
+
+  --c-primary-50:  238 240 255;
+  --c-primary-100: 224 227 255;
+  --c-primary-200: 196 201 255;
+  --c-primary-300: 163 169 251;
+  --c-primary-400: 123 127 242;
+  --c-primary-500:  79  70 229;
+  --c-primary-600:  67  56 202;
+  --c-primary-700:  55  48 163;
+  --c-primary-800:  42  37 128;
+  --c-primary-900:  30  27  75;
+
+  --c-accent-50:  255 247 230;
+  --c-accent-100: 253 236 200;
+  --c-accent-300: 248 199 101;
+  --c-accent-500: 245 165  36;
+  --c-accent-600: 209 138  18;
+  --c-accent-700: 156 102   8;
+
+  --c-ink-0:   255 255 255;
+  --c-ink-50:  244 244 246;
+  --c-ink-100: 238 238 242;
+  --c-ink-200: 229 229 236;
+  --c-ink-300: 208 208 217;
+  --c-ink-400: 148 148 163;
+  --c-ink-500: 113 113 128;
+  --c-ink-600:  82  82  96;
+  --c-ink-700:  57  57  70;
+  --c-ink-800:  38  38  50;
+  --c-ink-900:  26  26  36;
+
+  --c-surface:        255 255 255;
+  --c-surface-muted:  244 244 246;
+  --c-surface-dark:    30  30  42;
+  --c-surface-darker:  20  20  30;
+
+  --c-sidebar:          255 255 255;
+  --c-sidebar-hover:    244 244 246;
+  --c-sidebar-active:    79  70 229;
+  --c-sidebar-fg:        57  57  70;
+  --c-sidebar-muted:    148 148 163;
+  --c-sidebar-border:   229 229 236;
+  --c-sidebar-onactive: 255 255 255;
+}
+
+[data-theme='antarkita'] {
+  --font-display: 'Plus Jakarta Sans';
+  --font-body: 'Inter';
+  --font-mono: 'JetBrains Mono';
+
+  --r-xs: 4px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
+  --sh-1: 0 1px 2px rgba(15, 23, 42, .06);
+  --sh-2: 0 4px 12px rgba(15, 23, 42, .10);
+  --sh-3: 0 12px 32px rgba(15, 23, 42, .14);
+
+  --c-primary-50:  234 246 246;
+  --c-primary-100: 208 235 236;
+  --c-primary-200: 163 215 217;
+  --c-primary-300: 111 191 195;
+  --c-primary-400:  58 163 170;
+  --c-primary-500:  27 138 146;
+  --c-primary-600:  20 111 119;
+  --c-primary-700:  15  88  95;
+  --c-primary-800:   9  60  67;
+  --c-primary-900:   4  38  44;
+
+  --c-accent-50:  255 247 230;
+  --c-accent-100: 253 236 200;
+  --c-accent-300: 248 199 101;
+  --c-accent-500: 245 165  36;
+  --c-accent-600: 209 138  18;
+  --c-accent-700: 156 102   8;
+
+  --c-ink-0:   255 255 255;
+  --c-ink-50:  247 248 250;
+  --c-ink-100: 239 241 244;
+  --c-ink-200: 226 230 235;
+  --c-ink-300: 203 210 218;
+  --c-ink-400: 148 161 178;
+  --c-ink-500: 100 116 139;
+  --c-ink-600:  71  84 103;
+  --c-ink-700:  51  65  85;
+  --c-ink-800:  30  41  59;
+  --c-ink-900:  19  27  44;
+
+  --c-surface:        255 255 255;
+  --c-surface-muted:  247 248 250;
+  --c-surface-dark:    19  27  44;
+  --c-surface-darker:  11  17  28;
+
+  --c-sidebar:            7  58  66;
+  --c-sidebar-hover:     11  74  83;
+  --c-sidebar-active:    20 111 119;
+  --c-sidebar-fg:       232 244 245;
+  --c-sidebar-muted:    148 187 191;
+  --c-sidebar-border:    18  84  92;
+  --c-sidebar-onactive: 255 255 255;
+}
+
+/* ---------- Mode gelap ---------- */
+.dark,
+.dark[data-theme='operations'] {
+  --c-ink-0:    20  20  30;
+  --c-ink-50:   26  26  36;
+  --c-ink-100:  38  38  50;
+  --c-ink-200:  52  52  66;
+  --c-ink-300:  74  74  90;
+  --c-ink-400: 128 128 145;
+  --c-ink-500: 160 160 176;
+  --c-ink-600: 190 190 203;
+  --c-ink-700: 214 214 224;
+  --c-ink-800: 235 235 241;
+  --c-ink-900: 247 247 250;
+
+  --c-primary-400: 143 146 248;
+  --c-primary-500: 111 105 240;
+  --c-primary-600:  90  82 231;
+
+  --c-surface:        30  30  42;
+  --c-surface-muted:  20  20  30;
+
+  --c-sidebar:          26  26  36;
+  --c-sidebar-hover:    38  38  50;
+  --c-sidebar-active:  111 105 240;
+  --c-sidebar-fg:      214 214 224;
+  --c-sidebar-muted:   128 128 145;
+  --c-sidebar-border:   52  52  66;
+  --c-sidebar-onactive:255 255 255;
+}
+
+.dark[data-theme='antarkita'] {
+  --c-ink-0:    11  17  28;
+  --c-ink-50:   19  27  44;
+  --c-ink-100:  38  48  65;
+  --c-ink-200:  51  65  85;
+  --c-ink-300:  71  84 103;
+  --c-ink-400: 122 138 158;
+  --c-ink-500: 148 161 178;
+  --c-ink-600: 186 197 210;
+  --c-ink-700: 210 219 228;
+  --c-ink-800: 232 238 244;
+  --c-ink-900: 243 245 247;
+
+  --c-primary-400:  90 190 196;
+  --c-primary-500:  58 163 170;
+  --c-primary-600:  33 140 148;
+
+  --c-surface:        19  27  44;
+  --c-surface-muted:  11  17  28;
+
+  --c-sidebar:           7  58  66;
+  --c-sidebar-hover:    11  74  83;
+  --c-sidebar-active:   20 111 119;
+  --c-sidebar-fg:      232 244 245;
+  --c-sidebar-muted:   148 187 191;
+  --c-sidebar-border:   18  84  92;
+  --c-sidebar-onactive:255 255 255;
+}
+
+/* ---------- Dasar ---------- */
+html { color-scheme: light }
+html.dark { color-scheme: dark }
 body { @apply bg-ink-50 text-ink-900 font-sans text-body antialiased; }
-html.dark body { @apply bg-surface-darker text-ink-100; }
 * { -webkit-tap-highlight-color: transparent; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-thumb { @apply bg-ink-300 rounded-full; }
-html.dark ::-webkit-scrollbar-thumb { @apply bg-ink-700; }
 .tabular { font-variant-numeric: tabular-nums; }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
-.skeleton { @apply relative overflow-hidden bg-ink-100 dark:bg-ink-800 rounded-sm; }
+.skeleton { @apply relative overflow-hidden bg-ink-100 rounded-sm; }
 .skeleton::after { content:''; @apply absolute inset-0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: shimmer 1.4s infinite; }
 @media (prefers-reduced-motion: reduce) { * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+@media print {
+  .no-print, aside, header { display: none !important; }
+  body { background: #fff !important; }
+}

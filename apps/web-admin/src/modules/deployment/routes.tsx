@@ -11,14 +11,14 @@ import Dokumen from './pages/Dokumen'
 import Rfs from './pages/Rfs'
 
 const routes: AppRoute[] = [
-  { path: '/deploy/dashboard', module: 'DEPLOYMENT', element: <Dashboard /> },
-  { path: '/deploy/proyek', module: 'DEPLOYMENT', element: <Proyek /> },
-  { path: '/deploy/survey', module: 'DEPLOYMENT', element: <Survey /> },
-  { path: '/deploy/drm', module: 'DEPLOYMENT', element: <Drm /> },
-  { path: '/deploy/boq', module: 'DEPLOYMENT', element: <Boq /> },
-  { path: '/deploy/progres', module: 'DEPLOYMENT', element: <Progres /> },
-  { path: '/deploy/qc', module: 'DEPLOYMENT', element: <Qc /> },
-  { path: '/deploy/dokumen', module: 'DEPLOYMENT', element: <Dokumen /> },
-  { path: '/deploy/rfs', module: 'DEPLOYMENT', element: <Rfs /> },
+ { path: '/deploy/dashboard', module: 'DEPLOYMENT', element: <Dashboard /> },
+ { path: '/deploy/proyek', module: 'DEPLOYMENT', element: <Proyek /> },
+ { path: '/deploy/survey', module: 'DEPLOYMENT', element: <Survey /> },
+ { path: '/deploy/drm', module: 'DEPLOYMENT', element: <Drm /> },
+ { path: '/deploy/boq', module: 'DEPLOYMENT', element: <Boq /> },
+ { path: '/deploy/progres', module: 'DEPLOYMENT', element: <Progres /> },
+ { path: '/deploy/qc', module: 'DEPLOYMENT', element: <Qc /> },
+ { path: '/deploy/dokumen', module: 'DEPLOYMENT', element: <Dokumen /> },
+ { path: '/deploy/rfs', module: 'DEPLOYMENT', element: <Rfs /> },
 ]
 export default routes

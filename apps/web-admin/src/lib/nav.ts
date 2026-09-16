@@ -96,6 +96,8 @@ export const NAV: NavGroup[] = [
     { path: '/ops/sla-pelanggan', label: 'Laporan SLA Pelanggan', module: 'OPERATIONS' },
     { path: '/ops/eskalasi', label: 'Matriks Eskalasi', module: 'OPERATIONS' },
     { path: '/ops/pengetahuan', label: 'Basis Pengetahuan', module: 'OPERATIONS' },
+    { path: '/ops/morning', label: 'MORNING — Provisioning', module: 'OPERATIONS' },
+    { path: '/ops/bmon', label: 'BMON — Assurance', module: 'OPERATIONS' },
   ]},
   { key: 'k3', label: 'K3 / HSE', icon: 'HardHat', unit: 'OPERATIONS', items: [
     { path: '/k3/dashboard', label: 'Dashboard K3', module: 'OPERATIONS' },
@@ -123,6 +125,7 @@ export const NAV: NavGroup[] = [
     { path: '/pengaturan/hak-akses', label: 'Hak Akses Jabatan', module: 'CORE' },
     { path: '/pengaturan/cabang', label: 'Cabang', module: 'CORE' },
     { path: '/pengaturan/perusahaan', label: 'Profil Perusahaan', module: 'CORE' },
+    { path: '/pengaturan/tampilan', label: 'Tampilan & Template', module: 'CORE' },
     { path: '/pengaturan/master', label: 'Data Master Referensi', module: 'CORE' },
     { path: '/pengaturan/audit', label: 'Log Audit', module: 'CORE' },
   ]},

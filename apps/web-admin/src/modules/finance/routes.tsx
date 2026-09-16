@@ -8,11 +8,11 @@ import Anggaran from './pages/Anggaran'
 import Cashflow from './pages/Cashflow'
 
 const routes: AppRoute[] = [
-  { path: '/finance/dashboard', module: 'FINANCE', element: <DashboardFinance /> },
-  { path: '/finance/ap', module: 'FINANCE', element: <AP /> },
-  { path: '/finance/ar', module: 'FINANCE', element: <AR /> },
-  { path: '/finance/job-costing', module: 'FINANCE', element: <JobCosting /> },
-  { path: '/finance/anggaran', module: 'FINANCE', element: <Anggaran /> },
-  { path: '/finance/cashflow', module: 'FINANCE', element: <Cashflow /> },
+ { path: '/finance/dashboard', module: 'FINANCE', element: <DashboardFinance /> },
+ { path: '/finance/ap', module: 'FINANCE', element: <AP /> },
+ { path: '/finance/ar', module: 'FINANCE', element: <AR /> },
+ { path: '/finance/job-costing', module: 'FINANCE', element: <JobCosting /> },
+ { path: '/finance/anggaran', module: 'FINANCE', element: <Anggaran /> },
+ { path: '/finance/cashflow', module: 'FINANCE', element: <Cashflow /> },
 ]
 export default routes

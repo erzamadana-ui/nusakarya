@@ -1,4 +1,5 @@
 /** Konstanta & referensi statis untuk modul Operations. */
+import { chartColors, chartSeries } from '@/lib/theme'
 
 export type Opt = { value: string; label: string; tone?: string }
 
@@ -84,6 +85,12 @@ export const ASPEK_RCA: Opt[] = [
   { value: 'Partnership', label: 'Partnership' },
 ]
 
-export const CHART_COLORS = ['#1B8A92', '#F5A524', '#3AA3AA', '#F59E0B', '#64748B', '#E11D48', '#16A34A']
-export const SEVERITY_COLORS: Record<string, string> = { kritis: '#E11D48', tinggi: '#F59E0B', sedang: '#F5A524', rendah: '#64748B' }
-export const ASPECT_COLORS: Record<string, string> = { People: '#1B8A92', Process: '#F5A524', Tools: '#3AA3AA', Partnership: '#E11D48' }
+export const CHART_COLORS = () => chartSeries()
+export const SEVERITY_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { kritis: c.danger, tinggi: c.warning, sedang: c.accent, rendah: c.neutral }
+}
+export const ASPECT_COLORS = (): Record<string, string> => {
+  const c = chartColors()
+  return { People: c.primary, Process: c.accent, Tools: c.primarySoft, Partnership: c.danger }
+}

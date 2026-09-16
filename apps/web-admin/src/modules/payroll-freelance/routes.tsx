@@ -4,7 +4,7 @@ import MitraFreelance from './pages/MitraFreelance'
 import PayrollFreelance from './pages/PayrollFreelance'
 
 const routes: AppRoute[] = [
-  { path: '/hr/freelance', module: 'PAYROLL', element: <MitraFreelance /> },
-  { path: '/hr/payroll-freelance', module: 'PAYROLL', element: <PayrollFreelance /> },
+ { path: '/hr/freelance', module: 'PAYROLL', element: <MitraFreelance /> },
+ { path: '/hr/payroll-freelance', module: 'PAYROLL', element: <PayrollFreelance /> },
 ]
 export default routes
