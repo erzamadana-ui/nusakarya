@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom'
-import * as Icons from 'lucide-react'
+import {
+  LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
+  Settings, Circle, ChevronsLeft, ChevronsRight, Menu, Search, Sun, Moon, Bell, LogOut,
+  CornerDownLeft, AlertTriangle,
+} from 'lucide-react'
+
+const ICONS: Record<string, any> = {
+  LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
+  Settings, ChevronsLeft, ChevronsRight, Circle,
+}
 import { useAuth, ROLE_LABEL } from '@/lib/auth'
 import { NAV, ALL_ITEMS } from '@/lib/nav'
 import { inisial } from '@/lib/format'
 import { cx, Badge } from '@/components/ui'
 
 const Icon = ({ name, ...p }: any) => {
-  const C = (Icons as any)[name] ?? Icons.Circle
+  const C = ICONS[name] ?? Circle
   return <C {...p} />
 }
 
@@ -86,30 +95,30 @@ export default function AppShell() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 shrink-0 bg-white dark:bg-surface-dark border-b border-ink-200 dark:border-ink-800 flex items-center gap-3 px-4">
-          <button className="lg:hidden p-2 -ml-2 text-ink-500" onClick={() => setOpen(true)}><Icons.Menu size={20} /></button>
+          <button className="lg:hidden p-2 -ml-2 text-ink-500" onClick={() => setOpen(true)}><Menu size={20} /></button>
           <button onClick={() => setCmd(true)}
             className="flex items-center gap-2 h-9 px-3 rounded-sm border border-ink-200 dark:border-ink-700 text-ink-400 text-body hover:border-primary-300 min-w-[150px] sm:min-w-[260px]">
-            <Icons.Search size={15} /><span className="flex-1 text-left">Cari menu…</span>
+            <Search size={15} /><span className="flex-1 text-left">Cari menu…</span>
             <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-ink-500">⌘K</kbd>
           </button>
           <div className="flex-1" />
           <button onClick={() => setDark(d => !d)} className="p-2 rounded-sm text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800" title="Ganti tema">
-            {dark ? <Icons.Sun size={18} /> : <Icons.Moon size={18} />}
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button onClick={() => nav('/notifikasi')} className="p-2 rounded-sm text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"><Icons.Bell size={18} /></button>
+          <button onClick={() => nav('/notifikasi')} className="p-2 rounded-sm text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"><Bell size={18} /></button>
           <div className="flex items-center gap-2.5 pl-3 border-l border-ink-200 dark:border-ink-800">
             <div className="w-9 h-9 rounded-full bg-primary-500 text-white grid place-items-center text-caption font-semibold shrink-0">{inisial(profile?.full_name)}</div>
             <div className="hidden sm:block leading-tight">
               <div className="text-body font-medium text-ink-900 dark:text-ink-100 max-w-[150px] truncate">{profile?.full_name}</div>
               <div className="text-[11px] text-ink-400">{ROLE_LABEL[profile?.role ?? ''] ?? profile?.role}</div>
             </div>
-            <button onClick={signOut} title="Keluar" className="p-2 rounded-sm text-ink-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><Icons.LogOut size={17} /></button>
+            <button onClick={signOut} title="Keluar" className="p-2 rounded-sm text-ink-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><LogOut size={17} /></button>
           </div>
         </header>
 
         {company?.is_demo && (
           <div className="shrink-0 bg-accent-50 dark:bg-accent-700/20 border-b border-accent-300/50 px-4 py-1.5 text-caption text-accent-700 dark:text-accent-300 flex items-center gap-2">
-            <Icons.AlertTriangle size={13} /> Data contoh untuk peragaan — bersihkan sebelum dipakai produksi.
+            <AlertTriangle size={13} /> Data contoh untuk peragaan — bersihkan sebelum dipakai produksi.
           </div>)}
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6"><Outlet /></main>
@@ -119,7 +128,7 @@ export default function AppShell() {
         <div className="fixed inset-0 z-[60] bg-ink-900/40 backdrop-blur-[2px] flex items-start justify-center pt-[12vh] px-4" onClick={() => setCmd(false)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-lg shadow-e3 overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 h-14 border-b border-ink-200 dark:border-ink-800">
-              <Icons.Search size={17} className="text-ink-400" />
+              <Search size={17} className="text-ink-400" />
               <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Lompat ke menu…"
                 className="flex-1 bg-transparent outline-none text-body-l text-ink-900 dark:text-ink-100" />
               <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-ink-500">ESC</kbd>
@@ -129,7 +138,7 @@ export default function AppShell() {
               {results.map(r => (
                 <button key={r.path} onClick={() => { nav(r.path); setQ('') }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink-50 dark:hover:bg-ink-800 text-left">
-                  <Icons.CornerDownLeft size={14} className="text-ink-300" />
+                  <CornerDownLeft size={14} className="text-ink-300" />
                   <span className="flex-1 text-body text-ink-800 dark:text-ink-100">{r.label}</span>
                   <Badge tone="teal">{r.group}</Badge>
                 </button>))}

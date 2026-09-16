@@ -15,11 +15,21 @@ import inventoryRoutes from '@/modules/inventory/routes'
 import operationsRoutes from '@/modules/operations/routes'
 import deploymentRoutes from '@/modules/deployment/routes'
 import settingsRoutes from '@/modules/settings/routes'
+import hrExtendedRoutes from '@/modules/hr-extended/routes'
+import payrollFreelanceRoutes from '@/modules/payroll-freelance/routes'
+import hseRoutes from '@/modules/hse/routes'
+import financeExtendedRoutes from '@/modules/finance-extended/routes'
+import opsExtendedRoutes from '@/modules/ops-extended/routes'
+import deployExtendedRoutes from '@/modules/deploy-extended/routes'
+import commerceProcExtendedRoutes from '@/modules/commerce-procurement-extended/routes'
+import coreExtendedRoutes from '@/modules/core-extended/routes'
 
 export type AppRoute = { path: string; element: React.ReactNode; module: string }
 const ROUTES: AppRoute[] = [
   ...execRoutes, ...hrRoutes, ...commerceRoutes, ...procurementRoutes, ...financeRoutes,
   ...inventoryRoutes, ...operationsRoutes, ...deploymentRoutes, ...settingsRoutes,
+  ...hrExtendedRoutes, ...payrollFreelanceRoutes, ...hseRoutes, ...financeExtendedRoutes,
+  ...opsExtendedRoutes, ...deployExtendedRoutes, ...commerceProcExtendedRoutes, ...coreExtendedRoutes,
 ]
 
 function Guard({ module, children }: { module: string; children: React.ReactNode }) {

@@ -5,3 +5,8 @@ dist/
 .DS_Store
 .env
 !.env.example
+
+# kredensial — jangan pernah di-commit
+rahasia/
+*.token
+credentials*.md

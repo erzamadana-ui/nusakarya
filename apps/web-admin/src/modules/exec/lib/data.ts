@@ -49,7 +49,7 @@ export type PendingItem = { id: string; type: string; title: string; date: strin
 
 /** Dokumen menunggu persetujuan yang relevan dengan hak approve pengguna saat ini. */
 export async function fetchPendingApprovals(can: (m: string, lvl?: 'read' | 'write' | 'approve') => boolean): Promise<PendingItem[]> {
-  const tasks: Promise<PendingItem[]>[] = []
+  const tasks: PromiseLike<PendingItem[]>[] = []
 
   if (can('PROCUREMENT', 'approve')) {
     tasks.push(

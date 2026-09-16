@@ -6,5 +6,20 @@ export default defineConfig({
   plugins: [react()],
   base: process.env.VITE_BASE ?? '/',
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
-  build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
+  build: {
+    outDir: 'dist',
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('recharts') || id.includes('d3-')) return 'charts'
+          if (id.includes('@supabase')) return 'supabase'
+          if (id.includes('react-router')) return 'router'
+          if (id.includes('lucide-react')) return 'icons'
+          return 'vendor'
+        },
+      },
+    },
+  },
 })
