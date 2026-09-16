@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "NUSAKARYA Teknisi",
+    "slug": "nusakarya-teknisi",
+    "scheme": "nusakaryateknisi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#073A42"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nusakarya.teknisi",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Lokasi Anda digunakan untuk mencatat titik absensi dan lokasi pengerjaan Work Order/Tiket secara akurat.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Lokasi Anda digunakan untuk mencatat titik absensi dan lokasi pengerjaan Work Order/Tiket secara akurat.",
+        "NSCameraUsageDescription": "Kamera digunakan untuk swafoto absensi, foto evidence pekerjaan, dan pemindaian nomor seri perangkat (barcode).",
+        "NSPhotoLibraryUsageDescription": "Aplikasi memerlukan akses galeri untuk melampirkan foto evidence pekerjaan."
+      }
+    },
+    "android": {
+      "package": "com.nusakarya.teknisi",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#073A42"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Lokasi Anda digunakan untuk mencatat titik absensi dan lokasi pengerjaan Work Order/Tiket secara akurat."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Kamera digunakan untuk swafoto absensi, foto evidence pekerjaan, dan pemindaian nomor seri perangkat (barcode)."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Aplikasi memerlukan akses galeri untuk melampirkan foto evidence pekerjaan.",
+          "cameraPermission": "Kamera digunakan untuk swafoto absensi dan foto evidence pekerjaan."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}

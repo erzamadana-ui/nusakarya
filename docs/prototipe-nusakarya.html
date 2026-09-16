@@ -1,0 +1,1258 @@
+<title>Prototipe NUSAKARYA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --p50:#EAF6F6;--p100:#CFEBEC;--p200:#9FD6D9;--p300:#66BDC2;--p400:#3AA3AA;--p500:#1B8A92;--p600:#106E77;--p700:#0B535C;--p800:#073A42;--p900:#04262C;
+    --a400:#FBBF24;--a500:#F5A524;--a600:#D97706;
+    --n0:#FFFFFF;--n50:#F7F8FA;--n100:#EEF1F4;--n200:#E2E6EB;--n300:#CBD2D9;--n400:#9AA5B1;--n500:#6B7686;--n600:#4B5563;--n700:#364152;--n800:#202B3D;--n900:#131B2C;
+
+    --st-draft-t:#64748B;--st-draft-b:#F1F5F9;
+    --st-proses-t:#2563EB;--st-proses-b:#DBEAFE;
+    --st-pending-t:#D97706;--st-pending-b:#FEF3C7;
+    --st-approved-t:#16A34A;--st-approved-b:#DCFCE7;
+    --st-reject-t:#DC2626;--st-reject-b:#FEE2E2;
+    --st-overdue-t:#EA580C;--st-overdue-b:#FFEDD5;
+    --st-breach-t:#E11D48;--st-breach-b:#FFE4E6;
+
+    --bg-app:var(--n50);--bg-surface:var(--n0);--bg-elevated:var(--n0);
+    --border:var(--n200);--border-strong:var(--n300);
+    --sidebar-bg:var(--p800);--sidebar-active:var(--p700);--sidebar-text:#BFE3E4;--sidebar-text-active:#FFFFFF;--sidebar-accent:var(--a400);
+    --text-1:var(--n900);--text-2:var(--n600);--text-3:var(--n400);
+    --accent:var(--p500);--accent-hover:var(--p600);--accent-active:var(--p700);--accent-soft:var(--p50);
+    --focus:var(--p400);
+
+    --e1:0 1px 2px rgba(15,23,42,.06);
+    --e2:0 4px 12px rgba(15,23,42,.08);
+    --e3:0 12px 32px rgba(15,23,42,.16);
+
+    --r-xs:4px;--r-sm:6px;--r-md:10px;--r-lg:14px;--r-full:999px;
+    --font-d:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;
+    --font-b:'Inter',ui-sans-serif,system-ui,sans-serif;
+    --font-m:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg-app:#0B111C;--bg-surface:#131B2C;--bg-elevated:#1B2436;
+      --border:#263041;--border-strong:#324058;
+      --sidebar-bg:#04262C;--sidebar-active:rgba(255,255,255,.08);--sidebar-text:#8FC4C6;--sidebar-text-active:#F3F5F7;--sidebar-accent:#FBBF24;
+      --text-1:#F3F5F7;--text-2:#9AA5B1;--text-3:#6B7686;
+      --accent:#3AA3AA;--accent-hover:#66BDC2;--accent-active:#9FD6D9;--accent-soft:rgba(58,163,170,.14);
+      --e1:0 1px 2px rgba(0,0,0,.4);--e2:0 4px 14px rgba(0,0,0,.45);--e3:0 16px 40px rgba(0,0,0,.55);
+      --st-draft-t:#94A3B8;--st-draft-b:rgba(100,116,139,.16);
+      --st-proses-t:#60A5FA;--st-proses-b:rgba(37,99,235,.16);
+      --st-pending-t:#FBBF24;--st-pending-b:rgba(217,119,6,.16);
+      --st-approved-t:#4ADE80;--st-approved-b:rgba(22,163,74,.16);
+      --st-reject-t:#F87171;--st-reject-b:rgba(220,38,38,.16);
+      --st-overdue-t:#FB923C;--st-overdue-b:rgba(234,88,12,.16);
+      --st-breach-t:#FB7185;--st-breach-b:rgba(225,29,72,.18);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg-app:#0B111C;--bg-surface:#131B2C;--bg-elevated:#1B2436;
+    --border:#263041;--border-strong:#324058;
+    --sidebar-bg:#04262C;--sidebar-active:rgba(255,255,255,.08);--sidebar-text:#8FC4C6;--sidebar-text-active:#F3F5F7;--sidebar-accent:#FBBF24;
+    --text-1:#F3F5F7;--text-2:#9AA5B1;--text-3:#6B7686;
+    --accent:#3AA3AA;--accent-hover:#66BDC2;--accent-active:#9FD6D9;--accent-soft:rgba(58,163,170,.14);
+    --e1:0 1px 2px rgba(0,0,0,.4);--e2:0 4px 14px rgba(0,0,0,.45);--e3:0 16px 40px rgba(0,0,0,.55);
+    --st-draft-t:#94A3B8;--st-draft-b:rgba(100,116,139,.16);
+    --st-proses-t:#60A5FA;--st-proses-b:rgba(37,99,235,.16);
+    --st-pending-t:#FBBF24;--st-pending-b:rgba(217,119,6,.16);
+    --st-approved-t:#4ADE80;--st-approved-b:rgba(22,163,74,.16);
+    --st-reject-t:#F87171;--st-reject-b:rgba(220,38,38,.16);
+    --st-overdue-t:#FB923C;--st-overdue-b:rgba(234,88,12,.16);
+    --st-breach-t:#FB7185;--st-breach-b:rgba(225,29,72,.18);
+  }
+
+  /* ============ BASE ============ */
+  *,*::before,*::after{box-sizing:border-box}
+  body{
+    background:var(--bg-app);color:var(--text-1);
+    font-family:var(--font-b);font-size:14px;line-height:20px;
+    padding-inline:16px;padding-block:24px;
+    max-width:1360px;margin:0 auto;
+  }
+  h1,h2,h3,h4{font-family:var(--font-d);font-weight:700;margin:0;text-wrap:balance}
+  p{margin:0}
+  ::selection{background:var(--p300);color:var(--p900)}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--accent)}
+  .fnum{font-variant-numeric:tabular-nums}
+
+  /* ============ MASTHEAD ============ */
+  .masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-mark{width:34px;height:34px;border-radius:var(--r-sm);background:linear-gradient(145deg,var(--p500),var(--p800));display:flex;align-items:center;justify-content:center;box-shadow:var(--e1);flex-shrink:0}
+  .brand-mark svg{width:18px;height:18px}
+  .brand-name{font-family:var(--font-d);font-weight:800;font-size:18px;letter-spacing:.01em}
+  .brand-sub{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .theme-btn{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:var(--r-full);border:1px solid var(--border-strong);background:var(--bg-surface);color:var(--text-2);font-size:13px;font-weight:600;box-shadow:var(--e1)}
+  .theme-btn svg{width:15px;height:15px}
+  .theme-btn:hover{border-color:var(--accent)}
+
+  /* ============ TABS ============ */
+  .tabbar{position:sticky;top:0;z-index:20;display:flex;gap:2px;overflow-x:auto;background:var(--bg-app);padding-block:6px 2px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+  .tabbar::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:10px 14px;font-size:13px;font-weight:600;color:var(--text-2);background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab:hover{color:var(--text-1)}
+
+  .section{display:none}
+  .section.active{display:block}
+  .section-head{margin-bottom:20px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+  .section-head h2{font-size:24px;line-height:32px;margin-top:4px}
+  .section-desc{color:var(--text-2);font-size:14px;max-width:70ch;margin-top:6px}
+
+  /* ============ GENERIC COMPONENTS ============ */
+  .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--e1);padding:20px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 16px;border-radius:var(--r-sm);font-size:14px;font-weight:600;border:1px solid transparent;line-height:1}
+  .btn svg{width:15px;height:15px}
+  .btn-sm{height:32px;padding:0 12px;font-size:13px}
+  .btn-lg{height:48px;padding:0 20px;font-size:15px}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-hover)}
+  .btn-primary:active{background:var(--accent-active)}
+  .btn-secondary{background:var(--bg-surface);color:var(--text-1);border-color:var(--border-strong)}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-ghost{background:transparent;color:var(--text-2);border-color:transparent}
+  .btn-ghost:hover{background:var(--accent-soft);color:var(--accent)}
+  .btn-danger{background:var(--st-reject-b);color:var(--st-reject-t)}
+  .btn-disabled,.btn:disabled{background:var(--n200);color:var(--n400);cursor:not-allowed}
+  :root[data-theme="dark"] .btn-disabled,:root:not([data-theme="light"]) .btn-disabled{background:var(--border);color:var(--text-3)}
+
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;font-weight:600;color:var(--text-2)}
+  .input{height:40px;border-radius:var(--r-sm);border:1px solid var(--border-strong);background:var(--bg-surface);color:var(--text-1);padding:0 12px;font-size:14px;width:100%;font-family:inherit}
+  .input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+  .input-error{border-color:var(--st-reject-t)}
+  .helper-error{font-size:12px;color:var(--st-reject-t)}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:var(--r-full);font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+  .badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .b-draft{color:var(--st-draft-t);background:var(--st-draft-b)}
+  .b-proses{color:var(--st-proses-t);background:var(--st-proses-b)}
+  .b-pending{color:var(--st-pending-t);background:var(--st-pending-b)}
+  .b-approved{color:var(--st-approved-t);background:var(--st-approved-b)}
+  .b-reject{color:var(--st-reject-t);background:var(--st-reject-b)}
+  .b-overdue{color:var(--st-overdue-t);background:var(--st-overdue-b)}
+  .b-breach{color:var(--st-breach-t);background:var(--st-breach-b)}
+
+  .kpi{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--e1);padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+  .kpi-label{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.03em}
+  .kpi-value{font-family:var(--font-d);font-size:30px;line-height:36px;font-weight:700;font-variant-numeric:tabular-nums}
+  .kpi-delta{font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
+  .kpi-up{color:var(--st-approved-t)}
+  .kpi-down{color:var(--st-reject-t)}
+  .kpi-delta svg{width:12px;height:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl-wrap{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-surface)}
+  .tbl-scroll{overflow-x:auto}
+  thead th{position:sticky;top:0;background:var(--n50);color:var(--text-2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+  :root[data-theme="dark"] thead th,:root:not([data-theme="light"]) thead th{background:#182236}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text-1);white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:var(--n50)}
+  :root[data-theme="dark"] tbody tr:hover td,:root:not([data-theme="light"]) tbody tr:hover td{background:#182236}
+  .muted{color:var(--text-2)}
+  .mono{font-family:var(--font-m);font-size:12.5px}
+  td.num,th.num{text-align:right}
+
+  .swatch{border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)}
+  .swatch-color{height:56px}
+  .swatch-label{padding:8px 10px;background:var(--bg-surface);font-size:11px}
+  .swatch-label b{display:block;font-size:12px;font-family:var(--font-m)}
+
+  .type-row{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px dashed var(--border)}
+  .type-row:last-child{border-bottom:none}
+  .type-tag{flex:0 0 130px;font-size:11px;color:var(--text-3);font-family:var(--font-m)}
+
+  /* ============ ADMIN MOCKUP ============ */
+  .picker-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .picker-row label{font-size:13px;font-weight:600;color:var(--text-2)}
+  select.input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7686' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:34px;max-width:320px}
+
+  .device{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--e3);border:1px solid var(--border);background:var(--bg-surface)}
+  .device-chrome{height:34px;background:var(--n100);display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid var(--border)}
+  :root[data-theme="dark"] .device-chrome,:root:not([data-theme="light"]) .device-chrome{background:#182236}
+  .device-chrome i{width:9px;height:9px;border-radius:50%;background:var(--n300)}
+  .device-body{display:flex;height:clamp(540px,78vh,720px)}
+  .admin-sidebar{width:250px;flex:0 0 250px;background:var(--sidebar-bg);color:var(--sidebar-text);overflow-y:auto;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+  @media(max-width:760px){.admin-sidebar{width:72px;flex-basis:72px;padding:14px 8px}}
+  .sb-tenant{display:flex;align-items:center;gap:8px;padding:6px 8px 16px;color:#fff}
+  .sb-tenant-mark{width:26px;height:26px;border-radius:6px;background:var(--p600);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .sb-tenant-mark svg{width:14px;height:14px}
+  .sb-tenant-text{font-size:12px;font-weight:700;line-height:14px}
+  .sb-tenant-text span{display:block;font-weight:500;color:var(--sidebar-text);font-size:10px}
+  @media(max-width:760px){.sb-tenant-text{display:none}}
+  .sb-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(191,227,228,.55);padding:12px 10px 4px}
+  @media(max-width:760px){.sb-group-label{display:none}}
+  .sb-item{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--sidebar-text);position:relative;white-space:nowrap;overflow:hidden}
+  .sb-item svg{width:16px;height:16px;flex:0 0 auto}
+  .sb-item span{overflow:hidden;text-overflow:ellipsis}
+  @media(max-width:760px){.sb-item span{display:none}.sb-item{justify-content:center}}
+  .sb-item:hover{background:rgba(255,255,255,.06);color:#fff}
+  .sb-item.on{background:var(--sidebar-active);color:var(--sidebar-text-active);font-weight:600}
+  .sb-item.on::before{content:"";position:absolute;left:-10px;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--sidebar-accent)}
+
+  .admin-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg-app)}
+  .admin-topbar{height:56px;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border);background:var(--bg-surface)}
+  .tb-search{flex:1;max-width:360px;display:flex;align-items:center;gap:8px;height:34px;border-radius:var(--r-full);border:1px solid var(--border-strong);padding:0 12px;color:var(--text-3);font-size:13px}
+  .tb-search svg{width:14px;height:14px;flex:0 0 auto}
+  .tb-search kbd{margin-left:auto;font-family:var(--font-m);font-size:10px;background:var(--n100);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text-2)}
+  :root[data-theme="dark"] .tb-search kbd,:root:not([data-theme="light"]) .tb-search kbd{background:#1B2436}
+  .tb-spacer{flex:1}
+  .tb-icon{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text-2);position:relative;flex:0 0 auto}
+  .tb-icon svg{width:17px;height:17px}
+  .tb-icon:hover{background:var(--n100)}
+  :root[data-theme="dark"] .tb-icon:hover,:root:not([data-theme="light"]) .tb-icon:hover{background:#1B2436}
+  .tb-icon .ping{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--st-breach-t);border:1.5px solid var(--bg-surface)}
+  .tb-user{display:flex;align-items:center;gap:8px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,var(--p400),var(--p700));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex:0 0 auto}
+  .tb-user-text{font-size:12px;line-height:14px}
+  .tb-user-text b{display:block;font-size:13px}
+  @media(max-width:640px){.tb-user-text,.tb-search{display:none}}
+
+  .admin-content{flex:1;overflow-y:auto;padding:20px}
+  .breadcrumb{font-size:12px;color:var(--text-3);margin-bottom:6px}
+  .breadcrumb b{color:var(--text-2)}
+  .content-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .content-head h3{font-size:20px;line-height:28px}
+  .content-actions{display:flex;gap:8px}
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:var(--r-full);border:1px solid var(--border-strong);font-size:12px;color:var(--text-2);background:var(--bg-surface)}
+  .chip svg{width:12px;height:12px}
+
+  /* ============ CHARTS ============ */
+  .chart-card h4{font-size:15px;margin-bottom:2px}
+  .chart-sub{font-size:12px;color:var(--text-3);margin-bottom:14px}
+  svg.chart text{font-family:var(--font-b);fill:var(--text-2)}
+  svg.chart .val{font-weight:700;fill:var(--text-1)}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;color:var(--text-2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  /* ============ MOBILE PHONES ============ */
+  .phone-row{display:flex;gap:22px;overflow-x:auto;padding:6px 2px 18px}
+  .phone{flex:0 0 300px;width:300px;height:616px;border-radius:34px;background:var(--n900);padding:9px;box-shadow:var(--e3)}
+  .phone-screen{width:100%;height:100%;border-radius:26px;background:var(--bg-app);overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .phone-status{height:26px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:10px;font-weight:600;color:var(--text-1);font-variant-numeric:tabular-nums}
+  .phone-caption{text-align:center;font-size:12px;font-weight:600;color:var(--text-2);margin-top:10px}
+  .phone-topbar{padding:6px 16px 12px;flex:0 0 auto}
+  .phone-body{flex:1;overflow-y:auto;padding:0 16px 16px}
+  .phone-tabbar{flex:0 0 auto;height:54px;display:flex;border-top:1px solid var(--border);background:var(--bg-surface)}
+  .pt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--text-3);font-weight:600}
+  .pt-item svg{width:16px;height:16px}
+  .pt-item.on{color:var(--accent)}
+  .greet-card{background:linear-gradient(135deg,var(--p600),var(--p800));border-radius:16px;padding:16px;color:#fff;margin-bottom:14px}
+  .greet-card .who{font-size:15px;font-weight:700}
+  .greet-card .sub{font-size:11px;opacity:.8;margin-top:2px}
+  .attend-row{display:flex;gap:8px;margin-top:14px}
+  .attend-btn{flex:1;height:40px;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+  .attend-btn svg{width:14px;height:14px}
+  .attend-in{background:#fff;color:var(--p700)}
+  .attend-out{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3)}
+  .map-box{height:90px;border-radius:12px;margin-top:12px;background:
+    radial-gradient(circle at 30% 30%,var(--p300),transparent 55%),
+    radial-gradient(circle at 70% 60%,var(--p400),transparent 50%),var(--n200);
+    position:relative;overflow:hidden}
+  :root[data-theme="dark"] .map-box,:root:not([data-theme="light"]) .map-box{background:
+    radial-gradient(circle at 30% 30%,rgba(58,163,170,.5),transparent 55%),
+    radial-gradient(circle at 70% 60%,rgba(58,163,170,.35),transparent 50%),#1B2436}
+  .map-pin{position:absolute;left:48%;top:42%;width:14px;height:14px;border-radius:50% 50% 50% 0;background:var(--st-reject-t);transform:rotate(-45deg);box-shadow:0 0 0 4px rgba(220,38,38,.2)}
+  .quickstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .qs{background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center}
+  .qs b{display:block;font-size:16px;font-family:var(--font-d)}
+  .qs span{font-size:9px;color:var(--text-3);font-weight:600}
+  .section-title-sm{font-size:12px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.03em;margin:14px 0 8px}
+
+  .wo-card{background:var(--bg-surface);border:1px solid var(--border);border-left:3px solid var(--st-pending-t);border-radius:10px;padding:12px;margin-bottom:10px}
+  .wo-card.p-high{border-left-color:var(--st-breach-t)}
+  .wo-card.p-med{border-left-color:var(--st-pending-t)}
+  .wo-card.p-low{border-left-color:var(--st-proses-t)}
+  .wo-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .wo-id{font-family:var(--font-m);font-size:10.5px;color:var(--text-3)}
+  .wo-title{font-size:13px;font-weight:700;margin-top:2px}
+  .wo-meta{font-size:11px;color:var(--text-2);margin-top:6px;display:flex;flex-direction:column;gap:3px}
+  .wo-meta span{display:flex;align-items:center;gap:5px}
+  .wo-meta svg{width:11px;height:11px;flex:0 0 auto}
+  .wo-btn{margin-top:10px;width:100%;height:32px;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;border:none}
+
+  .stepper{display:flex;align-items:center;margin-bottom:14px}
+  .st-dot{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .st-dot svg{width:11px;height:11px}
+  .st-dot.todo{background:var(--n200);color:var(--n400)}
+  :root[data-theme="dark"] .st-dot.todo,:root:not([data-theme="light"]) .st-dot.todo{background:var(--border);color:var(--text-3)}
+  .st-line{flex:1;height:2px;background:var(--accent)}
+  .st-line.todo{background:var(--border)}
+
+  .chk-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+  .chk-item:last-child{border-bottom:none}
+  .chk-label{font-size:12.5px;display:flex;align-items:center;gap:8px}
+  .chk-label svg{width:14px;height:14px;color:var(--accent);flex:0 0 auto}
+  .chk-opts{display:flex;gap:4px}
+  .chk-opt{width:26px;height:22px;border-radius:6px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);color:var(--text-3)}
+  .chk-opt.pass{background:var(--st-approved-b);color:var(--st-approved-t);border-color:transparent}
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+  .photo-cell{aspect-ratio:1;border-radius:8px;background:linear-gradient(135deg,var(--p200),var(--p400));display:flex;align-items:center;justify-content:center;color:#fff}
+  .photo-cell svg{width:16px;height:16px}
+  .photo-cell.empty{background:var(--n100);border:1.5px dashed var(--border-strong);color:var(--text-3)}
+  :root[data-theme="dark"] .photo-cell.empty,:root:not([data-theme="light"]) .photo-cell.empty{background:#1B2436}
+
+  .sig-box{border:1.5px dashed var(--border-strong);border-radius:12px;height:110px;margin-top:8px;display:flex;align-items:center;justify-content:center;background:var(--bg-surface)}
+  .bast-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .bast-row b{color:var(--text-1);font-weight:600}
+
+  /* ============ MATRIX ============ */
+  .matrix-cell{text-align:center;font-family:var(--font-m);font-size:11px;font-weight:700}
+  .m-r{color:var(--st-proses-t)}
+  .m-w{color:var(--accent)}
+  .m-a{color:var(--st-approved-t)}
+  .m-dash{color:var(--text-3)}
+  .legend-row{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;color:var(--text-2)}
+  .legend-row b{font-family:var(--font-m)}
+
+  /* ============ REFERENCES ============ */
+  .ref-card{display:flex;flex-direction:column;gap:6px}
+  .ref-card .tag{font-size:10.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.03em}
+  .ref-card h4{font-size:14px}
+  .ref-card p{font-size:12.5px;color:var(--text-2);line-height:18px}
+  .ref-card a{font-size:12px;word-break:break-all}
+
+  footer.page-foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17.2" cy="9" r="2.3"/><path d="M15.4 14.6c2.3.4 3.8 2.3 3.8 5"/></symbol>
+<symbol id="i-handshake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.5l4-4.2 3.8 3 2.8-3 4 4.2-3 3.6-2.8-2-2.8 2.8-2.8-2-3.2-1.4z"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M2.5 3.5h2.2l2.3 11.2a2 2 0 0 0 2 1.6h7a2 2 0 0 0 2-1.6l1.5-7.7H5.6"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.2"/><path d="M3 10h18"/><circle cx="16.3" cy="14" r="1.2" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.4v9.2L12 21l-8-4.4V7.4z"/><path d="M4.3 7.6L12 12l7.7-4.4M12 12v9"/></symbol>
+<symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="12" height="9" rx="1.3"/><path d="M14 11h4l3.2 3.2V17H14z"/><circle cx="6.3" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.2a4 4 0 0 1-5.3 5.3L4 16.7l2.6 2.6 5.2-5.2a4 4 0 0 1 5.3-5.3l-2.9 2.9-2-2z"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l-6.5 2.2v14L9 18l6 2.2 6.5-2.2v-14L15 6.2 9 4z"/><path d="M9 4v14M15 6.2v14"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4 4l2.1 2.1M17.9 17.9L20 20M2.5 12h3M18.5 12h3M4 20l2.1-2.1M17.9 6.1L20 4"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.2" cy="10.2" r="6.5"/><path d="M19.5 19.5l-4.8-4.8"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0V14l2 3.5H4L6 14z"/><path d="M9.7 20.5a2.3 2.3 0 0 0 4.6 0"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.8A8.6 8.6 0 1 1 9.2 3.5a7.1 7.1 0 0 0 11.3 11.3z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M4 4l1.6 1.6M18.4 18.4L20 20M2.5 12h2.3M19.2 12h2.3M4 20l1.6-1.6M18.4 5.6L20 4"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.8" width="19" height="13" rx="2.2"/><path d="M8 6.8l1.4-2.3h5.2L16 6.8"/><circle cx="12" cy="13.2" r="3.6"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L18 9l-3-3L5 16l-1 4z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.2V12l3.4 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2L2.2 20h19.6z"/><path d="M12 9.6V14M12 17.2h.01"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11.8A7 7 0 0 0 5 9.2C5 14.6 12 21 12 21z"/><circle cx="12" cy="9.3" r="2.4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h8.5L19 7v14.5H6z"/><path d="M14 2.5V7h5"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.5L12 4l8.5 7.5"/><path d="M5.5 10v9.5h13V10"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-user-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6 19c1.2-2.8 3.4-4 6-4s4.8 1.2 6 4"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7.5v5.5l-4 2v-7.5z"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M4 19h16"/></symbol>
+</svg>
+
+<!-- ============ MASTHEAD ============ -->
+<div class="masthead">
+  <div class="brand">
+    <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#EAF6F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg></div>
+    <div>
+      <div class="brand-name">NUSAKARYA</div>
+      <div class="brand-sub">Prototipe UI/UX · untuk tinjauan Komisaris</div>
+    </div>
+  </div>
+  <button class="theme-btn" id="themeBtn" type="button"><svg><use href="#i-moon"/></svg><span id="themeLabel">Mode Gelap</span></button>
+</div>
+
+<nav class="tabbar" id="tabbar" role="tablist" aria-label="Bagian prototipe">
+  <button class="tab" data-tab="ringkasan" role="tab" aria-selected="true">1. Ringkasan</button>
+  <button class="tab" data-tab="admin" role="tab" aria-selected="false">2. Web Panel Admin</button>
+  <button class="tab" data-tab="dashboard" role="tab" aria-selected="false">3. Dashboard per Unit</button>
+  <button class="tab" data-tab="mobile" role="tab" aria-selected="false">4. Mobile Teknisi</button>
+  <button class="tab" data-tab="matrix" role="tab" aria-selected="false">5. Matriks Hak Akses</button>
+  <button class="tab" data-tab="referensi" role="tab" aria-selected="false">6. Referensi</button>
+</nav>
+
+<!-- ============ 1. RINGKASAN ============ -->
+<section class="section active" id="sec-ringkasan">
+  <div class="section-head">
+    <div class="eyebrow">Ringkasan Produk</div>
+    <h2>NUSAKARYA — Operational Control &amp; Supervision Tools</h2>
+    <p class="section-desc">Aplikasi kontrol operasional multi-tenant untuk kontraktor Fiber Optic dan penyedia Manage Service — mitra Telkom Akses. Menyatukan unit Human Resource, Commerce, Procurement, Finance, Operations, dan Design &amp; Deployment dalam satu sistem, dengan tampilan yang menyesuaikan fungsi tiap jabatan.</p>
+  </div>
+
+  <div class="grid g3" style="margin-bottom:28px">
+    <div class="card">
+      <svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-grid"/></svg>
+      <h3 style="margin-top:10px;font-size:16px">Web Panel Admin</h3>
+      <p class="muted" style="margin-top:6px;font-size:13px;line-height:19px">Panel kerja utama berbasis desktop untuk seluruh unit — data karyawan, procurement, inventory, tiket, hingga proyek deployment. Sidebar tergroup per unit, tabel data-heavy, alur approval berjenjang.</p>
+    </div>
+    <div class="card">
+      <svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-user-circle"/></svg>
+      <h3 style="margin-top:10px;font-size:16px">Dashboard Report per Unit</h3>
+      <p class="muted" style="margin-top:6px;font-size:13px;line-height:19px">Ringkasan eksekutif untuk tiap unit (Operations, Finance, Deployment, dst) — KPI besar, tren, dan grafik siap dibaca dalam rapat, diakses oleh manajer dan direksi.</p>
+    </div>
+    <div class="card">
+      <svg style="width:22px;height:22px;color:var(--accent)"><use href="#i-wrench"/></svg>
+      <h3 style="margin-top:10px;font-size:16px">Mobile Apps Teknisi</h3>
+      <p class="muted" style="margin-top:6px;font-size:13px;line-height:19px">Aplikasi lapangan untuk teknisi — absensi, daftar tugas, checklist work order dengan foto evidence bergeotag, hingga tanda tangan BAST digital pelanggan.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:18px;margin-bottom:4px">Design System</h3>
+  <p class="section-desc" style="margin-bottom:18px">Bahasa visual bernama <b>Ocean Teal</b> — identitas independen NUSAKARYA (tidak memakai merah-putih Telkom), dipasangkan dengan aksen amber untuk aksi penting.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <h4 style="font-size:14px;margin-bottom:12px">Palet Primary — Ocean Teal</h4>
+    <div class="grid" style="grid-template-columns:repeat(10,1fr);gap:8px" id="palettePrimary"></div>
+  </div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card">
+      <h4 style="font-size:14px;margin-bottom:12px">Aksen Amber</h4>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:8px" id="paletteAccent"></div>
+    </div>
+    <div class="card">
+      <h4 style="font-size:14px;margin-bottom:12px">Status Semantik</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="paletteStatus"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h4 style="font-size:14px;margin-bottom:6px">Skala Tipografi</h4>
+    <p class="muted" style="font-size:12px;margin-bottom:6px">Display &amp; heading: <b>Plus Jakarta Sans</b> · Body/UI: <b>Inter</b> · Kode/serial: <b>JetBrains Mono</b></p>
+    <div class="type-row"><div class="type-tag">Display 32/40 · 700</div><div style="font-family:var(--font-d);font-size:32px;line-height:40px;font-weight:700">Rp 4.827.500.000</div></div>
+    <div class="type-row"><div class="type-tag">H1 28/36 · 700</div><div style="font-family:var(--font-d);font-size:28px;line-height:36px;font-weight:700">Dashboard Operations</div></div>
+    <div class="type-row"><div class="type-tag">H2 24/32 · 700</div><div style="font-family:var(--font-d);font-size:24px;line-height:32px;font-weight:700">Ringkasan Proyek Deployment</div></div>
+    <div class="type-row"><div class="type-tag">H3 20/28 · 600</div><div style="font-family:var(--font-d);font-size:20px;line-height:28px;font-weight:600">Purchase Order PO-2026-0142</div></div>
+    <div class="type-row"><div class="type-tag">Body 14/20 · 400</div><div style="font-size:14px;line-height:20px">Teknisi wajib mengunggah foto evidence sebelum menutup Work Order.</div></div>
+    <div class="type-row"><div class="type-tag">Caption 12/16</div><div style="font-size:12px;line-height:16px;color:var(--text-2)">Diperbarui 3 menit lalu oleh Andi Saputra</div></div>
+    <div class="type-row"><div class="type-tag">Overline 11 · uppercase</div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-2)">Status Tiket</div></div>
+  </div>
+
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card" style="text-align:center">
+      <div style="height:44px;background:var(--accent);border-radius:4px;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--text-2)">radius xs · 4px</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="height:44px;background:var(--accent);border-radius:6px;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--text-2)">radius sm · 6px</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="height:44px;background:var(--accent);border-radius:10px;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--text-2)">radius md · 10px</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="height:44px;background:var(--accent);border-radius:14px;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--text-2)">radius lg · 14px</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h4 style="font-size:14px;margin-bottom:14px">Komponen Dasar</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px">
+      <button class="btn btn-primary">Simpan Data</button>
+      <button class="btn btn-secondary">Batal</button>
+      <button class="btn btn-ghost">Lihat Detail</button>
+      <button class="btn btn-danger">Hapus</button>
+      <button class="btn btn-disabled" disabled>Tidak Aktif</button>
+      <button class="btn btn-primary btn-sm">Kecil</button>
+      <button class="btn btn-primary btn-lg">Besar (mobile)</button>
+    </div>
+    <div class="grid g3" style="margin-bottom:18px">
+      <div class="field"><label>Nama Karyawan</label><input class="input" value="Budi Santoso" readonly></div>
+      <div class="field"><label>Fokus (focus ring)</label><input class="input" placeholder="Klik untuk fokus" id="focusDemo"></div>
+      <div class="field"><label>Contoh Error</label><input class="input input-error" value="08xx-salah-format"><span class="helper-error">Format nomor telepon tidak valid</span></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+      <span class="badge b-draft"><i class="dot"></i>Draft</span>
+      <span class="badge b-proses"><i class="dot"></i>Diproses</span>
+      <span class="badge b-pending"><i class="dot"></i>Menunggu Approval</span>
+      <span class="badge b-approved"><i class="dot"></i>Disetujui</span>
+      <span class="badge b-reject"><i class="dot"></i>Ditolak</span>
+      <span class="badge b-overdue"><i class="dot"></i>Overdue</span>
+      <span class="badge b-breach"><i class="dot"></i>SLA Breach</span>
+    </div>
+    <div class="grid g3" style="margin-bottom:18px">
+      <div class="kpi">
+        <div class="kpi-label">Proyek Berjalan</div>
+        <div class="kpi-value fnum">18</div>
+        <div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+3 vs bulan lalu</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tiket SLA Breach</div>
+        <div class="kpi-value fnum">4</div>
+        <div class="kpi-delta kpi-down"><svg><use href="#i-alert"/></svg>+2 vs minggu lalu</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Revenue Bulan Ini</div>
+        <div class="kpi-value fnum">Rp 4,83 M</div>
+        <div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+8,4%</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Karyawan</th><th>Cabang</th><th>Jabatan</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Rudi Hartono</td><td>Batam</td><td>Supervisor Lapangan</td><td><span class="badge b-approved"><i class="dot"></i>Aktif</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. WEB PANEL ADMIN ============ -->
+<section class="section" id="sec-admin">
+  <div class="section-head">
+    <div class="eyebrow">Web Panel Admin</div>
+    <h2>Panel Kerja Multi-Unit</h2>
+    <p class="section-desc">Sidebar tergroup mengikuti struktur menu <code style="font-family:var(--font-m);font-size:12px">nav.ts</code>, topbar dengan pencarian cepat, dan area konten yang berganti sesuai layar yang dipilih. Sidebar otomatis menyusut ke mode ikon di layar sempit.</p>
+  </div>
+  <div class="picker-row">
+    <label for="screenPicker">Pilih layar contoh:</label>
+    <select class="input" id="screenPicker"></select>
+  </div>
+  <div class="device">
+    <div class="device-chrome"><i></i><i></i><i></i></div>
+    <div class="device-body">
+      <aside class="admin-sidebar" id="adminSidebar"></aside>
+      <div class="admin-main">
+        <div class="admin-topbar">
+          <div class="tb-search"><svg><use href="#i-search"/></svg><span>Cari data, menu, dokumen…</span><kbd>⌘K</kbd></div>
+          <div class="tb-spacer"></div>
+          <div class="tb-icon"><svg><use href="#i-bell"/></svg><span class="ping"></span></div>
+          <div class="tb-icon"><svg><use href="#i-settings"/></svg></div>
+          <div class="tb-user">
+            <div class="avatar">BS</div>
+            <div class="tb-user-text"><b>Budi Santoso</b><span class="muted">Admin · PT Nusantara Karya Telekomunikasi</span></div>
+          </div>
+        </div>
+        <div class="admin-content" id="adminContent"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. DASHBOARD PER UNIT ============ -->
+<section class="section" id="sec-dashboard">
+  <div class="section-head">
+    <div class="eyebrow">Dashboard Report per Unit</div>
+    <h2>Ringkasan Eksekutif per Unit</h2>
+    <p class="section-desc">Tiga contoh dashboard — Operations, Finance, dan Deployment. Seluruh grafik digambar sebagai SVG murni tanpa pustaka chart.</p>
+  </div>
+
+  <!-- OPERATIONS -->
+  <div style="margin-bottom:36px">
+    <h3 style="font-size:18px;margin-bottom:14px">Operations</h3>
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Tiket Open</div><div class="kpi-value fnum">27</div><div class="kpi-delta kpi-down"><svg><use href="#i-alert"/></svg>+5 vs kemarin</div></div>
+      <div class="kpi"><div class="kpi-label">SLA Compliance</div><div class="kpi-value fnum">92,4%</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+1,1%</div></div>
+      <div class="kpi"><div class="kpi-label">MTTR Rata-rata</div><div class="kpi-value fnum">3j 42m</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>-18 menit</div></div>
+      <div class="kpi"><div class="kpi-label">Teknisi Aktif</div><div class="kpi-value fnum">64</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+2</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card chart-card">
+        <h4>Distribusi Status Tiket</h4>
+        <div class="chart-sub">Total 214 tiket bulan berjalan</div>
+        <svg class="chart" viewBox="0 0 260 200" width="100%" height="200" id="donutChart"></svg>
+      </div>
+      <div class="card chart-card">
+        <h4>Aging Bucket Tiket Terbuka</h4>
+        <div class="chart-sub">Berdasarkan lama tiket belum tertutup</div>
+        <svg class="chart" viewBox="0 0 360 200" width="100%" height="200" id="agingChart1"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCE -->
+  <div style="margin-bottom:36px">
+    <h3 style="font-size:18px;margin-bottom:14px">Finance</h3>
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Piutang (AR)</div><div class="kpi-value fnum">Rp 6,42 M</div><div class="kpi-delta kpi-down"><svg><use href="#i-alert"/></svg>+Rp 420 jt</div></div>
+      <div class="kpi"><div class="kpi-label">Hutang Mitra (AP)</div><div class="kpi-value fnum">Rp 3,11 M</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>-Rp 180 jt</div></div>
+      <div class="kpi"><div class="kpi-label">Arus Kas Bersih</div><div class="kpi-value fnum">Rp 918 jt</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+12,6%</div></div>
+      <div class="kpi"><div class="kpi-label">Margin Proyek</div><div class="kpi-value fnum">21,8%</div><div class="kpi-delta kpi-down"><svg><use href="#i-alert"/></svg>-1,4%</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card chart-card">
+        <h4>Piutang per Cabang</h4>
+        <div class="chart-sub">Nilai piutang berjalan, dalam Rp juta</div>
+        <svg class="chart" viewBox="0 0 360 210" width="100%" height="210" id="barChart"></svg>
+      </div>
+      <div class="card chart-card">
+        <h4>Aging Piutang (AR)</h4>
+        <div class="chart-sub">Sebaran umur piutang pelanggan</div>
+        <svg class="chart" viewBox="0 0 360 200" width="100%" height="200" id="agingChart2"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPLOYMENT -->
+  <div>
+    <h3 style="font-size:18px;margin-bottom:14px">Design &amp; Deployment</h3>
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Proyek Aktif</div><div class="kpi-value fnum">18</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+3</div></div>
+      <div class="kpi"><div class="kpi-label">Progres Rata-rata</div><div class="kpi-value fnum">64,2%</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+4,8%</div></div>
+      <div class="kpi"><div class="kpi-label">Realisasi BoQ</div><div class="kpi-value fnum">71,0%</div><div class="kpi-delta kpi-up"><svg><use href="#i-check"/></svg>+2,2%</div></div>
+      <div class="kpi"><div class="kpi-label">RFS Bulan Ini</div><div class="kpi-value fnum">6 site</div><div class="kpi-delta kpi-down"><svg><use href="#i-alert"/></svg>-2 vs target</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card chart-card">
+        <h4>Kurva S — Plan vs Actual</h4>
+        <div class="chart-sub">Proyek FTTH Cluster Batam Center</div>
+        <svg class="chart" viewBox="0 0 360 210" width="100%" height="210" id="sCurveChart"></svg>
+      </div>
+      <div class="card chart-card">
+        <h4>Progres Proyek per Cabang</h4>
+        <div class="chart-sub">Rata-rata capaian terhadap rencana, %</div>
+        <svg class="chart" viewBox="0 0 360 210" width="100%" height="210" id="barChart2"></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. MOBILE TEKNISI ============ -->
+<section class="section" id="sec-mobile">
+  <div class="section-head">
+    <div class="eyebrow">Mobile Apps Teknisi</div>
+    <h2>Alur Kerja Teknisi Lapangan</h2>
+    <p class="section-desc">Empat layar inti: beranda &amp; absensi, daftar tugas, detail work order dengan checklist &amp; foto evidence, dan tanda tangan BAST pelanggan. Geser ke samping untuk melihat seluruh alur.</p>
+  </div>
+  <div class="phone-row">
+
+    <!-- PHONE 1: BERANDA -->
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"><span>09:24</span><span>NUSAKARYA Teknisi</span></div>
+          <div class="phone-body">
+            <div class="greet-card">
+              <div class="who">Selamat Pagi, Andi Saputra</div>
+              <div class="sub">Teknisi Lapangan · Area Pekanbaru</div>
+              <div class="attend-row">
+                <button class="attend-btn attend-in"><svg style="color:var(--p700)"><use href="#i-check"/></svg>Absen Masuk</button>
+                <button class="attend-btn attend-out"><svg><use href="#i-clock"/></svg>Absen Keluar</button>
+              </div>
+              <div class="map-box"><div class="map-pin"></div></div>
+              <div style="font-size:10px;opacity:.85;margin-top:8px">Lokasi terverifikasi · radius 42m dari kantor cabang</div>
+            </div>
+            <div class="quickstats">
+              <div class="qs"><b>5</b><span>TUGAS HARI INI</span></div>
+              <div class="qs"><b>2</b><span>SELESAI</span></div>
+              <div class="qs"><b>96%</b><span>SLA TERPENUHI</span></div>
+            </div>
+            <div class="section-title-sm">Tugas Prioritas</div>
+            <div class="wo-card p-high">
+              <div class="wo-top"><span class="wo-id">WO-2026-08841</span><span class="badge b-breach">Prioritas Tinggi</span></div>
+              <div class="wo-title">Gangguan Total — PT Bank Riau Kepri</div>
+              <div class="wo-meta"><span><svg><use href="#i-pin"/></svg>Jl. Sudirman No. 45, Pekanbaru</span><span><svg><use href="#i-clock"/></svg>SLA tersisa 1j 48m</span></div>
+            </div>
+          </div>
+          <div class="phone-tabbar">
+            <div class="pt-item on"><svg><use href="#i-home"/></svg>Beranda</div>
+            <div class="pt-item"><svg><use href="#i-list"/></svg>Tugas</div>
+            <div class="pt-item"><svg><use href="#i-camera"/></svg>Evidence</div>
+            <div class="pt-item"><svg><use href="#i-user-circle"/></svg>Akun</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption">1. Beranda + Absensi</div>
+    </div>
+
+    <!-- PHONE 2: DAFTAR TUGAS -->
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"><span>09:26</span><span>Daftar Tugas</span></div>
+          <div class="phone-topbar">
+            <h4 style="font-size:16px">Tugas Saya</h4>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <span class="chip" style="background:var(--accent);color:#fff;border-color:var(--accent)">Semua (5)</span>
+              <span class="chip">Belum Mulai</span>
+              <span class="chip">Berjalan</span>
+            </div>
+          </div>
+          <div class="phone-body">
+            <div class="wo-card p-high">
+              <div class="wo-top"><span class="wo-id">WO-2026-08841</span><span class="badge b-breach">SLA 1j 48m</span></div>
+              <div class="wo-title">Gangguan Total — PT Bank Riau Kepri</div>
+              <div class="wo-meta"><span><svg><use href="#i-pin"/></svg>Pekanbaru · 4,2 km</span></div>
+              <button class="wo-btn">Mulai Perjalanan</button>
+            </div>
+            <div class="wo-card p-med">
+              <div class="wo-top"><span class="wo-id">WO-2026-08839</span><span class="badge b-pending">Menunggu</span></div>
+              <div class="wo-title">Instalasi Baru — Toko Sumber Optik Jaya</div>
+              <div class="wo-meta"><span><svg><use href="#i-pin"/></svg>Dumai · 38 km</span></div>
+              <button class="wo-btn">Mulai Perjalanan</button>
+            </div>
+            <div class="wo-card p-low">
+              <div class="wo-top"><span class="wo-id">WO-2026-08822</span><span class="badge b-proses">On Site</span></div>
+              <div class="wo-title">Maintenance Berkala ODP-114</div>
+              <div class="wo-meta"><span><svg><use href="#i-pin"/></svg>Pekanbaru · 1,1 km</span></div>
+              <button class="wo-btn">Lanjutkan</button>
+            </div>
+            <div class="wo-card" style="border-left-color:var(--st-draft-t)">
+              <div class="wo-top"><span class="wo-id">WO-2026-08810</span><span class="badge b-approved">Selesai</span></div>
+              <div class="wo-title">Perbaikan Redaman Tinggi — CV Karya Mandiri</div>
+              <div class="wo-meta"><span><svg><use href="#i-pin"/></svg>Pekanbaru · dilaporkan 08:12</span></div>
+            </div>
+          </div>
+          <div class="phone-tabbar">
+            <div class="pt-item"><svg><use href="#i-home"/></svg>Beranda</div>
+            <div class="pt-item on"><svg><use href="#i-list"/></svg>Tugas</div>
+            <div class="pt-item"><svg><use href="#i-camera"/></svg>Evidence</div>
+            <div class="pt-item"><svg><use href="#i-user-circle"/></svg>Akun</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption">2. Daftar Tugas</div>
+    </div>
+
+    <!-- PHONE 3: DETAIL WORK ORDER -->
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"><span>10:05</span><span>Detail Tugas</span></div>
+          <div class="phone-topbar">
+            <h4 style="font-size:15px">WO-2026-08841</h4>
+            <div class="stepper" style="margin-top:10px">
+              <div class="st-dot"><svg><use href="#i-check"/></svg></div><div class="st-line"></div>
+              <div class="st-dot"><svg><use href="#i-check"/></svg></div><div class="st-line"></div>
+              <div class="st-dot"><svg><use href="#i-wrench"/></svg></div><div class="st-line todo"></div>
+              <div class="st-dot todo">4</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:8.5px;color:var(--text-3);margin-top:-4px">
+              <span>Assigned</span><span>On Site</span><span style="color:var(--accent);font-weight:700">In Progress</span><span>Selesai</span>
+            </div>
+          </div>
+          <div class="phone-body">
+            <div class="section-title-sm" style="margin-top:4px">Checklist Perbaikan</div>
+            <div class="chk-item"><span class="chk-label"><svg><use href="#i-check"/></svg>Cek redaman core ODP</span><div class="chk-opts"><div class="chk-opt pass">P</div><div class="chk-opt">F</div><div class="chk-opt">NA</div></div></div>
+            <div class="chk-item"><span class="chk-label"><svg><use href="#i-check"/></svg>Ganti konektor SC/UPC</span><div class="chk-opts"><div class="chk-opt pass">P</div><div class="chk-opt">F</div><div class="chk-opt">NA</div></div></div>
+            <div class="chk-item"><span class="chk-label"><svg><use href="#i-check"/></svg>Uji ulang sinyal ONT</span><div class="chk-opts"><div class="chk-opt">P</div><div class="chk-opt">F</div><div class="chk-opt">NA</div></div></div>
+            <div class="section-title-sm">Foto Evidence</div>
+            <div class="photo-grid">
+              <div class="photo-cell"><svg><use href="#i-camera"/></svg></div>
+              <div class="photo-cell"><svg><use href="#i-camera"/></svg></div>
+              <div class="photo-cell empty"><svg><use href="#i-plus"/></svg></div>
+            </div>
+            <div style="font-size:9.5px;color:var(--text-3);margin-top:6px">Geotag otomatis: -0.5071, 101.4478 · 10:04 WIB</div>
+            <button class="wo-btn" style="margin-top:14px">Tandai Selesai &amp; Lanjut BAST</button>
+          </div>
+          <div class="phone-tabbar">
+            <div class="pt-item"><svg><use href="#i-home"/></svg>Beranda</div>
+            <div class="pt-item"><svg><use href="#i-list"/></svg>Tugas</div>
+            <div class="pt-item on"><svg><use href="#i-camera"/></svg>Evidence</div>
+            <div class="pt-item"><svg><use href="#i-user-circle"/></svg>Akun</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption">3. Checklist &amp; Foto Evidence</div>
+    </div>
+
+    <!-- PHONE 4: BAST -->
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"><span>10:22</span><span>BAST Digital</span></div>
+          <div class="phone-topbar"><h4 style="font-size:16px">Serah Terima Pekerjaan</h4></div>
+          <div class="phone-body">
+            <div class="bast-row"><span class="muted">No. Work Order</span><b class="mono">WO-2026-08841</b></div>
+            <div class="bast-row"><span class="muted">Pelanggan</span><b>PT Bank Riau Kepri</b></div>
+            <div class="bast-row"><span class="muted">Teknisi</span><b>Andi Saputra</b></div>
+            <div class="bast-row"><span class="muted">Waktu Selesai</span><b>10 Sep 2026, 10:20 WIB</b></div>
+            <div class="section-title-sm">Tanda Tangan Pelanggan</div>
+            <div class="sig-box">
+              <svg width="86%" height="70%" viewBox="0 0 220 70"><path d="M8 45 Q22 12 36 42 T64 40 Q74 18 84 40 T112 38 Q124 55 138 30 Q150 12 160 38 T196 34" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </div>
+            <div style="font-size:11px;font-weight:600;text-align:center;margin-top:6px">Siti Nurhaliza — Person In Charge</div>
+            <div class="section-title-sm">Tanda Tangan Teknisi</div>
+            <div class="sig-box" style="height:80px">
+              <svg width="86%" height="70%" viewBox="0 0 220 60"><path d="M10 30 Q30 5 45 32 Q55 48 70 20 Q85 2 100 30 Q115 50 135 18 Q150 4 165 30 T205 26" fill="none" stroke="var(--p700)" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </div>
+            <button class="wo-btn" style="margin-top:14px;height:44px"><svg style="width:13px;height:13px;margin-right:4px"><use href="#i-pen"/></svg>Kirim BAST &amp; Tutup Tiket</button>
+          </div>
+          <div class="phone-tabbar">
+            <div class="pt-item"><svg><use href="#i-home"/></svg>Beranda</div>
+            <div class="pt-item"><svg><use href="#i-list"/></svg>Tugas</div>
+            <div class="pt-item"><svg><use href="#i-camera"/></svg>Evidence</div>
+            <div class="pt-item on"><svg><use href="#i-user-circle"/></svg>Akun</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption">4. Tanda Tangan BAST</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ 5. MATRIKS HAK AKSES ============ -->
+<section class="section" id="sec-matrix">
+  <div class="section-head">
+    <div class="eyebrow">Matriks Hak Akses</div>
+    <h2>Hak Akses Jabatan × Modul</h2>
+    <p class="section-desc">Tampilan panel admin menyesuaikan jabatan pengguna — menu dan aksi yang tidak diizinkan tersembunyi otomatis, bukan sekadar dinonaktifkan.</p>
+  </div>
+  <div class="legend-row">
+    <span><b class="m-r">R</b> = Baca</span>
+    <span><b class="m-w">W</b> = Tulis / Kelola</span>
+    <span><b class="m-a">A</b> = Setujui</span>
+    <span><b class="m-dash">—</b> = Tidak dapat diakses</span>
+  </div>
+  <div class="tbl-wrap tbl-scroll">
+    <table id="matrixTable"></table>
+  </div>
+</section>
+
+<!-- ============ 6. REFERENSI ============ -->
+<section class="section" id="sec-referensi">
+  <div class="section-head">
+    <div class="eyebrow">Referensi Desain</div>
+    <h2>Kit Figma Acuan</h2>
+    <p class="section-desc">Kit komunitas Figma yang menjadi acuan pola, bukan ditiru langsung — dipadukan dengan design system NUSAKARYA sendiri.</p>
+  </div>
+  <div class="grid g3" id="refGrid"></div>
+</section>
+
+<footer class="page-foot">
+  <span>Prototipe statis — tanpa backend, data contoh untuk ilustrasi.</span>
+  <span>NUSAKARYA · Operational Control &amp; Supervision Tools · 2026</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- THEME ---------- */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeBtn');
+  var themeLabel = document.getElementById('themeLabel');
+  function applyThemeIcon(){
+    var t = root.dataset.theme;
+    var isDark = t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    themeBtn.querySelector('use').setAttribute('href', isDark ? '#i-sun' : '#i-moon');
+    themeLabel.textContent = isDark ? 'Mode Terang' : 'Mode Gelap';
+  }
+  themeBtn.addEventListener('click', function(){
+    var isDark = root.dataset.theme === 'dark' || (!root.dataset.theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    root.dataset.theme = isDark ? 'light' : 'dark';
+    try{ localStorage.setItem('nusakarya-theme', root.dataset.theme); }catch(e){}
+    applyThemeIcon();
+  });
+  try{
+    var saved = localStorage.getItem('nusakarya-theme');
+    if(saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+  }catch(e){}
+  applyThemeIcon();
+
+  /* ---------- TABS ---------- */
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabs.forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      btn.setAttribute('aria-selected','true');
+      document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+      document.getElementById('sec-' + btn.dataset.tab).classList.add('active');
+      window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+    });
+  });
+
+  /* ---------- PALETTES (SECTION 1) ---------- */
+  var primary = [['50','#EAF6F6'],['100','#CFEBEC'],['200','#9FD6D9'],['300','#66BDC2'],['400','#3AA3AA'],['500','#1B8A92'],['600','#106E77'],['700','#0B535C'],['800','#073A42'],['900','#04262C']];
+  var accent = [['400','#FBBF24'],['500','#F5A524'],['600','#D97706']];
+  var statuses = [
+    ['Draft','#F1F5F9','#64748B'],['Diproses','#DBEAFE','#2563EB'],['Menunggu','#FEF3C7','#D97706'],
+    ['Disetujui','#DCFCE7','#16A34A'],['Ditolak','#FEE2E2','#DC2626'],['Overdue','#FFEDD5','#EA580C'],['SLA Breach','#FFE4E6','#E11D48']
+  ];
+  function textColorFor(hex){
+    var r=parseInt(hex.substr(1,2),16), g=parseInt(hex.substr(3,2),16), b=parseInt(hex.substr(5,2),16);
+    var yiq=(r*299+g*587+b*114)/1000;
+    return yiq>=150 ? '#131B2C' : '#FFFFFF';
+  }
+  document.getElementById('palettePrimary').innerHTML = primary.map(function(c){
+    return '<div class="swatch"><div class="swatch-color" style="background:'+c[1]+';display:flex;align-items:flex-end;padding:6px;color:'+textColorFor(c[1])+';font-size:10px;font-weight:700">'+c[0]+'</div><div class="swatch-label">Primary<b>'+c[1]+'</b></div></div>';
+  }).join('');
+  document.getElementById('paletteAccent').innerHTML = accent.map(function(c){
+    return '<div class="swatch"><div class="swatch-color" style="background:'+c[1]+';display:flex;align-items:flex-end;padding:6px;color:'+textColorFor(c[1])+';font-size:10px;font-weight:700">'+c[0]+'</div><div class="swatch-label">Amber<b>'+c[1]+'</b></div></div>';
+  }).join('');
+  document.getElementById('paletteStatus').innerHTML = statuses.map(function(s){
+    return '<span class="badge" style="background:'+s[1]+';color:'+s[2]+';height:auto;padding:6px 10px;flex-direction:column;align-items:flex-start;gap:2px;border-radius:8px"><b style="font-family:var(--font-m);font-size:10px;font-weight:700">'+s[0]+'</b><span style="font-family:var(--font-m);font-size:9.5px;opacity:.85">'+s[2]+'</span></span>';
+  }).join('');
+
+  /* ---------- NAV DATA (mirrors apps/web-admin/src/lib/nav.ts) ---------- */
+  var NAV = [
+    { key:'exec', label:'Eksekutif', icon:'i-grid', items:[
+      {label:'Ringkasan Perusahaan'},{label:'Portal Eksekutif'}]},
+    { key:'hr', label:'Human Resource', icon:'i-users', items:[
+      {label:'Dashboard HR'},{label:'Data Karyawan'},{label:'Kontrak & Sertifikasi'},{label:'Absensi Lapangan'},
+      {label:'Roster & Shift'},{label:'Cuti & Izin'},{label:'Komponen Gaji'},{label:'Payroll & Slip Gaji'},{label:'Produktivitas Teknisi'}]},
+    { key:'commerce', label:'Commerce', icon:'i-handshake', items:[
+      {label:'Dashboard Commerce'},{label:'Pelanggan & Principal'},{label:'Kontrak'},{label:'Price List Kontrak'},
+      {label:'SPK'},{label:'Klaim Progres / BA'},{label:'BAST'},{label:'Invoice Pelanggan (AR)'},{label:'Penalti SLA'}]},
+    { key:'procurement', label:'Procurement', icon:'i-cart', items:[
+      {label:'Dashboard Procurement'},{label:'Vendor'},{label:'Katalog Item'},{label:'Purchase Request'},
+      {label:'RFQ & Penawaran'},{label:'Purchase Order'},{label:'Good Receive'},{label:'Invoice Vendor (3-way)'},{label:'Vendor Scorecard'}]},
+    { key:'finance', label:'Finance', icon:'i-wallet', items:[
+      {label:'Dashboard Finance'},{label:'Hutang & Bayar Mitra (AP)'},{label:'Piutang (AR)'},{label:'Job Costing & Margin'},
+      {label:'Anggaran'},{label:'Arus Kas'}]},
+    { key:'inventory', label:'Inventory', icon:'i-box', items:[
+      {label:'Dashboard Inventory'},{label:'Gudang'},{label:'Saldo Stok'},{label:'Inventory NTE (Serial)'},
+      {label:'Mutasi Stok'},{label:'Permintaan Material'},{label:'Pemakaian vs BoQ'},{label:'Stock Opname'}]},
+    { key:'asset', label:'Inventory Aset', icon:'i-truck', items:[
+      {label:'Daftar Aset'},{label:'Penugasan Aset'},{label:'Pemeliharaan Aset'}]},
+    { key:'ops', label:'Operations', icon:'i-wrench', items:[
+      {label:'Dashboard Operations'},{label:'Tiket Gangguan'},{label:'Papan Dispatch'},{label:'Work Order'},
+      {label:'Maintenance & Patroli'},{label:'Aset Jaringan'},{label:'RCA 4 Aspek'}]},
+    { key:'deploy', label:'Design & Deployment', icon:'i-map', items:[
+      {label:'Dashboard Deployment'},{label:'Proyek'},{label:'Survey'},{label:'DRM'},{label:'BoQ Plan vs Actual'},
+      {label:'Progres & Kurva S'},{label:'Quality Control'},{label:'Dokumen & ABD'},{label:'BAST & RFS'}]},
+    { key:'setting', label:'Pengaturan', icon:'i-settings', items:[
+      {label:'Pengguna'},{label:'Hak Akses Jabatan'},{label:'Cabang'},{label:'Profil Perusahaan'},{label:'Log Audit'}]}
+  ];
+
+  /* ---------- ADMIN SCREENS ---------- */
+  function money(n){ return 'Rp ' + n.toLocaleString('id-ID'); }
+
+  var SCREENS = {
+    exec_dashboard: { group:'exec', item:'Ringkasan Perusahaan', crumb:'Eksekutif / Ringkasan Perusahaan', title:'Dashboard Perusahaan',
+      render:function(){
+        return kpiRow([
+          ['Total Karyawan Aktif','342','+6 bulan ini','up'],
+          ['Proyek Berjalan','18','+3 vs bulan lalu','up'],
+          ['Revenue Bulan Ini','Rp 4,83 M','+8,4%','up'],
+          ['Tiket Open','27','+5 vs kemarin','down']
+        ]) + card('Aktivitas Terbaru', table(
+          ['Waktu','Unit','Aktivitas','Oleh'],
+          [
+            ['09:42','Procurement','PO-2026-0142 disetujui — Rp 84.200.000','Dewi Anggraini'],
+            ['09:15','Operations','Tiket TCK-2026-3391 dieskalasi ke Prioritas Tinggi','Sistem'],
+            ['08:57','Deployment','BAST proyek FTTH Cluster Dumai ditandatangani','Rudi Hartono'],
+            ['08:30','HR','3 pengajuan cuti baru menunggu persetujuan','Mega Wulandari']
+          ]
+        ));
+      }},
+    hr_karyawan: { group:'hr', item:'Data Karyawan', crumb:'Human Resource / Data Karyawan', title:'Data Karyawan',
+      render:function(){
+        return toolbar('342 karyawan', 'Tambah Karyawan') + tableWrap(
+          ['NIK','Nama','Jabatan','Cabang','Status Kontrak','Tgl Masuk',''],
+          [
+            ['NK-00231','Budi Santoso','Supervisor Lapangan','Batam','<span class="badge b-approved"><i class="dot"></i>Tetap</span>','12 Jan 2021','⋯'],
+            ['NK-00287','Siti Nurhaliza Rahman','Staff Procurement','Pekanbaru','<span class="badge b-approved"><i class="dot"></i>Tetap</span>','04 Mar 2022','⋯'],
+            ['NK-00312','Andi Saputra','Teknisi Fiber Optic','Pekanbaru','<span class="badge b-proses"><i class="dot"></i>Kontrak</span>','19 Jul 2023','⋯'],
+            ['NK-00340','Yeni Marlina','Admin Gudang','Dumai','<span class="badge b-proses"><i class="dot"></i>Kontrak</span>','02 Feb 2024','⋯'],
+            ['NK-00355','Rudi Hartono','Project Manager','Batam','<span class="badge b-approved"><i class="dot"></i>Tetap</span>','21 Sep 2020','⋯'],
+            ['NK-00368','Dewi Anggraini','Staff Finance','Padang','<span class="badge b-approved"><i class="dot"></i>Tetap</span>','15 May 2022','⋯'],
+            ['NK-00381','Fajar Ramadhan','Teknisi Fiber Optic','Bukittinggi','<span class="badge b-pending"><i class="dot"></i>Masa Percobaan</span>','03 Ags 2026','⋯'],
+            ['NK-00392','Nurul Huda','QC Deployment','Padang','<span class="badge b-approved"><i class="dot"></i>Tetap</span>','28 Jun 2021','⋯']
+          ]
+        );
+      }},
+    proc_po: { group:'procurement', item:'Purchase Order', crumb:'Procurement / Purchase Order', title:'Purchase Order',
+      render:function(){
+        return toolbar('56 PO bulan ini', 'Buat PO Baru') + tableWrap(
+          ['No. PO','Vendor','Tanggal','Total','Status',''],
+          [
+            ['PO-2026-0142','PT Sumber Optik Jaya','12 Sep 2026','Rp 84.200.000','<span class="badge b-pending"><i class="dot"></i>Menunggu Approval</span>','⋯'],
+            ['PO-2026-0141','PT Mitra Kabel Sejahtera','10 Sep 2026','Rp 212.750.000','<span class="badge b-approved"><i class="dot"></i>Disetujui</span>','⋯'],
+            ['PO-2026-0140','CV Anugerah Fiber Nusantara','08 Sep 2026','Rp 47.900.000','<span class="badge b-approved"><i class="dot"></i>Disetujui</span>','⋯'],
+            ['PO-2026-0139','PT Telaga Konektivitas Indonesia','05 Sep 2026','Rp 133.400.000','<span class="badge b-reject"><i class="dot"></i>Ditolak</span>','⋯'],
+            ['PO-2026-0138','PT Sumber Optik Jaya','02 Sep 2026','Rp 19.650.000','<span class="badge b-draft"><i class="dot"></i>Draft</span>','⋯'],
+            ['PO-2026-0137','PT Mitra Kabel Sejahtera','29 Ags 2026','Rp 96.000.000','<span class="badge b-approved"><i class="dot"></i>Disetujui</span>','⋯']
+          ], true
+        );
+      }},
+    inv_nte: { group:'inventory', item:'Inventory NTE (Serial)', crumb:'Inventory / Inventory NTE (Serial)', title:'Inventory NTE',
+      render:function(){
+        return toolbar('1.284 unit terdaftar', 'Scan Serial Baru') + tableWrap(
+          ['Serial Number','Tipe Perangkat','Gudang','Status','Penanggung Jawab',''],
+          [
+            ['<span class="mono">SN-ONT-88213456</span>','ONT ZTE F609','Gudang Batam','<span class="badge b-approved"><i class="dot"></i>Tersedia</span>','Yeni Marlina','⋯'],
+            ['<span class="mono">SN-ONT-88213498</span>','ONT Huawei HG8245H','Gudang Pekanbaru','<span class="badge b-proses"><i class="dot"></i>Terpasang</span>','Andi Saputra','⋯'],
+            ['<span class="mono">SN-ONT-88214021</span>','ONT ZTE F670L','Gudang Dumai','<span class="badge b-approved"><i class="dot"></i>Tersedia</span>','Fajar Ramadhan','⋯'],
+            ['<span class="mono">SN-ONU-88209911</span>','ONU FiberHome AN5506','Gudang Padang','<span class="badge b-reject"><i class="dot"></i>Rusak</span>','Nurul Huda','⋯'],
+            ['<span class="mono">SN-ONT-88214187</span>','ONT ZTE F609','Gudang Bukittinggi','<span class="badge b-proses"><i class="dot"></i>Terpasang</span>','Taufik Hidayat','⋯']
+          ]
+        );
+      }},
+    ops_tiket: { group:'ops', item:'Tiket Gangguan', crumb:'Operations / Tiket Gangguan', title:'Tiket Gangguan',
+      render:function(){
+        return toolbar('27 tiket open', 'Buat Tiket Manual') + tableWrap(
+          ['ID Tiket','Pelanggan','Lokasi','Prioritas','SLA','Status','Teknisi'],
+          [
+            ['<span class="mono">TCK-2026-3391</span>','PT Bank Riau Kepri','Pekanbaru','<span class="badge b-breach"><i class="dot"></i>Tinggi</span>','1j 48m tersisa','<span class="badge b-proses"><i class="dot"></i>In Progress</span>','Andi Saputra'],
+            ['<span class="mono">TCK-2026-3388</span>','Toko Sumber Optik Jaya','Dumai','<span class="badge b-pending"><i class="dot"></i>Sedang</span>','6j 10m tersisa','<span class="badge b-pending"><i class="dot"></i>Menunggu</span>','Fajar Ramadhan'],
+            ['<span class="mono">TCK-2026-3379</span>','CV Karya Mandiri','Pekanbaru','<span class="badge b-draft"><i class="dot"></i>Rendah</span>','1h 4j tersisa','<span class="badge b-approved"><i class="dot"></i>Resolved</span>','Andi Saputra'],
+            ['<span class="mono">TCK-2026-3372</span>','Koperasi Warga Bukittinggi','Bukittinggi','<span class="badge b-breach"><i class="dot"></i>Tinggi</span>','Lewat 22m','<span class="badge b-breach"><i class="dot"></i>SLA Breach</span>','Taufik Hidayat'],
+            ['<span class="mono">TCK-2026-3365</span>','Hotel Grand Padang','Padang','<span class="badge b-pending"><i class="dot"></i>Sedang</span>','3j 55m tersisa','<span class="badge b-proses"><i class="dot"></i>In Progress</span>','Nurul Huda']
+          ]
+        );
+      }},
+    deploy_proyek: { group:'deploy', item:'Proyek', crumb:'Design & Deployment / Proyek', title:'Proyek Deployment',
+      render:function(){
+        var rows = [
+          ['FTTH Cluster Batam Center','Batam','68','On Track','Rudi Hartono'],
+          ['FTTH Cluster Dumai Kota','Dumai','94','On Track','Fajar Ramadhan'],
+          ['Upgrade Backbone Pekanbaru','Pekanbaru','41','Perlu Perhatian','Andi Saputra'],
+          ['FTTH Cluster Bukittinggi','Bukittinggi','23','Terlambat','Taufik Hidayat'],
+          ['Relokasi ODC Padang Utara','Padang','77','On Track','Nurul Huda']
+        ];
+        var html = toolbar('18 proyek aktif', 'Buat Proyek Baru') + '<div class="grid g2">';
+        rows.forEach(function(r){
+          var badge = r[3]==='On Track' ? 'b-approved' : (r[3]==='Perlu Perhatian' ? 'b-pending' : 'b-reject');
+          html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+            '<div><h4 style="font-size:14px">'+r[0]+'</h4><div class="muted" style="font-size:12px;margin-top:2px">Cabang '+r[1]+' · PIC '+r[4]+'</div></div>'+
+            '<span class="badge '+badge+'"><i class="dot"></i>'+r[3]+'</span></div>'+
+            '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-2);margin-bottom:4px"><span>Progres</span><span class="fnum">'+r[2]+'%</span></div>'+
+            '<div style="height:8px;border-radius:5px;background:var(--n200);overflow:hidden"><div style="height:100%;width:'+r[2]+'%;background:'+(r[3]==='Terlambat'?'var(--st-reject-t)':'var(--accent)')+'"></div></div></div></div>';
+        });
+        html += '</div>';
+        return html;
+      }}
+  };
+
+  function kpiRow(items){
+    var h = '<div class="grid g4" style="margin-bottom:18px">';
+    items.forEach(function(k){
+      h += '<div class="kpi"><div class="kpi-label">'+k[0]+'</div><div class="kpi-value fnum">'+k[1]+'</div>'+
+        '<div class="kpi-delta kpi-'+k[3]+'"><svg><use href="#i-'+(k[3]==='up'?'check':'alert')+'"/></svg>'+k[2]+'</div></div>';
+    });
+    return h + '</div>';
+  }
+  function card(title, inner){ return '<div class="card" style="margin-bottom:16px"><h4 style="font-size:15px;margin-bottom:12px">'+title+'</h4>'+inner+'</div>'; }
+  function table(headers, rows){
+    var h = '<table><thead><tr>'+headers.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr></thead><tbody>';
+    rows.forEach(function(r){ h += '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>'; });
+    return h + '</tbody></table>';
+  }
+  function toolbar(count, actionLabel){
+    return '<div class="toolbar"><span class="chip"><svg><use href="#i-filter"/></svg>Filter</span><span class="chip">'+count+'</span><span class="tb-spacer" style="flex:1"></span>'+
+      '<button class="btn btn-secondary btn-sm"><svg><use href="#i-download"/></svg>Ekspor</button>'+
+      '<button class="btn btn-primary btn-sm"><svg><use href="#i-plus"/></svg>'+actionLabel+'</button></div>';
+  }
+  function tableWrap(headers, rows, numLast){
+    return '<div class="tbl-wrap tbl-scroll">' + table(headers, rows) + '</div>';
+  }
+
+  var screenSelect = document.getElementById('screenPicker');
+  var screenOrder = ['exec_dashboard','hr_karyawan','proc_po','inv_nte','ops_tiket','deploy_proyek'];
+  screenOrder.forEach(function(key){
+    var opt = document.createElement('option');
+    opt.value = key; opt.textContent = SCREENS[key].title + ' — ' + SCREENS[key].group.toUpperCase();
+    screenSelect.appendChild(opt);
+  });
+
+  function renderSidebar(activeGroup, activeItem){
+    var html = '<div class="sb-tenant"><div class="sb-tenant-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#EAF6F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg></div><div class="sb-tenant-text">NUSAKARYA<span>PT Nusantara Karya Telekomunikasi</span></div></div>';
+    NAV.forEach(function(g){
+      html += '<div class="sb-group-label">'+g.label+'</div>';
+      g.items.forEach(function(it){
+        var isOn = g.key === activeGroup && it.label === activeItem;
+        html += '<div class="sb-item'+(isOn?' on':'')+'"><svg><use href="#'+g.icon+'"/></svg><span>'+it.label+'</span></div>';
+      });
+    });
+    document.getElementById('adminSidebar').innerHTML = html;
+  }
+
+  function renderScreen(key){
+    var s = SCREENS[key];
+    renderSidebar(s.group, s.item);
+    document.getElementById('adminContent').innerHTML =
+      '<div class="breadcrumb">'+s.crumb.replace(/\//g,'<span style="margin:0 4px">/</span>')+'</div>'+
+      '<div class="content-head"><h3>'+s.title+'</h3></div>' + s.render();
+  }
+  screenSelect.addEventListener('change', function(){ renderScreen(screenSelect.value); });
+  renderScreen(screenOrder[0]);
+
+  /* ---------- CHARTS (SVG, hand-drawn) ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+  function svgTarget(id){ var s = document.getElementById(id); s.innerHTML=''; return s; }
+
+  // Donut chart: distribusi status tiket
+  (function(){
+    var svg = svgTarget('donutChart');
+    var data = [
+      {label:'Resolved', val:132, color:'#16A34A'},
+      {label:'In Progress', val:52, color:'#2563EB'},
+      {label:'Menunggu', val:26, color:'#D97706'},
+      {label:'SLA Breach', val:4, color:'#E11D48'}
+    ];
+    var total = data.reduce(function(a,d){return a+d.val;},0);
+    var cx=80, cy=100, rOuter=62, rInner=38, start=-90;
+    data.forEach(function(d){
+      var angle = d.val/total*360;
+      var end = start + angle;
+      var largeArc = angle > 180 ? 1 : 0;
+      function pt(r,a){ var rad=a*Math.PI/180; return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)]; }
+      var p1=pt(rOuter,start), p2=pt(rOuter,end), p3=pt(rInner,end), p4=pt(rInner,start);
+      var path = 'M'+p1[0]+','+p1[1]+' A'+rOuter+','+rOuter+' 0 '+largeArc+' 1 '+p2[0]+','+p2[1]+
+        ' L'+p3[0]+','+p3[1]+' A'+rInner+','+rInner+' 0 '+largeArc+' 0 '+p4[0]+','+p4[1]+' Z';
+      svg.appendChild(el('path',{d:path, fill:d.color}));
+      start = end;
+    });
+    svg.appendChild(el('text',{x:cx, y:cy-4, 'text-anchor':'middle', 'font-size':'20', 'font-weight':'700', class:'val'})).textContent = total;
+    svg.appendChild(el('text',{x:cx, y:cy+14, 'text-anchor':'middle', 'font-size':'10'})).textContent = 'tiket';
+    var lx=170, ly=44;
+    data.forEach(function(d,i){
+      var y = ly + i*28;
+      svg.appendChild(el('rect',{x:lx, y:y-9, width:10, height:10, rx:2, fill:d.color}));
+      var t1 = el('text',{x:lx+16, y:y, 'font-size':'11'}); t1.textContent = d.label; svg.appendChild(t1);
+      var t2 = el('text',{x:lx+16, y:y+13, 'font-size':'10', fill:'var(--text-3)'});
+      t2.setAttribute('class','val'); t2.textContent = d.val + ' (' + Math.round(d.val/total*100) + '%)';
+      svg.appendChild(t2);
+    });
+  })();
+
+  // Aging bucket 1: tiket
+  function agingChart(id, unitLabel, values, colors){
+    var svg = svgTarget(id);
+    var buckets = ['0–7 hari','8–14 hari','15–30 hari','>30 hari'];
+    var max = Math.max.apply(null, values);
+    var top=14, left=90, right=330, rowH=42;
+    buckets.forEach(function(b,i){
+      var y = top + i*rowH;
+      svg.appendChild(el('text',{x:left-10, y:y+16, 'text-anchor':'end', 'font-size':'11'})).textContent = b;
+      var w = (values[i]/max) * (right-left-4);
+      svg.appendChild(el('rect',{x:left, y:y, width:right-left, height:22, rx:5, fill:'var(--n100)'}));
+      svg.appendChild(el('rect',{x:left, y:y, width:Math.max(w,3), height:22, rx:5, fill:colors[i]}));
+      var t = el('text',{x:left+8, y:y+15, 'font-size':'11', fill:'#fff', 'font-weight':'700'});
+      t.setAttribute('class','val'); t.textContent = values[i] + ' ' + unitLabel;
+      if(w < 46){ t.setAttribute('x', left + w + 8); t.setAttribute('fill','var(--text-1)'); }
+      svg.appendChild(t);
+    });
+  }
+  agingChart('agingChart1', 'tkt', [14,7,4,2], ['#16A34A','#D97706','#EA580C','#E11D48']);
+  agingChart('agingChart2', 'jt', [3120,1840,980,480], ['#16A34A','#2563EB','#D97706','#E11D48']);
+
+  // Bar chart: piutang per cabang
+  function barChart(id, labels, values, color, suffix){
+    var svg = svgTarget(id);
+    var W=360,H=210, padL=36, padB=34, padT=16, padR=10;
+    var max = Math.ceil(Math.max.apply(null, values)/500)*500;
+    var chartW = W-padL-padR, chartH = H-padT-padB;
+    // gridlines
+    for(var g=0; g<=4; g++){
+      var gy = padT + chartH - (g/4)*chartH;
+      svg.appendChild(el('line',{x1:padL, x2:W-padR, y1:gy, y2:gy, stroke:'var(--border)', 'stroke-width':1}));
+      var lab = el('text',{x:padL-6, y:gy+3, 'text-anchor':'end', 'font-size':'9'}); lab.textContent = Math.round(max*g/4);
+      svg.appendChild(lab);
+    }
+    var bw = chartW/labels.length*0.56;
+    labels.forEach(function(l,i){
+      var slot = chartW/labels.length;
+      var x = padL + i*slot + (slot-bw)/2;
+      var h = (values[i]/max) * chartH;
+      var y = padT + chartH - h;
+      svg.appendChild(el('rect',{x:x, y:y, width:bw, height:h, rx:4, fill:color}));
+      var vt = el('text',{x:x+bw/2, y:y-6, 'text-anchor':'middle', 'font-size':'10', 'font-weight':'700'});
+      vt.setAttribute('class','val'); vt.textContent = values[i];
+      svg.appendChild(vt);
+      var lt = el('text',{x:x+bw/2, y:H-14, 'text-anchor':'middle', 'font-size':'10'}); lt.textContent = l;
+      svg.appendChild(lt);
+    });
+  }
+  barChart('barChart', ['Batam','Pekanbaru','Dumai','Padang','B.tinggi'], [2140,1580,980,1120,600], 'var(--p500)');
+  barChart('barChart2', ['Batam','Pekanbaru','Dumai','Padang','B.tinggi'], [78,66,91,58,49], 'var(--p500)');
+
+  // S-curve: plan vs actual
+  (function(){
+    var svg = svgTarget('sCurveChart');
+    var W=360,H=210, padL=32, padB=30, padT=16, padR=10;
+    var chartW=W-padL-padR, chartH=H-padT-padB;
+    var plan =   [2,6,14,26,40,55,68,79,88,94,98,100];
+    var actual = [1,4,10,19,30,42,54,64,72,79,84,88];
+    function pts(arr){
+      return arr.map(function(v,i){
+        var x = padL + (i/(arr.length-1))*chartW;
+        var y = padT + chartH - (v/100)*chartH;
+        return [x,y];
+      });
+    }
+    for(var g=0; g<=4; g++){
+      var gy = padT + chartH - (g/4)*chartH;
+      svg.appendChild(el('line',{x1:padL, x2:W-padR, y1:gy, y2:gy, stroke:'var(--border)', 'stroke-width':1}));
+      var lab = el('text',{x:padL-6, y:gy+3, 'text-anchor':'end', 'font-size':'9'}); lab.textContent = (g*25)+'%';
+      svg.appendChild(lab);
+    }
+    function path(ptsArr){ return ptsArr.map(function(p,i){ return (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '); }
+    var planPts = pts(plan), actPts = pts(actual);
+    svg.appendChild(el('path',{d:path(planPts), fill:'none', stroke:'var(--n400)', 'stroke-width':2, 'stroke-dasharray':'4 3'}));
+    var areaPath = path(actPts) + ' L' + actPts[actPts.length-1][0]+','+ (padT+chartH) + ' L' + actPts[0][0]+','+(padT+chartH) + ' Z';
+    svg.appendChild(el('path',{d:areaPath, fill:'var(--accent)', opacity:'0.12'}));
+    svg.appendChild(el('path',{d:path(actPts), fill:'none', stroke:'var(--accent)', 'stroke-width':2.5}));
+    var lastA = actPts[actPts.length-1], lastP = planPts[planPts.length-1];
+    svg.appendChild(el('circle',{cx:lastA[0], cy:lastA[1], r:4, fill:'var(--accent)'}));
+    svg.appendChild(el('circle',{cx:lastP[0], cy:lastP[1], r:3.5, fill:'var(--n400)'}));
+    var t1=el('text',{x:lastA[0]-4, y:lastA[1]-8, 'text-anchor':'end', 'font-size':'10', 'font-weight':'700', fill:'var(--accent)'}); t1.textContent='88% Actual'; svg.appendChild(t1);
+    var t2=el('text',{x:lastP[0]-4, y:lastP[1]-8, 'text-anchor':'end', 'font-size':'10', fill:'var(--text-3)'}); t2.textContent='100% Plan'; svg.appendChild(t2);
+    var months=['Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des','Jan','Feb'];
+    months.forEach(function(m,i){ if(i%2===0){ var mt=el('text',{x:planPts[i][0], y:H-12, 'text-anchor':'middle', 'font-size':'8.5'}); mt.textContent=m; svg.appendChild(mt); } });
+  })();
+
+  /* ---------- ACCESS MATRIX ---------- */
+  var roles = ['Komisaris','Direktur Utama','Manajer HR','Manajer Finance','Manajer Procurement','Manajer Operations','Manajer Deployment','Admin Gudang','Finance Staff','Teknisi Lapangan'];
+  var modules = ['Eksekutif','HR & Payroll','Commerce','Procurement','Finance','Inventory','Aset','Operations','Deployment','Pengaturan'];
+  // access[role][module] = 'R' | 'W' | 'A' | '-'
+  var access = {
+    'Komisaris':          ['R','R','R','R','R','R','R','R','R','-'],
+    'Direktur Utama':     ['A','A','A','A','A','A','A','A','A','R'],
+    'Manajer HR':         ['R','A','-','-','-','-','-','-','-','-'],
+    'Manajer Finance':    ['R','R','R','R','A','R','-','-','-','-'],
+    'Manajer Procurement':['R','-','-','A','R','R','-','-','-','-'],
+    'Manajer Operations': ['R','-','-','-','-','R','R','A','-','-'],
+    'Manajer Deployment': ['R','-','-','R','-','R','R','R','A','-'],
+    'Admin Gudang':       ['-','-','-','-','-','W','W','-','-','-'],
+    'Finance Staff':      ['-','-','-','R','W','-','-','-','-','-'],
+    'Teknisi Lapangan':   ['-','-','-','-','-','R','-','W','W','-']
+  };
+  (function(){
+    var table = document.getElementById('matrixTable');
+    var thead = '<thead><tr><th>Jabatan</th>' + modules.map(function(m){return '<th style="text-align:center">'+m+'</th>';}).join('') + '</tr></thead>';
+    var tbody = '<tbody>';
+    roles.forEach(function(r){
+      tbody += '<tr><td style="font-weight:600;white-space:nowrap">'+r+'</td>';
+      access[r].forEach(function(v){
+        var cls = v==='R'?'m-r':v==='W'?'m-w':v==='A'?'m-a':'m-dash';
+        tbody += '<td class="matrix-cell '+cls+'">'+v+'</td>';
+      });
+      tbody += '</tr>';
+    });
+    tbody += '</tbody>';
+    table.innerHTML = thead + tbody;
+  })();
+
+  /* ---------- REFERENSI ---------- */
+  var refs = [
+    ['Admin / SaaS Dashboard','Free Admin Dashboard UI Kit','https://www.figma.com/community/file/1244293267600418871/free-admin-dashboard-ui-kit','Diambil pola grid sidebar kiri + topbar dan kartu KPI ringkas sebagai kerangka dasar panel admin.'],
+    ['Dark Mode','Modern Dashboard UI Kit — Dark Admin Panel','https://www.figma.com/community/file/1621990878990665091/modern-dashboard-ui-kit-dark-admin-panel-productivity-analytics-app-design-figma','Referensi kontras & saturasi warna untuk mode gelap panel admin dan dashboard NOC.'],
+    ['Struktur Multi-Modul','ERP Dashboard Templates','https://www.figma.com/community/file/1433728151069322563/erp-dashboard-templates','Acuan penataan navigasi berlapis untuk banyak unit (HR, Finance, Inventory) dalam satu sistem.'],
+    ['HRIS','SmartHR — Free Figma UI Kit for HRM','https://www.figma.com/community/file/1539212751721531783/smarthr-free-figma-ui-kit-for-hrm-employee-management','Diambil tone profesional biru-putih dan pola tabel karyawan berdensitas tinggi untuk modul HR.'],
+    ['Warehouse / WMS','Warehouse Inventory Management UI Design','https://www.figma.com/community/file/1217505889997838477/warehouse-inventory-management-ui-design','Referensi tabel stok dengan indikator level & filter kategori gudang untuk modul Inventory.'],
+    ['Field Service Mobile','FieldForce','https://www.figma.com/community/file/1624819408100949360/fieldforce','Basis alur worklist teknisi lapangan, detail job, dan navigasi lokasi pada aplikasi mobile.'],
+    ['Ticketing / Helpdesk','Ticky — Ticket Management System UI Kit','https://www.figma.com/community/file/1565765129831935139/ticky-ticket-management-system-admin-dashboard-ui-kit-saas-web-design','Diambil pola prioritas berwarna & chip SLA countdown untuk modul Tiket Gangguan.'],
+    ['Procurement','PROCUREMENT MANAGEMENT SYSTEM','https://www.figma.com/community/file/1109485721173408343/procurement-management-system','Acuan langsung alur PR → PO → Approval dengan stepper untuk modul Procurement.'],
+    ['Project / Gantt','Gantt Wizard','https://www.figma.com/community/file/1309975729854846509/gantt-wizard','Referensi milestone marker & dependency line untuk modul Design & Deployment.'],
+    ['Executive Analytics','Operations Dashboard Dark Mode','https://www.figma.com/community/file/1506487400738812731/operations-dashboard-dark-mode','Acuan gauge & tata letak dashboard operasional gelap untuk ringkasan eksekutif.']
+  ];
+  document.getElementById('refGrid').innerHTML = refs.map(function(r){
+    return '<div class="card ref-card"><div class="tag">'+r[0]+'</div><h4>'+r[1]+'</h4><p>'+r[3]+'</p><a href="'+r[2]+'" target="_blank" rel="noopener">'+r[2]+'</a></div>';
+  }).join('');
+
+})();
+</script>
