@@ -18,6 +18,43 @@ const SOURCE_OPTIONS = [
 
 function emptyLine() { return { _key: uid(), account_code: '', description: '', debit: 0, credit: 0, project_id: '' } }
 
+/** Combobox akun yang bisa dicari (kode & nama) — pengganti <Select> polos untuk daftar akun yang panjang. */
+function AccountCombobox({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string }) {
+ const [open, setOpen] = useState(false)
+ const [query, setQuery] = useState('')
+ const selected = options.find(o => o.value === value)
+ const filtered = useMemo(() => {
+ const q = query.trim().toLowerCase()
+ const base = !q ? options : options.filter(o => o.label.toLowerCase().includes(q))
+ return base.slice(0, 60)
+ }, [options, query])
+ return (
+ <div className="relative">
+ <Input
+ value={open ? query : (selected?.label ?? '')}
+ onChange={(e: any) => { setQuery(e.target.value); if (!open) setOpen(true) }}
+ onFocus={() => { setQuery(''); setOpen(true) }}
+ onBlur={() => setTimeout(() => setOpen(false), 150)}
+ placeholder={placeholder ?? 'Cari kode / nama akun…'}
+ />
+ {open && (
+ <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto bg-surface border border-ink-200 rounded-md shadow-e2 py-1">
+ {filtered.length === 0 ? (
+ <div className="px-3 py-2 text-caption text-ink-400">Tidak ada akun yang cocok</div>
+ ) : filtered.map(o => (
+ <button type="button" key={o.value}
+ className="block w-full text-left px-3 py-1.5 text-body text-ink-700 hover:bg-primary-50 dark:hover:bg-primary-950/40"
+ onMouseDown={(e) => e.preventDefault()}
+ onClick={() => { onChange(o.value); setQuery(''); setOpen(false) }}>
+ {o.label}
+ </button>
+ ))}
+ </div>
+ )}
+ </div>
+ )
+}
+
 export default function Jurnal() {
  const { profile, can } = useAuth()
  const toast = useToast()
@@ -227,7 +264,7 @@ export default function Jurnal() {
  <tbody>
  {lines.map(l => (
  <tr key={l._key} className="border-t border-ink-100">
- <td className="px-2 py-1.5"><Select value={l.account_code} onChange={(e: any) => setLine(l._key, { account_code: e.target.value })} options={accountOptions} placeholder="Pilih akun" /></td>
+ <td className="px-2 py-1.5"><AccountCombobox value={l.account_code} onChange={(v: string) => setLine(l._key, { account_code: v })} options={accountOptions} /></td>
  <td className="px-2 py-1.5"><Input value={l.description} onChange={(e: any) => setLine(l._key, { description: e.target.value })} placeholder="Opsional" /></td>
  <td className="px-2 py-1.5"><Money value={l.debit} onChange={(v: number) => setLine(l._key, { debit: v, credit: v > 0 ? 0 : l.credit })} /></td>
  <td className="px-2 py-1.5"><Money value={l.credit} onChange={(v: number) => setLine(l._key, { credit: v, debit: v > 0 ? 0 : l.debit })} /></td>
@@ -292,7 +329,7 @@ function BukuBesar({ profile, coaMap, accountOptions, toast }: any) {
  return (
  <div>
  <FilterBar>
- <Field label="Akun" className="min-w-[260px]"><Select value={account} onChange={(e: any) => setAccount(e.target.value)} options={accountOptions} placeholder="Pilih akun" /></Field>
+ <Field label="Akun" className="min-w-[260px]"><AccountCombobox value={account} onChange={setAccount} options={accountOptions} placeholder="Cari kode / nama akun…" /></Field>
  <Field label="Dari Tanggal"><Input type="date" value={dateFrom} onChange={(e: any) => setDateFrom(e.target.value)} /></Field>
  <Field label="Sampai Tanggal"><Input type="date" value={dateTo} onChange={(e: any) => setDateTo(e.target.value)} /></Field>
  </FilterBar>

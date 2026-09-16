@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { list, insert, update, nextDocNo, uploadFile, signedUrl } from '@/lib/db'
 import { rupiah, tgl, exportCSV } from '@/lib/format'
 import {
- PageHeader, FilterBar, Tabs, Card, DataTable, Badge, Modal, Field, Input, Select, Money, Button,
+ PageHeader, FilterBar, Tabs, Card, DataTable, Badge, Modal, Field, Input, Select, Money, Textarea, Button,
  useToast, KpiCard, Download, Plus,
 } from '@/components/ui'
 import { Paperclip } from 'lucide-react'
@@ -26,6 +26,9 @@ export default function Pajak() {
  const [form, setForm] = useState<any>(emptyForm)
  const [busy, setBusy] = useState(false)
  const [uploadingId, setUploadingId] = useState<string | null>(null)
+ const [koreksiRow, setKoreksiRow] = useState<any>(null)
+ const [koreksiReason, setKoreksiReason] = useState('')
+ const [koreksiBusy, setKoreksiBusy] = useState(false)
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
 
@@ -74,9 +77,35 @@ export default function Pajak() {
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan data pajak', 'error') } finally { setBusy(false) }
  }
 
+ function pesanGagal(e: any, aksi: string) {
+ const msg = String(e?.message ?? '')
+ if (/row-level security|permission denied|RLS/i.test(msg)) {
+ return `Gagal ${aksi}: Anda tidak memiliki hak Tulis pada modul Finance. Hubungi admin untuk memberi hak akses.`
+ }
+ return msg || `Gagal ${aksi}`
+ }
+
  async function tandaiDilaporkan(row: any) {
  try { await update('tax_records', row.id, { status: 'dilaporkan' }); toast.push('Ditandai sudah dilaporkan.', 'success'); await load() }
- catch (e: any) { toast.push(e.message ?? 'Gagal memperbarui status', 'error') }
+ catch (e: any) { toast.push(pesanGagal(e, 'memperbarui status'), 'error') }
+ }
+
+ function openKoreksi(row: any) { setKoreksiRow(row); setKoreksiReason(''); }
+ async function submitKoreksi() {
+ if (!koreksiRow) return
+ if (!koreksiReason.trim()) { toast.push('Alasan koreksi wajib diisi.', 'error'); return }
+ setKoreksiBusy(true)
+ try {
+ // tax_records tidak punya kolom catatan — alasan koreksi dicatat di tabel approvals untuk jejak audit.
+ await insert('approvals', {
+ company_id: profile!.company_id, entity_type: 'tax_record', entity_id: koreksiRow.id, step: 1,
+ status: 'skipped', note: `Dikoreksi: ${koreksiReason.trim()}`, approver_id: profile!.id,
+ acted_at: new Date().toISOString(), created_by: profile!.id,
+ })
+ await update('tax_records', koreksiRow.id, { status: 'dikoreksi' })
+ toast.push('Data pajak ditandai dikoreksi. Alasan koreksi tercatat untuk audit.', 'success')
+ setKoreksiRow(null); await load()
+ } catch (e: any) { toast.push(pesanGagal(e, 'menandai dikoreksi'), 'error') } finally { setKoreksiBusy(false) }
  }
 
  async function unggahBerkas(row: any, file: File) {
@@ -148,9 +177,14 @@ export default function Pajak() {
  </label>
  ) },
  { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
- { key: 'aksi', header: '', sortable: false, align: 'right', render: (r) => r.status !== 'dilaporkan' && can('FINANCE', 'write') && (
- <Button size="sm" variant="outline" onClick={() => tandaiDilaporkan(r)}>Tandai Dilaporkan</Button>
- ) },
+ {
+ key: 'aksi', header: '', sortable: false, align: 'right', render: (r) => can('FINANCE', 'write') && (
+ <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+ {r.status === 'draft' && <Button size="sm" variant="outline" onClick={() => tandaiDilaporkan(r)}>Tandai Dilaporkan</Button>}
+ {r.status === 'dilaporkan' && can('FINANCE', 'approve') && <Button size="sm" variant="outline" className="text-amber-600" onClick={() => openKoreksi(r)}>Tandai Dikoreksi</Button>}
+ </div>
+ ),
+ },
  ]}
  />
 
@@ -193,6 +227,19 @@ export default function Pajak() {
  : <Field label="No Bukti Potong"><Input value={form.bukti_potong_no} onChange={(e: any) => setForm((f: any) => ({ ...f, bukti_potong_no: e.target.value }))} /></Field>}
  <Field label="DPP" required><Money value={form.dpp} onChange={(v: number) => setForm((f: any) => ({ ...f, dpp: v }))} /></Field>
  <Field label="Nilai Pajak" required><Money value={form.tax_amount} onChange={(v: number) => setForm((f: any) => ({ ...f, tax_amount: v }))} /></Field>
+ </div>
+ </Modal>
+
+ <Modal open={!!koreksiRow} onClose={() => setKoreksiRow(null)} title="Tandai Dikoreksi" size="sm"
+ footer={<Button variant="danger" loading={koreksiBusy} onClick={submitKoreksi}>Tandai Dikoreksi</Button>}>
+ <div className="space-y-3">
+ <p className="text-body text-ink-600">
+ Data pajak <strong>{koreksiRow?.record_no}</strong> ({koreksiRow?.counterparty_name}) akan ditandai <strong>dikoreksi</strong>.
+ Baris data ini TIDAK diedit langsung — buat entri baru dengan nilai yang benar agar riwayat pelaporan asli tetap utuh untuk kebutuhan audit pajak.
+ </p>
+ <Field label="Alasan Koreksi" required>
+ <Textarea rows={3} value={koreksiReason} onChange={(e: any) => setKoreksiReason(e.target.value)} placeholder="Jelaskan alasan pembetulan (mis. salah nilai DPP, salah lawan transaksi)" />
+ </Field>
  </div>
  </Modal>
  </div>

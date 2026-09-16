@@ -7,6 +7,7 @@ import {
 } from '@/components/ui'
 import { tglJam, durasi, rupiah, num } from '@/lib/format'
 import { WO_TYPES, WO_STATUSES, woStatusLabel, woStatusTone } from '../lib/constants'
+import { WO_STATUS } from '../lib/status'
 import { tautanPeta } from '../lib/helpers'
 
 export default function WorkOrder() {
@@ -19,6 +20,7 @@ export default function WorkOrder() {
  const [wos, setWos] = useState<any[]>([])
  const [branches, setBranches] = useState<any[]>([])
  const [technicians, setTechnicians] = useState<any[]>([])
+ const [jobTypes, setJobTypes] = useState<any[]>([])
 
  const [f, setF] = useState({ wo_type: '', status: '', branch_id: '', assigned_to: '', from: '', to: '' })
 
@@ -35,7 +37,7 @@ export default function WorkOrder() {
  const [qcNote, setQcNote] = useState('')
 
  function newForm() {
- return { wo_type: '', title: '', customer_name: '', customer_no: '', address: '', lat: '', lng: '', branch_id: '', scheduled_at: '', description: '' }
+ return { wo_type: '', job_type_id: '', title: '', customer_name: '', customer_no: '', address: '', lat: '', lng: '', branch_id: '', scheduled_at: '', description: '' }
  }
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
@@ -43,12 +45,13 @@ export default function WorkOrder() {
  async function load() {
  setLoading(true)
  try {
- const [w, br, emp] = await Promise.all([
+ const [w, br, emp, jt] = await Promise.all([
  list('work_orders', { eq: { company_id: profile!.company_id }, order: { col: 'scheduled_at', asc: false }, limit: 2000 }),
  list('branches', { select: 'id,name', eq: { company_id: profile!.company_id }, order: { col: 'name', asc: true } }),
  list('employees', { select: 'id,full_name,position', eq: { company_id: profile!.company_id }, ilike: { col: 'position', value: 'teknisi' }, order: { col: 'full_name', asc: true } }),
+ list('job_types', { select: 'id,name', eq: { company_id: profile!.company_id }, order: { col: 'name', asc: true } }),
  ])
- setWos(w); setBranches(br); setTechnicians(emp)
+ setWos(w); setBranches(br); setTechnicians(emp); setJobTypes(jt)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat work order', 'error') }
  finally { setLoading(false) }
  }
@@ -76,18 +79,18 @@ export default function WorkOrder() {
  function closeDrawer() { setSelected(null); setQcOpen(null); setQcNote('') }
 
  async function submitNew() {
- if (!form.wo_type || !form.title || !form.customer_name || !form.branch_id) {
- toast.push('Lengkapi jenis, judul, pelanggan dan cabang terlebih dahulu', 'error'); return
+ if (!form.wo_type || !form.job_type_id || !form.title || !form.customer_name || !form.branch_id) {
+ toast.push('Lengkapi jenis, jenis pekerjaan (job type), judul, pelanggan dan cabang terlebih dahulu', 'error'); return
  }
  setSaving(true)
  try {
  const woNo = await nextDocNo(profile!.company_id, 'WO')
  await insert('work_orders', {
- company_id: profile!.company_id, wo_no: woNo, wo_type: form.wo_type, title: form.title,
+ company_id: profile!.company_id, wo_no: woNo, wo_type: form.wo_type, job_type_id: form.job_type_id, title: form.title,
  description: form.description || null, customer_name: form.customer_name, customer_no: form.customer_no || null,
  address: form.address || null, lat: form.lat || null, lng: form.lng || null, branch_id: form.branch_id,
  scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
- status: 'belum_ditugaskan', qc_status: 'belum', created_by: profile!.id,
+ status: WO_STATUS.DRAFT, qc_status: 'belum', created_by: profile!.id,
  })
  toast.push(`Work order ${woNo} berhasil dibuat`, 'success'); setNewOpen(false); setForm(newForm()); await load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan work order', 'error') }
@@ -143,7 +146,7 @@ export default function WorkOrder() {
  />
 
  <Drawer open={!!selected} onClose={closeDrawer} width="max-w-2xl" title={selected ? `${selected.wo_no} — ${selected.title || ''}` : ''}
- footer={selected && approver && selected.status === 'selesai' && selected.qc_status === 'belum' && (
+ footer={selected && approver && selected.status === WO_STATUS.DONE && selected.qc_status === 'belum' && (
  <div className="flex gap-2 w-full">
  <Button variant="danger" onClick={() => setQcOpen('tidak_lulus')}>QC Tidak Lulus</Button>
  <Button variant="success" onClick={() => setQcOpen('lulus')}>QC Lulus</Button>
@@ -199,6 +202,7 @@ export default function WorkOrder() {
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <Field label="No WO"><Input value="Otomatis saat disimpan (WO/…)" disabled /></Field>
  <Field label="Jenis" required><Select options={WO_TYPES} value={form.wo_type} onChange={(e: any) => setForm({ ...form, wo_type: e.target.value })} /></Field>
+ <Field label="Jenis Pekerjaan (Job Type)" required hint="Wajib diisi — dipakai perhitungan poin/tarif produktivitas teknisi saat WO ditandai Selesai."><Select options={jobTypes.map(j => ({ value: j.id, label: j.name }))} value={form.job_type_id} onChange={(e: any) => setForm({ ...form, job_type_id: e.target.value })} /></Field>
  <Field label="Judul Pekerjaan" required className="sm:col-span-2"><Input value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} /></Field>
  <Field label="Nama Pelanggan" required><Input value={form.customer_name} onChange={(e: any) => setForm({ ...form, customer_name: e.target.value })} /></Field>
  <Field label="No Pelanggan"><Input value={form.customer_no} onChange={(e: any) => setForm({ ...form, customer_no: e.target.value })} /></Field>

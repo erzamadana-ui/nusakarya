@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { chartColors } from '@/lib/theme'
 import { useAuth } from '@/lib/auth'
-import { list } from '@/lib/db'
+import { list, insert, nextDocNo } from '@/lib/db'
 import { rupiah, tgl, todayISO } from '@/lib/format'
-import { PageHeader, Card, CardHeader, KpiCard, DataTable, Badge, TableSkeleton, EmptyState } from '@/components/ui'
+import { PageHeader, Card, CardHeader, KpiCard, DataTable, Badge, TableSkeleton, EmptyState, Button, Modal, Field, Select, Input, Textarea, useToast, Plus } from '@/components/ui'
 import {
  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line,
  PieChart, Pie, Cell, Legend,
@@ -13,8 +13,12 @@ import { CHART_COLORS } from '../lib/constants'
 import { agingDays, isArActive, monthKey, monthLabel } from '../lib/helpers'
 
 const AGING_ORDER = ['0-30', '31-60', '61-90', '>90']
+type ClaimItem = { price_list_id: string | null; description: string; uom: string; unit_price: number; qty: number }
+const emptyKontrak = { contract_name: '', customer_id: '', contract_type: 'deployment', start_date: '', end_date: '', contract_value: 0 }
 
 export default function DashboardCommerce() {
+ const { profile, can } = useAuth()
+ const toast = useToast()
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState<string | null>(null)
  const [contracts, setContracts] = useState<any[]>([])
@@ -24,13 +28,23 @@ export default function DashboardCommerce() {
  const [customers, setCustomers] = useState<any[]>([])
  const [agingView, setAgingView] = useState<any[]>([])
 
+ const [klaimOpen, setKlaimOpen] = useState(false)
+ const [klaimSpkId, setKlaimSpkId] = useState('')
+ const [klaimItems, setKlaimItems] = useState<ClaimItem[]>([])
+ const [klaimItemsLoading, setKlaimItemsLoading] = useState(false)
+ const [klaimSaving, setKlaimSaving] = useState(false)
+
+ const [kontrakOpen, setKontrakOpen] = useState(false)
+ const [kontrakForm, setKontrakForm] = useState<any>(emptyKontrak)
+ const [kontrakSaving, setKontrakSaving] = useState(false)
+
  useEffect(() => {
  (async () => {
  setLoading(true)
  try {
  const [c, s, cl, inv, cu, av] = await Promise.all([
- list('contracts', { select: 'id,contract_name,customer_id,contract_value,status', limit: 1000 }),
- list('spk', { select: 'id,spk_value,status', limit: 1000 }),
+ list('contracts', { select: 'id,contract_name,customer_id,contract_value,status,retention_percent', limit: 1000 }),
+ list('spk', { select: 'id,spk_no,title,contract_id,spk_value,status', limit: 1000 }),
  list('progress_claims', { select: 'id,claim_no,contract_id,claim_amount,status,created_at', limit: 1000 }),
  list('ar_invoices', { select: 'id,inv_no,customer_id,total,paid_amount,status,due_date,invoice_date', limit: 2000 }),
  list('customers', { select: 'id,name', limit: 1000 }),
@@ -41,6 +55,71 @@ export default function DashboardCommerce() {
  finally { setLoading(false) }
  })()
  }, [])
+
+ async function reloadClaims() { setClaims(await list('progress_claims', { select: 'id,claim_no,contract_id,claim_amount,status,created_at', limit: 1000 })) }
+ async function reloadContracts() { setContracts(await list('contracts', { select: 'id,contract_name,customer_id,contract_value,status,retention_percent', limit: 1000 })) }
+
+ function friendlyCommerceError(e: any, fallback: string) {
+ const msg = e?.message ?? ''
+ if (/row-level security|permission denied/i.test(msg)) return 'Gagal menyimpan — hak akses Anda pada modul Commerce tidak mengizinkan tindakan ini.'
+ return msg || fallback
+ }
+
+ function openKlaim() { setKlaimSpkId(''); setKlaimItems([]); setKlaimOpen(true) }
+ async function pullPriceListQuick(spkId: string) {
+ setKlaimSpkId(spkId)
+ const spk = spkList.find((s: any) => s.id === spkId)
+ if (!spk) { setKlaimItems([]); return }
+ setKlaimItemsLoading(true)
+ try {
+ const pl = await list('contract_price_list', { eq: { contract_id: spk.contract_id, is_active: true }, order: { col: 'item_code', asc: true }, limit: 500 })
+ setKlaimItems(pl.map((p: any) => ({ price_list_id: p.id, description: `${p.item_code ? p.item_code + ' — ' : ''}${p.description ?? ''}`, uom: p.uom ?? '', unit_price: Number(p.unit_price) || 0, qty: 0 })))
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menarik item price list', 'error') }
+ finally { setKlaimItemsLoading(false) }
+ }
+ const klaimAmount = useMemo(() => klaimItems.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0), [klaimItems])
+ async function saveKlaim() {
+ if (!klaimSpkId) { toast.push('Pilih SPK terlebih dahulu', 'error'); return }
+ const spk = spkList.find((s: any) => s.id === klaimSpkId)
+ const filledItems = klaimItems.filter(it => Number(it.qty) > 0)
+ if (filledItems.length === 0) { toast.push('Isi minimal satu qty realisasi', 'error'); return }
+ setKlaimSaving(true)
+ try {
+ const contract = contracts.find((c: any) => c.id === spk.contract_id)
+ const retentionAmount = Math.round(klaimAmount * Number(contract?.retention_percent ?? 0) / 100)
+ const claimNo = await nextDocNo(profile!.company_id, 'CLM')
+ const claim = await insert<any>('progress_claims', {
+ company_id: profile!.company_id, claim_no: claimNo, spk_id: klaimSpkId, contract_id: spk.contract_id,
+ period_start: todayISO(), period_end: todayISO(), progress_percent: 0,
+ claim_amount: klaimAmount, retention_amount: retentionAmount, status: 'draft', created_by: profile!.id,
+ })
+ for (const it of filledItems) {
+ await insert('progress_claim_items', {
+ company_id: profile!.company_id, claim_id: claim.id, price_list_id: it.price_list_id,
+ description: it.description, uom: it.uom, qty: Number(it.qty), unit_price: Number(it.unit_price),
+ amount: Number(it.qty) * Number(it.unit_price),
+ })
+ }
+ toast.push(`Klaim ${claimNo} ditambahkan`); setKlaimOpen(false); reloadClaims()
+ } catch (e: any) { toast.push(friendlyCommerceError(e, 'Gagal menyimpan klaim'), 'error') }
+ finally { setKlaimSaving(false) }
+ }
+
+ function openKontrak() { setKontrakForm(emptyKontrak); setKontrakOpen(true) }
+ async function saveKontrak() {
+ if (!kontrakForm.contract_name || !kontrakForm.customer_id) { toast.push('Nama kontrak dan pelanggan wajib diisi', 'error'); return }
+ setKontrakSaving(true)
+ try {
+ const contract_no = await nextDocNo(profile!.company_id, 'KTR')
+ await insert('contracts', {
+ company_id: profile!.company_id, contract_no, contract_name: kontrakForm.contract_name, customer_id: kontrakForm.customer_id,
+ contract_type: kontrakForm.contract_type || null, start_date: kontrakForm.start_date || null, end_date: kontrakForm.end_date || null,
+ contract_value: Number(kontrakForm.contract_value || 0), status: 'draft', created_by: profile!.id,
+ })
+ toast.push(`Kontrak ${contract_no} ditambahkan sebagai draft`); setKontrakOpen(false); reloadContracts()
+ } catch (e: any) { toast.push(friendlyCommerceError(e, 'Gagal menyimpan kontrak'), 'error') }
+ finally { setKontrakSaving(false) }
+ }
 
  const customerMap = useMemo(() => Object.fromEntries(customers.map(c => [c.id, c.name])), [customers])
 
@@ -109,6 +188,13 @@ export default function DashboardCommerce() {
  <div>
  <PageHeader title="Dashboard Commerce" subtitle="Ringkasan kontrak, SPK, klaim progres, dan piutang pelanggan." />
 
+ {can('COMMERCE', 'write') && (
+ <div className="flex flex-wrap gap-2 mb-5">
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openKlaim}>Buat Klaim</Button>
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openKontrak}>Kontrak Baru</Button>
+ </div>
+ )}
+
  {loading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">{Array.from({ length: 5 }).map((_, i) => <Card key={i} className="p-4"><TableSkeleton rows={2} /></Card>)}</div> : (
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
  <KpiCard label="Nilai Kontrak Aktif" value={rupiah(kpi.activeContractValue, true)} icon={<Handshake size={16} />} tone="teal" />
@@ -175,6 +261,39 @@ export default function DashboardCommerce() {
  emptyTitle="Tidak ada tindakan tertunda" emptyMessage="Seluruh klaim dan invoice dalam kondisi terkendali." />
  )}
  </Card>
+
+ <Modal open={klaimOpen} onClose={() => setKlaimOpen(false)} size="lg" title="Buat Klaim"
+ subtitle="Pilih SPK aktif, isi qty realisasi dari item price list kontrak."
+ footer={<><Button variant="outline" onClick={() => setKlaimOpen(false)}>Batal</Button><Button loading={klaimSaving} onClick={saveKlaim}>Simpan Draft</Button></>}>
+ <div className="grid gap-4">
+ <Field label="SPK" required><Select value={klaimSpkId} onChange={(e: any) => pullPriceListQuick(e.target.value)}
+ options={spkList.filter((s: any) => s.status === 'aktif').map((s: any) => ({ value: s.id, label: `${s.spk_no ?? ''} — ${s.title ?? ''}` }))} /></Field>
+ {klaimItemsLoading ? <TableSkeleton rows={3} /> : klaimItems.length > 0 && (
+ <div className="border border-ink-200 rounded-md divide-y divide-ink-200 max-h-72 overflow-y-auto">
+ {klaimItems.map((it, i) => (
+ <div key={i} className="flex items-center gap-3 p-2.5">
+ <span className="flex-1 text-caption text-ink-700">{it.description || '-'} <span className="text-ink-400">({it.uom})</span></span>
+ <span className="w-28 text-caption text-ink-500 text-right">{rupiah(it.unit_price)}</span>
+ <Input type="number" min="0" className="w-24" value={it.qty} onChange={(e: any) => setKlaimItems(v => v.map((x, idx) => idx === i ? { ...x, qty: e.target.value } : x))} />
+ </div>
+ ))}
+ </div>
+ )}
+ <p className="text-caption text-ink-500">Total klaim: <span className="font-semibold text-ink-800">{rupiah(klaimAmount)}</span></p>
+ </div>
+ </Modal>
+
+ <Modal open={kontrakOpen} onClose={() => setKontrakOpen(false)} title="Kontrak Baru"
+ footer={<><Button variant="outline" onClick={() => setKontrakOpen(false)}>Batal</Button><Button loading={kontrakSaving} onClick={saveKontrak}>Simpan Draft</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Nama Kontrak" required className="sm:col-span-2"><Input value={kontrakForm.contract_name} onChange={(e: any) => setKontrakForm({ ...kontrakForm, contract_name: e.target.value })} /></Field>
+ <Field label="Pelanggan" required className="sm:col-span-2"><Select value={kontrakForm.customer_id} onChange={(e: any) => setKontrakForm({ ...kontrakForm, customer_id: e.target.value })} options={customers.map(c => ({ value: c.id, label: c.name }))} /></Field>
+ <Field label="Tipe Kontrak"><Select value={kontrakForm.contract_type} onChange={(e: any) => setKontrakForm({ ...kontrakForm, contract_type: e.target.value })} options={[{ value: 'deployment', label: 'Deployment' }, { value: 'manage_service', label: 'Manage Service' }, { value: 'maintenance', label: 'Maintenance' }, { value: 'borongan', label: 'Borongan' }, { value: 'unit_price', label: 'Unit Price' }]} /></Field>
+ <Field label="Nilai Kontrak"><Input type="number" min="0" value={kontrakForm.contract_value} onChange={(e: any) => setKontrakForm({ ...kontrakForm, contract_value: e.target.value })} /></Field>
+ <Field label="Tanggal Mulai"><Input type="date" value={kontrakForm.start_date} onChange={(e: any) => setKontrakForm({ ...kontrakForm, start_date: e.target.value })} /></Field>
+ <Field label="Tanggal Selesai"><Input type="date" value={kontrakForm.end_date} onChange={(e: any) => setKontrakForm({ ...kontrakForm, end_date: e.target.value })} /></Field>
+ </div>
+ </Modal>
  </div>
  )
 }

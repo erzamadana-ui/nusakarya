@@ -47,7 +47,7 @@ export const PUNCH_STATUS = [
   { value: 'ditolak', label: 'Ditolak' },
   { value: 'ditutup', label: 'Ditutup' },
 ]
-export const PUNCH_STATUS_TABS = ['terbuka', 'diperbaiki', 'diverifikasi', 'ditutup']
+export const PUNCH_STATUS_TABS = ['terbuka', 'diperbaiki', 'diverifikasi', 'ditolak', 'ditutup']
 export const PUNCH_SEVERITY = [
   { value: 'minor', label: 'Minor' },
   { value: 'mayor', label: 'Mayor' },

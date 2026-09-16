@@ -1,5 +1,6 @@
 /** Konstanta & referensi statis untuk modul Operations. */
 import { chartColors, chartSeries } from '@/lib/theme'
+import { optionsOf, labelOf, toneOf } from './status'
 
 export type Opt = { value: string; label: string; tone?: string }
 
@@ -16,67 +17,30 @@ export const severityTone = (v?: string) => SEVERITAS.find(s => s.value === v)?.
 export const SLA_DEFAULT_NOTE =
   'Nilai di atas adalah default sistem berdasarkan tingkat keparahan — WAJIB disesuaikan dengan ketentuan SLA pada kontrak pelanggan sebelum tiket disimpan.'
 
-export const TICKET_SOURCES: Opt[] = [
-  { value: 'call_center', label: 'Call Center' },
-  { value: 'aplikasi', label: 'Aplikasi Pelanggan' },
-  { value: 'noc', label: 'NOC / Monitoring' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'lapangan', label: 'Laporan Lapangan' },
-]
-export const TICKET_TYPES: Opt[] = [
-  { value: 'internet_terputus', label: 'Internet Terputus' },
-  { value: 'internet_lambat', label: 'Internet Lambat' },
-  { value: 'redaman_tinggi', label: 'Redaman Tinggi' },
-  { value: 'perangkat_rusak', label: 'Perangkat Rusak' },
-  { value: 'ont_offline', label: 'ONT Offline' },
-  { value: 'lainnya', label: 'Lainnya' },
-]
-export const TICKET_STATUSES: Opt[] = [
-  { value: 'baru', label: 'Baru', tone: 'slate' },
-  { value: 'ditugaskan', label: 'Ditugaskan', tone: 'blue' },
-  { value: 'dikerjakan', label: 'Dikerjakan', tone: 'blue' },
-  { value: 'pause', label: 'Pause SLA', tone: 'amber' },
-  { value: 'selesai', label: 'Selesai', tone: 'emerald' },
-  { value: 'ditutup', label: 'Ditutup', tone: 'zinc' },
-]
-export const ticketStatusLabel = (v?: string) => TICKET_STATUSES.find(s => s.value === v)?.label ?? (v || '-')
-export const ticketStatusTone = (v?: string) => TICKET_STATUSES.find(s => s.value === v)?.tone ?? 'slate'
+/**
+ * Nilai berikut WAJIB persis sama dengan CHECK constraint tabel `tickets`/`work_orders`
+ * (lihat modules/operations/lib/status.ts — sumber kebenaran tunggal, ditarik dari basis data).
+ * JANGAN menambah/mengubah value di sini secara langsung; ubah status.ts.
+ */
+export const TICKET_SOURCES: Opt[] = optionsOf('tickets.source')
+export const TICKET_TYPES: Opt[] = optionsOf('tickets.ticket_type')
+export const TICKET_STATUSES: Opt[] = optionsOf('tickets.status')
+export const ticketStatusLabel = (v?: string) => labelOf('tickets.status', v)
+export const ticketStatusTone = (v?: string) => toneOf('tickets.status', v)
 
-export const WO_TYPES: Opt[] = [
-  { value: 'PSB', label: 'PSB (Pasang Baru)' },
-  { value: 'MIGRASI', label: 'Migrasi' },
-  { value: 'GANGGUAN', label: 'Gangguan' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
-  { value: 'DEPLOYMENT', label: 'Deployment' },
-  { value: 'SURVEY', label: 'Survey' },
-  { value: 'DISMANTLE', label: 'Dismantle' },
-]
-export const WO_STATUSES: Opt[] = [
-  { value: 'belum_ditugaskan', label: 'Belum Ditugaskan', tone: 'slate' },
-  { value: 'ditugaskan', label: 'Ditugaskan', tone: 'blue' },
-  { value: 'dikerjakan', label: 'Dikerjakan', tone: 'blue' },
-  { value: 'selesai', label: 'Selesai', tone: 'emerald' },
-  { value: 'gagal', label: 'Gagal', tone: 'red' },
-]
-export const woStatusLabel = (v?: string) => WO_STATUSES.find(s => s.value === v)?.label ?? (v || '-')
-export const woStatusTone = (v?: string) => WO_STATUSES.find(s => s.value === v)?.tone ?? 'slate'
+export const WO_TYPES: Opt[] = optionsOf('work_orders.wo_type')
+export const WO_STATUSES: Opt[] = optionsOf('work_orders.status')
+export const woStatusLabel = (v?: string) => labelOf('work_orders.status', v)
+export const woStatusTone = (v?: string) => toneOf('work_orders.status', v)
 
 export const ELEMENT_TYPES = ['ODC', 'ODP', 'FAT', 'FDT', 'CLOSURE', 'TIANG', 'KABEL', 'OLT', 'SEGMENT']
+export const NETWORK_ELEMENT_STATUSES: Opt[] = optionsOf('network_elements.status')
 
-export const MAINT_TYPES: Opt[] = [
-  { value: 'preventive', label: 'Preventive' },
-  { value: 'patroli', label: 'Patroli' },
-  { value: 'pengukuran', label: 'Pengukuran' },
-  { value: 'perapihan', label: 'Perapihan' },
-]
-export const MAINT_FREQ: Opt[] = [
-  { value: 'harian', label: 'Harian' },
-  { value: 'mingguan', label: 'Mingguan' },
-  { value: 'bulanan', label: 'Bulanan' },
-  { value: 'triwulan', label: 'Triwulan' },
-  { value: 'tahunan', label: 'Tahunan' },
-]
-export const MAINT_TASK_STATUSES = ['terjadwal', 'berjalan', 'selesai', 'terlewat']
+export const MAINT_TYPES: Opt[] = optionsOf('maintenance_plans.plan_type')
+export const MAINT_FREQ: Opt[] = optionsOf('maintenance_plans.frequency')
+export const MAINT_TASK_STATUSES: Opt[] = optionsOf('maintenance_tasks.status')
+export const maintTaskStatusLabel = (v?: string) => labelOf('maintenance_tasks.status', v)
+export const maintTaskStatusTone = (v?: string) => toneOf('maintenance_tasks.status', v)
 
 export const ASPEK_RCA: Opt[] = [
   { value: 'People', label: 'People' },

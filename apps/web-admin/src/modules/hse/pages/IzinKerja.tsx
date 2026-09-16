@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, XCircle, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { list, insert, update, nextDocNo } from '@/lib/db'
 import {
@@ -92,6 +92,15 @@ export default function IzinKerja() {
  }
  function toggleChecklist(i: number) {
  setForm((f: any) => ({ ...f, checklist: f.checklist.map((c: ChecklistItem, idx: number) => idx === i ? { ...c, checked: !c.checked } : c) }))
+ }
+ function addChecklistItem() {
+ setForm((f: any) => ({ ...f, checklist: [...(f.checklist ?? []), { item: '', checked: false }] }))
+ }
+ function editChecklistItem(i: number, item: string) {
+ setForm((f: any) => ({ ...f, checklist: f.checklist.map((c: ChecklistItem, idx: number) => idx === i ? { ...c, item } : c) }))
+ }
+ function removeChecklistItem(i: number) {
+ setForm((f: any) => ({ ...f, checklist: f.checklist.filter((_: ChecklistItem, idx: number) => idx !== i) }))
  }
  function useCurrentLocation() {
  if (!navigator.geolocation) { toast.push('Perangkat tidak mendukung penangkapan lokasi', 'error'); return }
@@ -242,13 +251,20 @@ export default function IzinKerja() {
 
  {form.permit_type && (
  <div className="border border-ink-200 rounded-md">
- <div className="px-4 py-2.5 border-b border-ink-200">
+ <div className="px-4 py-2.5 border-b border-ink-200 flex items-center justify-between">
+ <div>
  <span className="text-caption font-semibold uppercase tracking-wide text-ink-500">Checklist Keselamatan Wajib — {permitTypeLabel(form.permit_type)}</span>
- <p className="text-caption text-ink-400 mt-0.5">Seluruh butir wajib dicentang sebelum izin dapat disetujui.</p>
+ <p className="text-caption text-ink-400 mt-0.5">Seluruh butir wajib dicentang sebelum izin dapat disetujui. Tambahkan butir khusus lokasi bila perlu.</p>
+ </div>
+ <Button type="button" size="sm" variant="outline" icon={<Plus size={14} />} onClick={addChecklistItem}>Tambah Butir</Button>
  </div>
  <div className="divide-y divide-ink-200">
  {form.checklist.map((c: ChecklistItem, i: number) => (
- <div key={i} className="px-4 py-2.5"><Checkbox label={c.item} checked={c.checked} onChange={() => toggleChecklist(i)} /></div>
+ <div key={i} className="px-4 py-2.5 flex items-center gap-2">
+ <div className="flex-1"><Checkbox label="" checked={c.checked} onChange={() => toggleChecklist(i)} /></div>
+ <Input value={c.item} onChange={(e: any) => editChecklistItem(i, e.target.value)} placeholder="Uraian butir checklist" className="flex-[6]" />
+ <button type="button" onClick={() => removeChecklistItem(i)} className="p-1 text-ink-400 hover:text-red-600"><X size={15} /></button>
+ </div>
  ))}
  </div>
  </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
-import { list, insert, nextDocNo } from '@/lib/db'
+import { list, insert, update, nextDocNo } from '@/lib/db'
 import {
  PageHeader, Card, CardHeader, DataTable, Badge, Button, Modal, Drawer, Field, Input, Select, Textarea,
  Checkbox, KpiCard, Desc, Section, useToast, Plus, cx,
@@ -35,6 +35,8 @@ export default function Inspeksi() {
  const [saving, setSaving] = useState(false)
 
  const [selected, setSelected] = useState<any>(null)
+ const [followUp, setFollowUp] = useState<any>({ follow_up: '', due_date: '' })
+ const [followUpSaving, setFollowUpSaving] = useState(false)
 
  useEffect(() => { if (profile?.company_id) loadAll() }, [profile?.company_id])
 
@@ -96,6 +98,31 @@ export default function Inspeksi() {
 
  const overdue = (due?: string | null) => due && due < todayISO()
 
+ function openDetail(row: any) { setSelected(row); setFollowUp({ follow_up: row.follow_up ?? '', due_date: row.due_date ?? '' }) }
+
+ async function saveFollowUp() {
+ if (!selected) return
+ setFollowUpSaving(true)
+ try {
+ const upd = await update('hse_inspections', selected.id, { follow_up: followUp.follow_up || null, due_date: followUp.due_date || null })
+ toast.push('Tindak lanjut diperbarui')
+ setSelected(upd); setInspections(is => is.map(i => i.id === upd.id ? upd : i))
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan tindak lanjut', 'error') }
+ finally { setFollowUpSaving(false) }
+ }
+
+ async function closeFollowUp() {
+ if (!selected) return
+ setFollowUpSaving(true)
+ try {
+ const closedNote = `${selected.follow_up ?? ''}${selected.follow_up ? ' — ' : ''}Tindak lanjut selesai ${tgl(todayISO())}.`
+ const upd = await update('hse_inspections', selected.id, { follow_up: closedNote, due_date: null })
+ toast.push('Tindak lanjut ditandai selesai')
+ setSelected(upd); setInspections(is => is.map(i => i.id === upd.id ? upd : i)); setFollowUp({ follow_up: upd.follow_up ?? '', due_date: '' })
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menandai tindak lanjut selesai', 'error') }
+ finally { setFollowUpSaving(false) }
+ }
+
  return (
  <div>
  <PageHeader title="Inspeksi APD & Alat" subtitle="Inspeksi K3 lapangan dengan checklist dinamis per jenis"
@@ -110,7 +137,7 @@ export default function Inspeksi() {
  <p className="text-caption text-ink-400 mb-4">{INSPECTION_RESULT_NOTE}</p>
 
  <DataTable
- loading={loading} rows={inspections} onRowClick={setSelected}
+ loading={loading} rows={inspections} onRowClick={openDetail}
  searchKeys={['inspection_no', 'target_ref']} exportName="inspeksi-k3"
  emptyTitle="Belum ada inspeksi" emptyMessage="Inspeksi yang disimpan akan muncul di sini."
  columns={[
@@ -178,7 +205,18 @@ export default function Inspeksi() {
  { label: 'Hasil', value: <Badge tone={inspectionResultTone(selected.result)}>{inspectionResultLabel(selected.result)}</Badge> },
  { label: 'Tenggat Tindak Lanjut', value: selected.due_date ? tgl(selected.due_date) : '-' },
  ]} />
- {selected.follow_up && <p className="mt-4 text-body text-ink-600"><span className="font-medium text-ink-800">Tindak Lanjut: </span>{selected.follow_up}</p>}
+ </Section>
+ <Section title="Tindak Lanjut">
+ {writable ? (
+ <div className="space-y-3">
+ <Field label="Rencana / Catatan Tindak Lanjut"><Textarea value={followUp.follow_up} onChange={(e: any) => setFollowUp({ ...followUp, follow_up: e.target.value })} /></Field>
+ <Field label="Tenggat"><Input type="date" value={followUp.due_date} onChange={(e: any) => setFollowUp({ ...followUp, due_date: e.target.value })} /></Field>
+ <div className="flex flex-wrap gap-2">
+ <Button size="sm" variant="outline" loading={followUpSaving} onClick={saveFollowUp}>Simpan Tindak Lanjut</Button>
+ {(selected.follow_up || selected.due_date) && <Button size="sm" variant="success" loading={followUpSaving} onClick={closeFollowUp}>Tandai Tindak Lanjut Selesai</Button>}
+ </div>
+ </div>
+ ) : (selected.follow_up ? <p className="text-body text-ink-600">{selected.follow_up}</p> : <p className="text-caption text-ink-400">Belum ada catatan tindak lanjut.</p>)}
  </Section>
  <Section title="Checklist">
  <div className="divide-y divide-ink-200 border border-ink-200 rounded-md">

@@ -5,7 +5,7 @@ import {
  PageHeader, DataTable, Badge, Button, Modal, Field, Select, Input, Textarea, Money, Tabs, KpiCard, useToast, Plus,
 } from '@/components/ui'
 import { rupiah, tgl, todayISO } from '@/lib/format'
-import { ADVANCE_STATUS_TABS, isPast, isThisMonth } from '../lib/constants'
+import { ADVANCE_STATUS_TABS, DISBURSEMENT_METHOD_OPTIONS, isPast, isThisMonth } from '../lib/constants'
 
 const emptyForm = { employee_id: '', purpose: '', amount: 0, due_date: '', note: '' }
 
@@ -26,6 +26,9 @@ export default function Kasbon() {
  const [settle, setSettle] = useState<any>(null)
  const [settleAmount, setSettleAmount] = useState(0)
  const [busyId, setBusyId] = useState<string | null>(null)
+
+ const [cairkan, setCairkan] = useState<any>(null)
+ const [cairkanForm, setCairkanForm] = useState<any>({ tanggal: todayISO(), cara: 'Transfer Bank' })
 
  useEffect(() => { load() }, [])
 
@@ -90,15 +93,34 @@ export default function Kasbon() {
  setBusyId(settle.id)
  try {
  const newSettled = Number(settle.settled_amount ?? 0) + settleAmount
- const newStatus = newSettled >= Number(settle.amount ?? 0) ? 'lunas' : 'disetujui'
+ const newStatus = newSettled >= Number(settle.amount ?? 0) ? 'lunas' : 'sebagian_lunas'
  await update('employee_advances', settle.id, { settled_amount: newSettled, status: newStatus })
  toast.push('Pelunasan kasbon dicatat'); setSettle(null); load()
- } catch (e: any) { toast.push(e.message ?? 'Gagal mencatat pelunasan', 'error') }
+ } catch (e: any) {
+ const msg = /row-level security|permission denied/i.test(e.message ?? '') ? 'Gagal mencatat — hak akses Anda pada modul HR tidak mengizinkan penulisan (perlu izin write).' : (e.message ?? 'Gagal mencatat pelunasan')
+ toast.push(msg, 'error')
+ }
  finally { setBusyId(null) }
  }
 
- const beredar = rows.filter(r => r.status === 'disetujui').reduce((s, r) => s + (Number(r.amount ?? 0) - Number(r.settled_amount ?? 0)), 0)
- const jatuhTempoBulanIni = rows.filter(r => r.status === 'disetujui' && isThisMonth(r.due_date)).length
+ function openCairkan(r: any) { setCairkan(r); setCairkanForm({ tanggal: todayISO(), cara: 'Transfer Bank' }) }
+ async function submitCairkan() {
+ if (!cairkanForm.tanggal || !cairkanForm.cara) { toast.push('Tanggal dan cara pencairan wajib diisi', 'error'); return }
+ setBusyId(cairkan.id)
+ try {
+ const catatan = `Dicairkan pada ${tgl(cairkanForm.tanggal)} via ${cairkanForm.cara} oleh ${profile?.full_name ?? 'pengguna'}.`
+ await update('employee_advances', cairkan.id, { status: 'dicairkan', note: `${cairkan.note ?? ''}\n\n${catatan}`.trim() })
+ toast.push('Kasbon ditandai dicairkan'); setCairkan(null); load()
+ } catch (e: any) {
+ const msg = /row-level security|permission denied/i.test(e.message ?? '') ? 'Gagal mencairkan — hak akses Anda pada modul HR tidak mengizinkan penulisan (perlu izin write).' : (e.message ?? 'Gagal mencairkan kasbon')
+ toast.push(msg, 'error')
+ }
+ finally { setBusyId(null) }
+ }
+
+ const outstandingStatuses = ['disetujui', 'dicairkan', 'sebagian_lunas']
+ const beredar = rows.filter(r => outstandingStatuses.includes(r.status)).reduce((s, r) => s + (Number(r.amount ?? 0) - Number(r.settled_amount ?? 0)), 0)
+ const jatuhTempoBulanIni = rows.filter(r => outstandingStatuses.includes(r.status) && isThisMonth(r.due_date)).length
  const lewatTempo = rows.filter(overdue).length
 
  return (
@@ -129,8 +151,9 @@ export default function Kasbon() {
  { key: 'aksi', header: 'Aksi', align: 'center', sortable: false, render: (r: any) => (
  <div className="flex items-center gap-1.5 justify-center">
  {can('HR', 'approve') && r.status === 'diajukan' && <><Button size="sm" variant="success" loading={busyId === r.id} onClick={() => approve(r)}>Setujui</Button><Button size="sm" variant="danger" onClick={() => { setReject(r); setRejectReason('') }}>Tolak</Button></>}
- {can('HR', 'write') && r.status === 'disetujui' && <Button size="sm" variant="outline" onClick={() => openSettle(r)}>Catat Pelunasan</Button>}
- {!(r.status === 'diajukan' || r.status === 'disetujui') && <span className="text-ink-300">-</span>}
+ {can('HR', 'write') && r.status === 'disetujui' && <Button size="sm" variant="outline" onClick={() => openCairkan(r)}>Cairkan</Button>}
+ {can('HR', 'write') && (r.status === 'dicairkan' || r.status === 'sebagian_lunas') && <Button size="sm" variant="outline" onClick={() => openSettle(r)}>Catat Pelunasan</Button>}
+ {!['diajukan', 'disetujui', 'dicairkan', 'sebagian_lunas'].includes(r.status) && <span className="text-ink-300">-</span>}
  </div>) },
  ]}
  />
@@ -158,7 +181,18 @@ export default function Kasbon() {
  {settle && (
  <div className="space-y-3">
  <p className="text-caption text-ink-500">Sisa kasbon saat ini: <span className="font-medium text-ink-800">{rupiah(Number(settle.amount ?? 0) - Number(settle.settled_amount ?? 0))}</span></p>
- <Field label="Jumlah Pelunasan" required><Money value={settleAmount} onChange={setSettleAmount} /></Field>
+ <Field label="Jumlah Pelunasan" required hint="Boleh sebagian — sisa dihitung otomatis. Status berubah menjadi Lunas bila pelunasan mencapai jumlah penuh."><Money value={settleAmount} onChange={setSettleAmount} /></Field>
+ </div>
+ )}
+ </Modal>
+
+ <Modal open={!!cairkan} onClose={() => setCairkan(null)} title="Cairkan Kasbon" size="sm"
+ footer={<><Button variant="outline" onClick={() => setCairkan(null)}>Batal</Button><Button loading={busyId === cairkan?.id} onClick={submitCairkan}>Konfirmasi Cairkan</Button></>}>
+ {cairkan && (
+ <div className="space-y-3">
+ <p className="text-caption text-ink-500">Kasbon <span className="font-medium text-ink-800">{cairkan.advance_no}</span> — {rupiah(cairkan.amount)} untuk {cairkan.employees?.full_name}.</p>
+ <Field label="Tanggal Pencairan" required><Input type="date" value={cairkanForm.tanggal} onChange={(e: any) => setCairkanForm({ ...cairkanForm, tanggal: e.target.value })} /></Field>
+ <Field label="Cara Pencairan" required><Select value={cairkanForm.cara} onChange={(e: any) => setCairkanForm({ ...cairkanForm, cara: e.target.value })} options={DISBURSEMENT_METHOD_OPTIONS} /></Field>
  </div>
  )}
  </Modal>

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { chartColors } from '@/lib/theme'
 import { useAuth } from '@/lib/auth'
-import { list } from '@/lib/db'
+import { list, insert, update, nextDocNo } from '@/lib/db'
 import { rupiah, pct, tgl, todayISO } from '@/lib/format'
-import { PageHeader, Card, CardHeader, KpiCard, Badge, TableSkeleton, EmptyState, Section, DataTable } from '@/components/ui'
+import { PageHeader, Card, CardHeader, KpiCard, Badge, TableSkeleton, EmptyState, Section, DataTable, Button, Modal, Field, Select, Input, Textarea, Money, useToast, Plus } from '@/components/ui'
 import { Wallet, TrendingDown, AlertTriangle, Clock3, PieChart } from 'lucide-react'
 import {
  ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Cell,
@@ -13,11 +13,26 @@ import {
 } from '../lib/helpers'
 
 const rp = (v: any) => rupiah(Number(v) || 0)
+const KAS_KATEGORI = [
+ 'Penerimaan Piutang (AR)', 'Pembayaran Vendor (AP)', 'Gaji & Upah', 'Operasional Kantor', 'Sewa & Utilitas',
+ 'Pajak', 'Modal / Investasi', 'Pinjaman', 'Lain-lain',
+]
+const emptyKas = { flow_date: todayISO(), direction: 'in', category: '', description: '', amount: 0 }
+const emptyBayar = { invoice_id: '', payment_date: todayISO(), amount: 0, method: 'Transfer Bank', bank_ref: '' }
 
 export default function DashboardFinance() {
- const { profile } = useAuth()
+ const { profile, can } = useAuth()
+ const toast = useToast()
  const [loading, setLoading] = useState(true)
  const [err, setErr] = useState<string | null>(null)
+
+ const [kasOpen, setKasOpen] = useState(false)
+ const [kasForm, setKasForm] = useState<any>(emptyKas)
+ const [kasSaving, setKasSaving] = useState(false)
+
+ const [bayarOpen, setBayarOpen] = useState(false)
+ const [bayarForm, setBayarForm] = useState<any>(emptyBayar)
+ const [bayarSaving, setBayarSaving] = useState(false)
 
  const [dashRows, setDashRows] = useState<any[]>([])
  const [marginRows, setMarginRows] = useState<any[]>([])
@@ -49,6 +64,59 @@ export default function DashboardFinance() {
  } catch (e: any) {
  setErr(e.message ?? 'Gagal memuat dashboard finance')
  } finally { setLoading(false) }
+ }
+
+ function friendlyFinanceError(e: any, fallback: string) {
+ const msg = e?.message ?? ''
+ if (/row-level security|permission denied/i.test(msg)) return 'Gagal menyimpan — hak akses Anda pada modul Finance tidak mengizinkan tindakan ini.'
+ return msg || fallback
+ }
+
+ function openKas() { setKasForm({ ...emptyKas, flow_date: todayISO() }); setKasOpen(true) }
+ async function saveKas() {
+ if (!kasForm.amount || Number(kasForm.amount) <= 0) { toast.push('Nominal harus lebih dari 0', 'error'); return }
+ setKasSaving(true)
+ try {
+ await insert('cash_flows', {
+ company_id: profile!.company_id, flow_date: kasForm.flow_date, direction: kasForm.direction,
+ category: kasForm.category || null, description: kasForm.description || null, amount: Number(kasForm.amount),
+ })
+ toast.push('Transaksi kas dicatat'); setKasOpen(false); load()
+ } catch (e: any) { toast.push(friendlyFinanceError(e, 'Gagal mencatat transaksi kas'), 'error') }
+ finally { setKasSaving(false) }
+ }
+
+ const vendorInvoicesUnpaid = useMemo(() => vendorInvoices.filter((i: any) => !['lunas', 'ditolak'].includes(i.status)), [vendorInvoices])
+ function openBayar() { setBayarForm({ ...emptyBayar, invoice_id: '', amount: 0 }); setBayarOpen(true) }
+ function pickInvoiceBayar(id: string) {
+ const inv = vendorInvoicesUnpaid.find((i: any) => i.id === id)
+ const sisa = inv ? Number(inv.total || 0) - Number(inv.paid_amount || 0) : 0
+ setBayarForm((f: any) => ({ ...f, invoice_id: id, amount: sisa }))
+ }
+ async function saveBayar() {
+ const inv = vendorInvoicesUnpaid.find((i: any) => i.id === bayarForm.invoice_id)
+ if (!inv) { toast.push('Pilih invoice vendor yang akan dibayar', 'error'); return }
+ if (!bayarForm.amount || Number(bayarForm.amount) <= 0) { toast.push('Nominal pembayaran harus lebih dari 0', 'error'); return }
+ setBayarSaving(true)
+ try {
+ const paymentNo = await nextDocNo(profile!.company_id, 'AP')
+ const payment = await insert<any>('ap_payments', {
+ company_id: profile!.company_id, payment_no: paymentNo, payment_date: bayarForm.payment_date,
+ vendor_id: inv.vendor_id, invoice_id: inv.id, amount: Number(bayarForm.amount), method: bayarForm.method,
+ bank_ref: bayarForm.bank_ref || null, status: 'selesai',
+ })
+ const newPaid = Number(inv.paid_amount || 0) + Number(bayarForm.amount)
+ await update('vendor_invoices', inv.id, { paid_amount: newPaid, status: newPaid >= Number(inv.total || 0) ? 'lunas' : inv.status })
+ try {
+ await insert('cash_flows', {
+ company_id: profile!.company_id, flow_date: bayarForm.payment_date, direction: 'out',
+ category: 'Pembayaran Vendor (AP)', description: inv.inv_no, amount: Number(bayarForm.amount),
+ ref_type: 'ap_payments', ref_id: payment.id,
+ })
+ } catch { /* pencatatan kas gagal tidak membatalkan pembayaran yang sudah tercatat */ }
+ toast.push(`Pembayaran ${paymentNo} tersimpan`); setBayarOpen(false); load()
+ } catch (e: any) { toast.push(friendlyFinanceError(e, 'Gagal mencatat pembayaran'), 'error') }
+ finally { setBayarSaving(false) }
  }
 
  const months = useMemo(() => lastMonths(12), [])
@@ -137,6 +205,13 @@ export default function DashboardFinance() {
  return (
  <div>
  <PageHeader title="Dashboard Finance" subtitle="Ringkasan kas, piutang, hutang, dan margin — fokus pada kelancaran pembayaran mitra." />
+
+ {can('FINANCE', 'write') && (
+ <div className="flex flex-wrap gap-2 mb-5">
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openKas}>Catat Kas Masuk/Keluar</Button>
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openBayar}>Catat Pembayaran</Button>
+ </div>
+ )}
 
  {loading ? <TableSkeleton rows={4} /> : (
  <>
@@ -259,6 +334,32 @@ export default function DashboardFinance() {
  </Section>
  </>
  )}
+
+ <Modal open={kasOpen} onClose={() => setKasOpen(false)} title="Catat Kas Masuk/Keluar"
+ footer={<><Button variant="outline" onClick={() => setKasOpen(false)}>Batal</Button><Button loading={kasSaving} onClick={saveKas}>Simpan</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Tanggal"><Input type="date" value={kasForm.flow_date} onChange={(e: any) => setKasForm({ ...kasForm, flow_date: e.target.value })} /></Field>
+ <Field label="Arah"><Select value={kasForm.direction} onChange={(e: any) => setKasForm({ ...kasForm, direction: e.target.value })} options={[{ value: 'in', label: 'Kas Masuk' }, { value: 'out', label: 'Kas Keluar' }]} /></Field>
+ <Field label="Kategori" className="sm:col-span-2"><Select value={kasForm.category} onChange={(e: any) => setKasForm({ ...kasForm, category: e.target.value })} options={KAS_KATEGORI} /></Field>
+ <Field label="Nominal" required><Money value={kasForm.amount} onChange={(v: number) => setKasForm({ ...kasForm, amount: v })} /></Field>
+ <Field label="Keterangan"><Input value={kasForm.description} onChange={(e: any) => setKasForm({ ...kasForm, description: e.target.value })} /></Field>
+ </div>
+ </Modal>
+
+ <Modal open={bayarOpen} onClose={() => setBayarOpen(false)} title="Catat Pembayaran Vendor"
+ subtitle="Untuk invoice yang dokumennya belum lengkap (PO/GR/faktur pajak), gunakan alur verifikasi di halaman Hutang & Pembayaran Mitra (AP)."
+ footer={<><Button variant="outline" onClick={() => setBayarOpen(false)}>Batal</Button><Button loading={bayarSaving} onClick={saveBayar}>Simpan Pembayaran</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Invoice Vendor" required className="sm:col-span-2">
+ <Select value={bayarForm.invoice_id} onChange={(e: any) => pickInvoiceBayar(e.target.value)}
+ options={vendorInvoicesUnpaid.map((i: any) => ({ value: i.id, label: `${i.inv_no} — ${vendors.find(v => v.id === i.vendor_id)?.name ?? '-'} (sisa ${rp(Number(i.total || 0) - Number(i.paid_amount || 0))})` }))} />
+ </Field>
+ <Field label="Tanggal Bayar"><Input type="date" value={bayarForm.payment_date} onChange={(e: any) => setBayarForm({ ...bayarForm, payment_date: e.target.value })} /></Field>
+ <Field label="Nominal" required><Money value={bayarForm.amount} onChange={(v: number) => setBayarForm({ ...bayarForm, amount: v })} /></Field>
+ <Field label="Metode"><Select value={bayarForm.method} onChange={(e: any) => setBayarForm({ ...bayarForm, method: e.target.value })} options={['Transfer Bank', 'Cek', 'Giro', 'Tunai']} /></Field>
+ <Field label="No. Referensi Bank"><Input value={bayarForm.bank_ref} onChange={(e: any) => setBayarForm({ ...bayarForm, bank_ref: e.target.value })} /></Field>
+ </div>
+ </Modal>
  </div>
  )
 }

@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { list, insert, update, nextDocNo } from '@/lib/db'
 import { rupiah, tgl, todayISO, exportCSV } from '@/lib/format'
 import {
- PageHeader, Tabs, DataTable, Badge, Drawer, Modal, Field, Input, Select, Button,
+ PageHeader, Tabs, DataTable, Badge, Drawer, Modal, Field, Input, Select, Money, Textarea, Button,
  useToast, EmptyState, Section, Desc,
 } from '@/components/ui'
 import { CheckCircle2, XCircle, Download } from 'lucide-react'
@@ -40,7 +40,11 @@ export default function AP() {
  const [detail, setDetail] = useState<any | null>(null)
  const [detailPayments, setDetailPayments] = useState<any[]>([])
  const [batchOpen, setBatchOpen] = useState(false)
- const [batchForm, setBatchForm] = useState<any>({ payment_date: todayISO(), method: 'Transfer Bank', bank_ref: '' })
+ const [batchForm, setBatchForm] = useState<any>({ payment_date: todayISO(), method: 'Transfer Bank', bank_ref: '', note: '' })
+ const [payOpen, setPayOpen] = useState(false)
+ const [payForm, setPayForm] = useState<any>({ payment_date: todayISO(), amount: 0, method: 'Transfer Bank', bank_ref: '', note: '' })
+ const [rejectOpen, setRejectOpen] = useState(false)
+ const [rejectReason, setRejectReason] = useState('')
  const [busy, setBusy] = useState(false)
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
@@ -65,12 +69,50 @@ export default function AP() {
  }), [withTab])
  const view = useMemo(() => withTab.filter(r => r._tab === tab), [withTab, tab])
 
+ function pesanGagalRls(e: any, aksi: string) {
+ const msg = String(e?.message ?? '')
+ if (/row-level security|permission denied|RLS/i.test(msg)) {
+ return `Gagal ${aksi}: Anda tidak memiliki hak yang cukup pada modul Finance. Hubungi admin untuk memberi hak akses.`
+ }
+ return msg || `Gagal ${aksi}`
+ }
+
  async function openDetail(row: any) {
  setDetail(row)
+ setPayForm({ payment_date: todayISO(), amount: sisaTagihan(row.total, row.paid_amount), method: 'Transfer Bank', bank_ref: '', note: '' })
  try {
  const pays = await list('ap_payments', { eq: { invoice_id: row.id }, order: { col: 'payment_date', asc: false }, limit: 100 })
  setDetailPayments(pays)
  } catch { setDetailPayments([]) }
+ }
+
+ async function catatPembayaran() {
+ if (!detail) return
+ const amount = Number(payForm.amount) || 0
+ const sisa = sisaTagihan(detail.total, detail.paid_amount)
+ if (amount <= 0) { toast.push('Jumlah pembayaran harus lebih dari 0.', 'error'); return }
+ if (amount > sisa) { toast.push('Jumlah pembayaran tidak boleh melebihi sisa tagihan.', 'error'); return }
+ setBusy(true)
+ try {
+ const paymentNo = await nextDocNo(profile!.company_id, 'AP')
+ const payment = await insert('ap_payments', {
+ company_id: profile!.company_id, payment_no: paymentNo, payment_date: payForm.payment_date,
+ vendor_id: detail.vendor_id, invoice_id: detail.id, amount, method: payForm.method,
+ bank_ref: payForm.bank_ref || null, note: payForm.note || null, status: 'selesai',
+ })
+ const newPaid = Number(detail.paid_amount || 0) + amount
+ const newStatus = newPaid >= Number(detail.total || 0) ? 'lunas' : 'dibayar_sebagian'
+ await update('vendor_invoices', detail.id, { paid_amount: newPaid, status: newStatus })
+ try {
+ await insert('cash_flows', {
+ company_id: profile!.company_id, flow_date: payForm.payment_date, direction: 'out',
+ category: 'Pembayaran Vendor (AP)', description: `${detail.inv_no} — ${detail.vendor?.name ?? ''}`,
+ amount, ref_type: 'ap_payments', ref_id: payment.id,
+ })
+ } catch { /* pencatatan kas gagal tidak membatalkan pembayaran yang sudah tercatat */ }
+ toast.push('Pembayaran berhasil dicatat.', 'success')
+ setPayOpen(false); setDetail(null); await load()
+ } catch (e: any) { toast.push(pesanGagalRls(e, 'mencatat pembayaran'), 'error') } finally { setBusy(false) }
  }
 
  async function doVerifikasi(inv: any) {
@@ -91,13 +133,20 @@ export default function AP() {
  await load(); setDetail(null)
  } catch (e: any) { toast.push(e.message ?? 'Gagal mengajukan pembayaran', 'error') } finally { setBusy(false) }
  }
- async function doTolak(inv: any) {
+ function openReject() { setRejectReason(''); setRejectOpen(true) }
+ async function submitTolak() {
+ if (!detail) return
+ if (!rejectReason.trim()) { toast.push('Alasan penolakan wajib diisi.', 'error'); return }
  setBusy(true)
  try {
- await update('vendor_invoices', inv.id, { status: 'ditolak' })
- toast.push('Invoice ditolak.', 'success')
- await load(); setDetail(null)
- } catch (e: any) { toast.push(e.message ?? 'Gagal menolak invoice', 'error') } finally { setBusy(false) }
+ await insert('approvals', {
+ company_id: profile!.company_id, entity_type: 'vendor_invoice', entity_id: detail.id, step: 1,
+ status: 'rejected', note: rejectReason.trim(), approver_id: profile!.id, acted_at: new Date().toISOString(), created_by: profile!.id,
+ })
+ await update('vendor_invoices', detail.id, { status: 'ditolak' })
+ toast.push('Invoice ditolak. Alasan penolakan tercatat.', 'success')
+ setRejectOpen(false); await load(); setDetail(null)
+ } catch (e: any) { toast.push(pesanGagalRls(e, 'menolak invoice'), 'error') } finally { setBusy(false) }
  }
 
  const selectedInvoices = useMemo(() => view.filter(r => selected.includes(r.id) && checklistFor(r).complete), [view, selected])
@@ -131,7 +180,7 @@ export default function AP() {
  const payment = await insert('ap_payments', {
  company_id: profile!.company_id, payment_no: paymentNo, payment_date: batchForm.payment_date,
  vendor_id: inv.vendor_id, invoice_id: inv.id, amount: inv._sisa, method: batchForm.method,
- bank_ref: batchForm.bank_ref || null, status: 'selesai',
+ bank_ref: batchForm.bank_ref || null, note: batchForm.note || null, status: 'selesai',
  })
  await update('vendor_invoices', inv.id, { paid_amount: Number(inv.paid_amount || 0) + inv._sisa, status: 'lunas' })
  try {
@@ -191,14 +240,17 @@ export default function AP() {
  <Drawer open={!!detail} onClose={() => setDetail(null)} title={detail?.inv_no} width="max-w-2xl"
  footer={detail && (
  <>
- {detail.status === 'draft' || detail.status === 'diajukan' ? (
- can('FINANCE', 'write') && <Button variant="outline" loading={busy} onClick={() => doVerifikasi(detail)}>Verifikasi</Button>
- ) : null}
+ {['draft', 'diajukan', 'diverifikasi'].includes(detail.status) && can('FINANCE', 'approve') && (
+ <Button variant="danger" loading={busy} onClick={openReject}>Tolak</Button>
+ )}
+ {(detail.status === 'draft' || detail.status === 'diajukan') && can('FINANCE', 'write') && (
+ <Button variant="outline" loading={busy} onClick={() => doVerifikasi(detail)}>Verifikasi</Button>
+ )}
  {detail.status === 'diverifikasi' && can('FINANCE', 'approve') && (
- <>
- <Button variant="danger" loading={busy} onClick={() => doTolak(detail)}>Tolak</Button>
  <Button loading={busy} disabled={!checklistFor(detail).complete} onClick={() => doAjukanPembayaran(detail)}>Ajukan Pembayaran</Button>
- </>
+ )}
+ {['disetujui', 'dibayar_sebagian'].includes(detail.status) && can('FINANCE', 'write') && (
+ <Button loading={busy} onClick={() => setPayOpen(true)}>Catat Pembayaran</Button>
  )}
  </>
  )}>
@@ -269,6 +321,9 @@ export default function AP() {
  <Field label="Referensi / Catatan Bank" className="sm:col-span-2">
  <Input value={batchForm.bank_ref} onChange={(e: any) => setBatchForm((f: any) => ({ ...f, bank_ref: e.target.value }))} placeholder="No. referensi transfer (opsional)" />
  </Field>
+ <Field label="Catatan Batch" className="sm:col-span-2">
+ <Textarea rows={2} value={batchForm.note} onChange={(e: any) => setBatchForm((f: any) => ({ ...f, note: e.target.value }))} placeholder="Opsional" />
+ </Field>
  </div>
  <p className="text-caption text-ink-500 mb-2">{selectedInvoices.length} invoice dipilih, total {rp(batchTotal)}. Setiap invoice akan dilunasi penuh sebesar sisa tagihannya.</p>
  <div className="border border-ink-200 rounded-md divide-y divide-ink-200 max-h-52 overflow-y-auto">
@@ -278,6 +333,33 @@ export default function AP() {
  <div className="tabular">{rp(r._sisa)}</div>
  </div>
  ))}
+ </div>
+ </Modal>
+
+ <Modal open={payOpen} onClose={() => setPayOpen(false)} title="Catat Pembayaran" size="sm"
+ footer={<Button loading={busy} onClick={catatPembayaran}>Simpan</Button>}>
+ <div className="space-y-3">
+ <Desc cols={2} items={[
+ { label: 'Vendor', value: detail?.vendor?.name },
+ { label: 'Sisa Tagihan', value: detail ? rp(sisaTagihan(detail.total, detail.paid_amount)) : '-' },
+ ]} />
+ <Field label="Tanggal Pembayaran" required><Input type="date" value={payForm.payment_date} onChange={(e: any) => setPayForm((f: any) => ({ ...f, payment_date: e.target.value }))} /></Field>
+ <Field label="Jumlah" required hint="Boleh sebagian — sisa tagihan akan berstatus 'dibayar sebagian'.">
+ <Money value={payForm.amount} onChange={(v: number) => setPayForm((f: any) => ({ ...f, amount: v }))} />
+ </Field>
+ <Field label="Metode"><Select value={payForm.method} onChange={(e: any) => setPayForm((f: any) => ({ ...f, method: e.target.value }))} options={['Transfer Bank', 'Giro', 'Kliring']} /></Field>
+ <Field label="Referensi Bank"><Input value={payForm.bank_ref} onChange={(e: any) => setPayForm((f: any) => ({ ...f, bank_ref: e.target.value }))} placeholder="Opsional" /></Field>
+ <Field label="Catatan"><Textarea rows={2} value={payForm.note} onChange={(e: any) => setPayForm((f: any) => ({ ...f, note: e.target.value }))} placeholder="Opsional" /></Field>
+ </div>
+ </Modal>
+
+ <Modal open={rejectOpen} onClose={() => setRejectOpen(false)} title="Tolak Invoice" size="sm"
+ footer={<Button variant="danger" loading={busy} onClick={submitTolak}>Tolak Invoice</Button>}>
+ <div className="space-y-3">
+ <p className="text-body text-ink-600">Invoice <strong>{detail?.inv_no}</strong> dari <strong>{detail?.vendor?.name}</strong> akan ditolak.</p>
+ <Field label="Alasan Penolakan" required>
+ <Textarea rows={3} value={rejectReason} onChange={(e: any) => setRejectReason(e.target.value)} placeholder="Jelaskan alasan invoice ditolak (mis. dokumen tidak sesuai, nilai tidak cocok PO)" />
+ </Field>
  </div>
  </Modal>
  </div>

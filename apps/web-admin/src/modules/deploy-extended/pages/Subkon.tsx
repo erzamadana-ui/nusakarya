@@ -164,6 +164,27 @@ export default function Subkon() {
  } catch (e: any) { toast.push(e.message ?? 'Gagal memverifikasi laporan', 'error') }
  }
 
+ /** Hanya laporan progres terakhir yang BELUM diverifikasi boleh dihapus (mis. salah input),
+ * agar riwayat yang sudah diverifikasi tidak bisa dihilangkan begitu saja. Paket dikembalikan
+ * ke progres & status laporan sebelumnya. */
+ const deleteLastProgress = async () => {
+ if (!lastProgress || lastProgress.verified_by) return
+ try {
+ await remove('subcontract_progress', lastProgress.id)
+ const remaining = await list('subcontract_progress', { eq: { package_id: drawerRow.id }, order: { col: 'report_date', asc: false } })
+ const prevPct = remaining[0]?.progress_percent ?? 0
+ const newStatus = remaining.length === 0 ? 'draft' : (drawerRow.status === 'selesai' && Number(prevPct) < 100 ? 'aktif' : drawerRow.status)
+ const updPkg = await update('subcontract_packages', drawerRow.id, { progress_percent: prevPct, status: newStatus })
+ toast.push('Laporan progres terakhir dihapus')
+ setDrawerRow(updPkg); setProgress(remaining); load()
+ } catch (e: any) {
+ const msg = String(e?.message ?? '')
+ toast.push(/row-level security|permission denied|RLS/i.test(msg)
+ ? 'Gagal menghapus: Anda tidak memiliki hak Setujui pada modul Deployment. Hubungi admin untuk memberi hak akses.'
+ : (msg || 'Gagal menghapus laporan progres'), 'error')
+ }
+ }
+
  return (
  <div>
  <PageHeader title="Paket Subkontraktor" subtitle="Kontrak kerja subkontraktor, progres, dan rekap keuangan retensi"
@@ -261,7 +282,10 @@ export default function Subkon() {
  </Section>
  <Section title="Riwayat Progres" className="mt-2">
  {approver && lastProgress && !lastProgress.verified_by && (
- <Button size="sm" variant="outline" icon={<ShieldCheck size={14} />} onClick={verifyLast} className="mb-3">Verifikasi Laporan Terakhir</Button>
+ <div className="flex gap-2 mb-3">
+ <Button size="sm" variant="outline" icon={<ShieldCheck size={14} />} onClick={verifyLast}>Verifikasi Laporan Terakhir</Button>
+ <Button size="sm" variant="ghost" className="text-red-600" onClick={deleteLastProgress}>Hapus Laporan Terakhir</Button>
+ </div>
  )}
  {loadingProgress ? <p className="text-caption text-ink-400">Memuat riwayat…</p> : progress.length === 0 ? (
  <EmptyState title="Belum ada laporan progres" message="Klik &quot;Tambah Laporan Progres&quot; untuk mencatat progres pertama." />

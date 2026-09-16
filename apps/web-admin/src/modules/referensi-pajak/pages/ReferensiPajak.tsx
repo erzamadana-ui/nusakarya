@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth'
-import { list, update } from '@/lib/db'
+import { list, update, insert } from '@/lib/db'
 import { rupiah, tgl, tglJam, exportCSV, todayISO } from '@/lib/format'
 import {
   PageHeader, KpiCard, Tabs, DataTable, Badge, Modal, Field, Input, Textarea, Money, Button,
   useToast, ConfirmDialog, Card, CardHeader, Desc,
 } from '@/components/ui'
-import { AlertTriangle, ShieldCheck, ExternalLink, Download } from 'lucide-react'
+import { AlertTriangle, ShieldCheck, ExternalLink, Download, Plus } from 'lucide-react'
 import { FOOTNOTE_PAJAK, TER_CATEGORY_PTKP, TER_CATEGORY_TABS, pctRate } from '../lib/constants'
 
 type TaxRateRef = {
@@ -120,6 +120,11 @@ export default function ReferensiPajak() {
 }
 
 /* ============================== TAB: TARIF UMUM ============================== */
+const emptyTaxRateForm = {
+  tax_code: '', tax_name: '', rate_pct: '', basis_note: '', legal_basis: '', source_url: '',
+  effective_from: todayISO(), effective_to: '', note: '',
+}
+
 function TabUmum({ rows, loading, profiles, canWrite, canApprove, onSaved, toast }: {
   rows: TaxRateRef[]; loading: boolean; profiles: Record<string, string>; canWrite: boolean; canApprove: boolean
   onSaved: () => void; toast: any
@@ -128,7 +133,38 @@ function TabUmum({ rows, loading, profiles, canWrite, canApprove, onSaved, toast
   const [form, setForm] = useState<any>({})
   const [busy, setBusy] = useState(false)
   const [confirmVerify, setConfirmVerify] = useState<TaxRateRef | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState<any>(emptyTaxRateForm)
   const { profile } = useAuth()
+
+  function openAdd() { setAddForm(emptyTaxRateForm); setAddOpen(true) }
+
+  function pesanGagal(e: any, aksi: string) {
+    const msg = String(e?.message ?? '')
+    if (/row-level security|permission denied|RLS/i.test(msg)) {
+      return `Gagal ${aksi}: Anda tidak memiliki hak Tulis pada modul Finance untuk referensi pajak. Hubungi admin untuk memberi hak akses.`
+    }
+    return msg || `Gagal ${aksi}`
+  }
+
+  async function tambah() {
+    if (!addForm.tax_code.trim()) { toast.push('Kode tarif wajib diisi.', 'error'); return }
+    if (!addForm.tax_name.trim()) { toast.push('Nama tarif wajib diisi.', 'error'); return }
+    if (addForm.rate_pct === '' || isNaN(Number(addForm.rate_pct))) { toast.push('Tarif (%) wajib diisi.', 'error'); return }
+    if (!addForm.effective_from) { toast.push('Berlaku sejak wajib diisi.', 'error'); return }
+    setBusy(true)
+    try {
+      await insert('tax_rates_ref', {
+        company_id: profile!.company_id, tax_code: addForm.tax_code.trim().toUpperCase().replace(/\s+/g, '_'),
+        tax_name: addForm.tax_name.trim(), rate: Number(addForm.rate_pct) / 100, basis_note: addForm.basis_note || null,
+        legal_basis: addForm.legal_basis || null, source_url: addForm.source_url || null,
+        effective_from: addForm.effective_from, effective_to: addForm.effective_to || null, note: addForm.note || null,
+        is_verified: false,
+      })
+      toast.push('Tarif baru ditambahkan. Perlu diverifikasi tim pajak sebelum dipakai sebagai dasar resmi.', 'success')
+      setAddOpen(false); onSaved()
+    } catch (e: any) { toast.push(pesanGagal(e, 'menambah tarif'), 'error') } finally { setBusy(false) }
+  }
 
   function openEdit(row: TaxRateRef) {
     setEditing(row)
@@ -180,7 +216,10 @@ function TabUmum({ rows, loading, profiles, canWrite, canApprove, onSaved, toast
     <>
       <DataTable
         loading={loading} rows={rows} rowKey="id" searchKeys={['tax_code', 'tax_name']}
-        toolbar={<Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>}
+        toolbar={<div className="flex gap-2">
+          <Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>
+          {canWrite && <Button size="sm" icon={<Plus size={14} />} onClick={openAdd}>Tambah Tarif Baru</Button>}
+        </div>}
         emptyTitle="Belum ada tarif umum" emptyMessage="Tarif PPN, PPh 23, dan lainnya akan tampil di sini."
         columns={[
           { key: 'tax_code', header: 'Kode', width: '190px' },
@@ -221,6 +260,26 @@ function TabUmum({ rows, loading, profiles, canWrite, canApprove, onSaved, toast
 
       <ConfirmDialog open={!!confirmVerify} onClose={() => setConfirmVerify(null)} onConfirm={verifikasi}
         title="Tandai Terverifikasi" message={`Nyatakan tarif "${confirmVerify?.tax_name}" telah dicocokkan ke peraturan resmi oleh tim pajak?`} />
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Tambah Tarif Baru" size="md"
+        footer={<Button loading={busy} onClick={tambah}>Simpan</Button>}>
+        <div className="space-y-3">
+          <Field label="Kode Tarif" required hint="Kode unik, huruf besar & garis bawah. Cth: PPN_BARANG_MEWAH">
+            <Input value={addForm.tax_code ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, tax_code: e.target.value }))} placeholder="cth. PPN_BARANG_MEWAH" />
+          </Field>
+          <Field label="Nama Tarif" required><Input value={addForm.tax_name ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, tax_name: e.target.value }))} /></Field>
+          <Field label="Tarif (%)" required hint="Contoh: 11 untuk 11%"><Input type="number" step="0.01" value={addForm.rate_pct ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, rate_pct: e.target.value }))} /></Field>
+          <Field label="Dasar Pengenaan Pajak"><Textarea rows={2} value={addForm.basis_note ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, basis_note: e.target.value }))} /></Field>
+          <Field label="Dasar Hukum"><Textarea rows={2} value={addForm.legal_basis ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, legal_basis: e.target.value }))} /></Field>
+          <Field label="URL Sumber"><Input value={addForm.source_url ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, source_url: e.target.value }))} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Berlaku Sejak" required><Input type="date" value={addForm.effective_from ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, effective_from: e.target.value }))} /></Field>
+            <Field label="Berlaku Sampai" hint="Kosongkan bila masih berlaku."><Input type="date" value={addForm.effective_to ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, effective_to: e.target.value }))} /></Field>
+          </div>
+          <Field label="Catatan"><Textarea rows={2} value={addForm.note ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, note: e.target.value }))} /></Field>
+          <p className="text-caption text-ink-400">Baris tarif lama TIDAK dihapus otomatis — bila tarif ini menggantikan tarif lama, buka tarif lama lalu isi "Berlaku Sampai" agar riwayat perhitungan lama tetap utuh.</p>
+        </div>
+      </Modal>
     </>
   )
 }
@@ -236,7 +295,35 @@ function TabTer({ rows, loading, profiles, canWrite, canApprove, onSaved, toast 
   const [form, setForm] = useState<any>({})
   const [busy, setBusy] = useState(false)
   const [confirmVerify, setConfirmVerify] = useState<TerRate | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState<any>({ category: 'A', min_income: '', max_income: '', rate_pct: '', effective_from: todayISO(), source_note: '' })
   const { profile } = useAuth()
+
+  function pesanGagal(e: any, aksi: string) {
+    const msg = String(e?.message ?? '')
+    if (/row-level security|permission denied|RLS/i.test(msg)) {
+      return `Gagal ${aksi}: Anda tidak memiliki hak Tulis pada modul Payroll untuk referensi TER. Hubungi admin untuk memberi hak akses.`
+    }
+    return msg || `Gagal ${aksi}`
+  }
+
+  function openAdd() { setAddForm({ category, min_income: '', max_income: '', rate_pct: '', effective_from: todayISO(), source_note: '' }); setAddOpen(true) }
+
+  async function tambah() {
+    if (!addForm.category) { toast.push('Kategori wajib dipilih.', 'error'); return }
+    if (addForm.min_income === '' || isNaN(Number(addForm.min_income))) { toast.push('Batas bawah wajib diisi.', 'error'); return }
+    if (addForm.rate_pct === '' || isNaN(Number(addForm.rate_pct))) { toast.push('Tarif (%) wajib diisi.', 'error'); return }
+    setBusy(true)
+    try {
+      await insert('ter_rates', {
+        category: addForm.category, min_income: Number(addForm.min_income), max_income: addForm.max_income === '' ? null : Number(addForm.max_income),
+        rate: Number(addForm.rate_pct) / 100, source_note: addForm.source_note || null, effective_from: addForm.effective_from || null,
+        is_verified: false,
+      })
+      toast.push('Lapisan TER baru ditambahkan. Perlu diverifikasi tim payroll.', 'success')
+      setAddOpen(false); onSaved()
+    } catch (e: any) { toast.push(pesanGagal(e, 'menambah lapisan TER'), 'error') } finally { setBusy(false) }
+  }
 
   const catRows = useMemo(() => rows.filter(r => r.category === category), [rows, category])
   const matched = useMemo(() => {
@@ -312,7 +399,10 @@ function TabTer({ rows, loading, profiles, canWrite, canApprove, onSaved, toast 
 
       <DataTable
         loading={loading} rows={catRows} rowKey="id" searchable={false}
-        toolbar={<Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>}
+        toolbar={<div className="flex gap-2">
+          <Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>
+          {canWrite && <Button size="sm" icon={<Plus size={14} />} onClick={openAdd}>Tambah Lapisan Baru</Button>}
+        </div>}
         emptyTitle="Belum ada lapisan TER" emptyMessage="Lapisan TER kategori ini belum tersedia."
         columns={[
           { key: 'min_income', header: 'Batas Bawah', align: 'right', render: r => rupiah(r.min_income) },
@@ -347,6 +437,20 @@ function TabTer({ rows, loading, profiles, canWrite, canApprove, onSaved, toast 
 
       <ConfirmDialog open={!!confirmVerify} onClose={() => setConfirmVerify(null)} onConfirm={verifikasi}
         title="Tandai Terverifikasi" message={confirmVerify ? `Nyatakan lapisan TER ${confirmVerify.category} (${rupiah(confirmVerify.min_income)} – ${confirmVerify.max_income ? rupiah(confirmVerify.max_income) : 'tanpa batas'}) sudah dicocokkan ke Lampiran PMK 168/2023?` : ''} />
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Tambah Lapisan TER Baru" size="sm"
+        footer={<Button loading={busy} onClick={tambah}>Simpan</Button>}>
+        <div className="space-y-3">
+          <Field label="Kategori" required><Tabs tabs={TER_CATEGORY_TABS} value={addForm.category} onChange={(v: any) => setAddForm((f: any) => ({ ...f, category: v }))} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Batas Bawah" required><Money value={addForm.min_income === '' ? 0 : Number(addForm.min_income)} onChange={(v: number) => setAddForm((f: any) => ({ ...f, min_income: v }))} /></Field>
+            <Field label="Batas Atas" hint="Kosongkan bila tanpa batas atas."><Money value={addForm.max_income === '' ? 0 : Number(addForm.max_income)} onChange={(v: number) => setAddForm((f: any) => ({ ...f, max_income: v }))} /></Field>
+          </div>
+          <Field label="Tarif (%)" required hint="Contoh: 1.5 untuk 1,5%"><Input type="number" step="0.0001" value={addForm.rate_pct ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, rate_pct: e.target.value }))} /></Field>
+          <Field label="Sumber / Catatan"><Textarea rows={2} value={addForm.source_note ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, source_note: e.target.value }))} /></Field>
+          <Field label="Berlaku Sejak"><Input type="date" value={addForm.effective_from ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, effective_from: e.target.value }))} /></Field>
+        </div>
+      </Modal>
     </>
   )
 }
@@ -360,7 +464,36 @@ function TabArt17({ rows, loading, profiles, canWrite, canApprove, onSaved, toas
   const [form, setForm] = useState<any>({})
   const [busy, setBusy] = useState(false)
   const [confirmVerify, setConfirmVerify] = useState<Art17 | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState<any>({ min_income: '', max_income: '', rate_pct: '', effective_from: todayISO(), source_note: '' })
   const { profile } = useAuth()
+
+  function pesanGagal(e: any, aksi: string) {
+    const msg = String(e?.message ?? '')
+    if (/row-level security|permission denied|RLS/i.test(msg)) {
+      return `Gagal ${aksi}: Anda tidak memiliki hak Setujui pada modul Payroll untuk menambah lapisan Pasal 17. Hubungi admin untuk memberi hak akses.`
+    }
+    return msg || `Gagal ${aksi}`
+  }
+
+  function openAdd() { setAddForm({ min_income: '', max_income: '', rate_pct: '', effective_from: todayISO(), source_note: '' }); setAddOpen(true) }
+
+  async function tambah() {
+    if (addForm.min_income === '' || isNaN(Number(addForm.min_income))) { toast.push('Batas bawah wajib diisi.', 'error'); return }
+    if (addForm.rate_pct === '' || isNaN(Number(addForm.rate_pct))) { toast.push('Tarif (%) wajib diisi.', 'error'); return }
+    if (!addForm.effective_from) { toast.push('Berlaku sejak wajib diisi.', 'error'); return }
+    setBusy(true)
+    try {
+      await insert('tax_brackets_art17', {
+        company_id: profile!.company_id, min_income: Number(addForm.min_income),
+        max_income: addForm.max_income === '' ? null : Number(addForm.max_income),
+        rate: Number(addForm.rate_pct) / 100, source_note: addForm.source_note || null, effective_from: addForm.effective_from,
+        is_verified: false,
+      })
+      toast.push('Lapisan Pasal 17 baru ditambahkan. Perlu diverifikasi tim payroll.', 'success')
+      setAddOpen(false); onSaved()
+    } catch (e: any) { toast.push(pesanGagal(e, 'menambah lapisan Pasal 17'), 'error') } finally { setBusy(false) }
+  }
 
   function openEdit(row: Art17) {
     setEditing(row)
@@ -404,7 +537,10 @@ function TabArt17({ rows, loading, profiles, canWrite, canApprove, onSaved, toas
     <>
       <DataTable
         loading={loading} rows={rows} rowKey="id" searchable={false}
-        toolbar={<Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>}
+        toolbar={<div className="flex gap-2">
+          <Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportVerifikasi}>Ekspor untuk Verifikasi</Button>
+          {canApprove && <Button size="sm" icon={<Plus size={14} />} onClick={openAdd}>Tambah Lapisan Baru</Button>}
+        </div>}
         emptyTitle="Belum ada lapisan Pasal 17" emptyMessage="Tarif progresif Pasal 17 belum tersedia."
         columns={[
           { key: 'min_income', header: 'Batas Bawah', align: 'right', render: r => rupiah(r.min_income) },
@@ -438,6 +574,20 @@ function TabArt17({ rows, loading, profiles, canWrite, canApprove, onSaved, toas
 
       <ConfirmDialog open={!!confirmVerify} onClose={() => setConfirmVerify(null)} onConfirm={verifikasi}
         title="Tandai Terverifikasi" message={confirmVerify ? `Nyatakan lapisan Pasal 17 (${rupiah(confirmVerify.min_income)} – ${confirmVerify.max_income ? rupiah(confirmVerify.max_income) : 'tanpa batas'}) sudah dicocokkan ke UU HPP?` : ''} />
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Tambah Lapisan Pasal 17 Baru" size="sm"
+        footer={<Button loading={busy} onClick={tambah}>Simpan</Button>}>
+        <div className="space-y-3">
+          <p className="text-caption text-ink-400">Menambah lapisan baru memerlukan hak Setujui Payroll — perubahan tarif progresif berdampak luas ke seluruh perhitungan gaji.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Batas Bawah" required><Money value={addForm.min_income === '' ? 0 : Number(addForm.min_income)} onChange={(v: number) => setAddForm((f: any) => ({ ...f, min_income: v }))} /></Field>
+            <Field label="Batas Atas" hint="Kosongkan bila tanpa batas atas."><Money value={addForm.max_income === '' ? 0 : Number(addForm.max_income)} onChange={(v: number) => setAddForm((f: any) => ({ ...f, max_income: v }))} /></Field>
+          </div>
+          <Field label="Tarif (%)" required hint="Contoh: 5 untuk 5%"><Input type="number" step="0.01" value={addForm.rate_pct ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, rate_pct: e.target.value }))} /></Field>
+          <Field label="Sumber / Catatan"><Textarea rows={2} value={addForm.source_note ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, source_note: e.target.value }))} /></Field>
+          <Field label="Berlaku Sejak" required><Input type="date" value={addForm.effective_from ?? ''} onChange={(e: any) => setAddForm((f: any) => ({ ...f, effective_from: e.target.value }))} /></Field>
+        </div>
+      </Modal>
     </>
   )
 }

@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth'
 import { list, insert, update, remove, nextDocNo } from '@/lib/db'
 import { rupiah, tgl, todayISO, num } from '@/lib/format'
 import {
- PageHeader, FilterBar, KpiCard, DataTable, Drawer, Stepper, Progress, Badge,
+ PageHeader, FilterBar, KpiCard, DataTable, Drawer, Modal, Stepper, Progress, Badge,
  Button, Field, Input, Textarea, Select, Money, useToast, Plus,
 } from '@/components/ui'
 import { PO_STATUS, PO_STEPS, poStepIndex } from '../lib/shared'
@@ -33,6 +33,8 @@ export default function PO() {
  const [ppnPercent, setPpnPercent] = useState(11)
  const [saving, setSaving] = useState(false)
  const printRef = useRef<HTMLDivElement>(null)
+ const [closeOpen, setCloseOpen] = useState(false)
+ const [closeReason, setCloseReason] = useState('')
 
  const load = useCallback(async () => {
  setLoading(true)
@@ -179,6 +181,17 @@ export default function PO() {
  }
  function buatGR() { navigate('/procurement/gr', { state: { fromPoId: drawer.row.id } }) }
  function cetak() { window.print() }
+ function openClose() { setCloseReason(''); setCloseOpen(true) }
+ async function doClose() {
+ if (!closeReason.trim()) { toast.push('Alasan penutupan wajib diisi', 'error'); return }
+ setSaving(true)
+ try {
+ const note = `${drawer.row.note ?? ''}${drawer.row.note ? '\n' : ''}Alasan penutupan PO: ${closeReason}`.trim()
+ await update('purchase_orders', drawer.row.id, { status: 'ditutup', note })
+ toast.push('PO ditutup'); setCloseOpen(false); setDrawer({ open: false }); load()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menutup PO', 'error') }
+ finally { setSaving(false) }
+ }
 
  const columns = [
  { key: 'po_no', header: 'No. PO', width: '150px' },
@@ -224,6 +237,7 @@ export default function PO() {
  )}
  {drawer.row?.status === 'disetujui' && can('PROCUREMENT', 'write') && <Button loading={saving} onClick={() => setStatus('dikirim', 'PO ditandai terkirim ke vendor')}>Tandai Terkirim</Button>}
  {['dikirim', 'diterima_sebagian'].includes(drawer.row?.status) && can('PROCUREMENT', 'write') && <Button onClick={buatGR}>Buat Good Receive</Button>}
+ {drawer.row?.status === 'diterima_sebagian' && can('PROCUREMENT', 'approve') && <Button variant="danger" onClick={openClose}>Tutup PO</Button>}
  </div>}>
  {drawer.row && <div className="mb-4"><Stepper steps={PO_STEPS} current={poStepIndex(drawer.row.status)} /></div>}
  <div className="grid sm:grid-cols-2 gap-4 mb-5">
@@ -271,6 +285,13 @@ export default function PO() {
  <div className="flex justify-between text-body-l font-semibold border-t border-ink-200 pt-1.5"><span>Total PO</span><span className="tabular">{rupiah(total)}</span></div>
  </div>
  </Drawer>
+
+ <Modal open={closeOpen} onClose={() => setCloseOpen(false)} title="Tutup PO"
+ footer={<><Button variant="outline" onClick={() => setCloseOpen(false)}>Batal</Button>
+ <Button variant="danger" loading={saving} onClick={doClose}>Tutup PO</Button></>}>
+ <p className="text-body text-ink-600 mb-3">PO akan ditandai ditutup — dipakai bila kekurangan kirim diterima sebagai final dan vendor tidak akan mengirim sisanya. Sisa qty yang belum diterima tidak akan ditagih.</p>
+ <Field label="Alasan Penutupan" required><Textarea value={closeReason} onChange={(e: any) => setCloseReason(e.target.value)} placeholder="Contoh: sisa kiriman dibatalkan, vendor tidak sanggup memenuhi kekurangan…" /></Field>
+ </Modal>
 
  {/* Area cetak — tersembunyi di layar, tampil khusus saat window.print() */}
  <style>{`@media print { body * { visibility: hidden; } #po-print-area, #po-print-area * { visibility: visible; } #po-print-area { position: fixed; inset: 0; padding: 32px; background: #fff; color: #000; } }`}</style>

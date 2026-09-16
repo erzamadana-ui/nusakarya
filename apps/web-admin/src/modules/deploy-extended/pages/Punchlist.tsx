@@ -151,6 +151,10 @@ export default function Punchlist() {
  try { const upd = await update('punch_lists', row.id, { status: 'ditutup' }); toast.push('Temuan ditutup'); setDrawerRow(upd); load() }
  catch (e: any) { toast.push(e.message ?? 'Gagal menutup temuan', 'error') }
  }
+ const tolak = async (row: any) => {
+ try { const upd = await update('punch_lists', row.id, { status: 'ditolak' }); toast.push('Temuan ditolak (tidak valid/duplikat)'); setDrawerRow(upd); load() }
+ catch (e: any) { toast.push(e.message ?? 'Gagal menolak temuan', 'error') }
+ }
 
  const openDrawer = async (row: any) => {
  setDrawerRow(row)
@@ -286,6 +290,7 @@ export default function Punchlist() {
  footer={drawerRow && <>
  {approver && <Button variant="danger" onClick={() => setDelRow(drawerRow)}>Hapus</Button>}
  {writable && drawerRow.status === 'terbuka' && <Button variant="outline" onClick={() => openFix(drawerRow)}>Tandai Diperbaiki</Button>}
+ {approver && drawerRow.status === 'terbuka' && <Button variant="danger" onClick={() => tolak(drawerRow)}>Tolak Temuan</Button>}
  {approver && drawerRow.status === 'diperbaiki' && <><Button variant="danger" onClick={() => verifikasi(drawerRow, false)}>Tolak</Button><Button variant="success" onClick={() => verifikasi(drawerRow, true)}>Verifikasi</Button></>}
  {approver && drawerRow.status === 'diverifikasi' && <Button onClick={() => tutup(drawerRow)}>Tutup Temuan</Button>}
  {writable && <Button variant="outline" onClick={() => openEdit(drawerRow)}>Ubah</Button>}

@@ -60,6 +60,10 @@ export default function PayrollFreelance() {
  const [payModal, setPayModal] = useState(false)
  const [payForm, setPayForm] = useState({ paid_at: todayISO(), payment_ref: '' })
 
+ const [rejectRow, setRejectRow] = useState<any>(null)
+ const [rejectReason, setRejectReason] = useState('')
+ const [rejectSaving, setRejectSaving] = useState(false)
+
  const [drawerRow, setDrawerRow] = useState<any>(null)
  const [drawerLines, setDrawerLines] = useState<any[] | null>(null)
 
@@ -236,7 +240,7 @@ export default function PayrollFreelance() {
  const dppPercent = r.taxScheme === 'pph21_bukan_pegawai' ? 50 : 100
  const taxRate = r.bruto > 0 ? tax / r.bruto : 0
  const payload = {
- company_id: profile?.company_id, period_code: calcPeriod, employee_id: r.employeeId, payee_type: 'individu',
+ company_id: profile?.company_id, period_code: calcPeriod, employee_id: r.employeeId, payee_type: 'orang_pribadi',
  npwp: r.npwp, has_npwp: r.hasNpwp, gross_amount: r.bruto, dpp_percent: dppPercent, dpp_amount: Math.round(dppAmount),
  tax_scheme: r.taxScheme, tax_rate: taxRate, tax_amount: Math.round(tax), other_deduction: r.otherDeduction || 0,
  net_amount: netto(r), status: 'dihitung',
@@ -293,6 +297,22 @@ export default function PayrollFreelance() {
  toast.push(`${selectedIds.length} payout ditandai dibayar`); setPayModal(false); loadPayouts(); loadDashboard()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menandai pembayaran', 'error') }
  finally { setTransitioning(false) }
+ }
+
+ function openReject(r: any) { setRejectRow(r); setRejectReason('') }
+ function friendlyPayoutError(e: any, fallback: string) {
+ const msg = e?.message ?? ''
+ if (/row-level security|permission denied/i.test(msg)) return 'Gagal menyimpan — hak akses Anda pada modul PAYROLL tidak mengizinkan tindakan ini (perlu izin write/approve).'
+ return msg || fallback
+ }
+ async function submitReject() {
+ if (!rejectReason.trim()) { toast.push('Alasan penolakan wajib diisi', 'error'); return }
+ setRejectSaving(true)
+ try {
+ await update('freelance_payouts', rejectRow.id, { status: 'ditolak', note: `${rejectRow.note ?? ''}\n\nAlasan penolakan: ${rejectReason}`.trim() })
+ toast.push('Payout ditolak'); setRejectRow(null); setSelectedIds([]); setDrawerRow(null); loadPayouts(); loadDashboard()
+ } catch (e: any) { toast.push(friendlyPayoutError(e, 'Gagal menolak payout'), 'error') }
+ finally { setRejectSaving(false) }
  }
 
  function exportTransfer() {
@@ -390,6 +410,7 @@ export default function PayrollFreelance() {
  {write && statusTab === 'dihitung' && selectedIds.length > 0 && <Button size="sm" loading={transitioning} onClick={() => bulkTransition('diverifikasi')}>Verifikasi {selectedIds.length} Payout</Button>}
  {approve && statusTab === 'diverifikasi' && selectedIds.length > 0 && <Button size="sm" variant="success" loading={transitioning} onClick={() => bulkTransition('disetujui')}>Setujui {selectedIds.length} Payout</Button>}
  {approve && statusTab === 'disetujui' && selectedIds.length > 0 && <Button size="sm" variant="success" onClick={() => setPayModal(true)}>Tandai Dibayar ({selectedIds.length})</Button>}
+ {(write || approve) && ['dihitung', 'diverifikasi', 'disetujui'].includes(statusTab) && selectedIds.length === 1 && <Button size="sm" variant="danger" onClick={() => openReject(payouts.find(p => p.id === selectedIds[0]))}>Tolak Payout</Button>}
  {(statusTab === 'disetujui' || statusTab === 'dibayar') && filteredByTab.length > 0 && <Button size="sm" variant="outline" icon={<Download size={14} />} onClick={exportTransfer}>Ekspor CSV Transfer</Button>}
  </div>
  </div>
@@ -431,6 +452,15 @@ export default function PayrollFreelance() {
  <Field label="Tanggal Transfer" required><Input type="date" value={payForm.paid_at} onChange={(e: any) => setPayForm({ ...payForm, paid_at: e.target.value })} /></Field>
  <Field label="Referensi Transfer" required><Input value={payForm.payment_ref} onChange={(e: any) => setPayForm({ ...payForm, payment_ref: e.target.value })} placeholder="No. referensi bank / batch transfer" /></Field>
  </div>
+ </Modal>
+
+ {/* Modal tolak payout */}
+ <Modal open={!!rejectRow} onClose={() => setRejectRow(null)} title="Tolak Payout Mitra" size="sm"
+ footer={<><Button variant="outline" onClick={() => setRejectRow(null)}>Batal</Button><Button variant="danger" loading={rejectSaving} onClick={submitReject}>Tolak Payout</Button></>}>
+ {rejectRow && <div className="space-y-3">
+ <p className="text-body text-ink-600">Payout <b>{rejectRow.payout_no}</b> milik <b>{rejectRow.employees?.full_name}</b> (Netto {rupiah(rejectRow.net_amount)}) akan ditolak dan tidak dilanjutkan ke pembayaran.</p>
+ <Field label="Alasan Penolakan" required><Input value={rejectReason} onChange={(e: any) => setRejectReason(e.target.value)} placeholder="Wajib diisi — mis. salah hitung, tidak sesuai SPK" /></Field>
+ </div>}
  </Modal>
 
  {/* Wizard Hitung Payout Periode */}
@@ -524,6 +554,7 @@ export default function PayrollFreelance() {
  await update('freelance_payouts', drawerRow.id, { status: 'disetujui', self_billing_no: no }); toast.push('Payout disetujui'); setDrawerRow(null); loadPayouts()
  }}>Setujui</Button>}
  {approve && drawerRow.status === 'disetujui' && <Button size="sm" variant="success" onClick={() => { setSelectedIds([drawerRow.id]); setDrawerRow(null); setPayModal(true) }}>Tandai Dibayar</Button>}
+ {(write || approve) && ['dihitung', 'diverifikasi', 'disetujui'].includes(drawerRow.status) && <Button size="sm" variant="danger" onClick={() => openReject(drawerRow)}>Tolak</Button>}
  </div>
  <Button size="sm" variant="outline" icon={<Printer size={14} />} onClick={() => window.print()}>Cetak Self-Billing</Button>
  </div>}>

@@ -4,16 +4,20 @@ import {
  Tooltip, Legend, ComposedChart, Line,
 } from 'recharts'
 import { useAuth } from '@/lib/auth'
-import { list } from '@/lib/db'
-import { Card, CardHeader, PageHeader, KpiCard, DataTable, useToast, Badge, TableSkeleton } from '@/components/ui'
+import { list, insert, nextDocNo } from '@/lib/db'
+import { Card, CardHeader, PageHeader, KpiCard, DataTable, useToast, Badge, TableSkeleton,
+ Button, Modal, Field, Input, Select, Textarea } from '@/components/ui'
 import { durasi, pct, tgl } from '@/lib/format'
 import SlaCountdown from '../components/SlaCountdown'
 import { CHART_COLORS, SEVERITY_COLORS, ticketStatusLabel, ticketStatusTone, severityLabel, severityTone } from '../lib/constants'
+import { WO_STATUS, TICKET_STATUS, optionsOf } from '../lib/status'
 import { rentangHariIni, hariKeBelakang } from '../lib/helpers'
 
 export default function Dashboard() {
- const { profile } = useAuth()
+ const { profile, can } = useAuth()
  const toast = useToast()
+ const [formTiket, setFormTiket] = useState<any>(null)
+ const [simpan, setSimpan] = useState(false)
  const [loading, setLoading] = useState(true)
  const [tickets, setTickets] = useState<any[]>([])
  const [branches, setBranches] = useState<any[]>([])
@@ -35,7 +39,7 @@ export default function Dashboard() {
  list('branches', { select: 'id,name', eq: { company_id: profile!.company_id }, order: { col: 'name', asc: true } }),
  list('employees', { select: 'id,full_name', eq: { company_id: profile!.company_id } }),
  list('work_orders', {
- select: 'id,status,finished_at', eq: { company_id: profile!.company_id, status: 'selesai' },
+ select: 'id,status,finished_at', eq: { company_id: profile!.company_id, status: WO_STATUS.DONE },
  gte: { finished_at: awal }, lte: { finished_at: akhir },
  }),
  ])
@@ -49,7 +53,7 @@ export default function Dashboard() {
 
  const now = new Date()
  const kpi = useMemo(() => {
- const terbuka = tickets.filter(t => !['selesai', 'ditutup'].includes(t.status))
+ const terbuka = tickets.filter(t => !['resolved', 'closed', 'cancelled'].includes(t.status))
  const melanggar = tickets.filter(t => t.sla_status === 'breach' || (!t.resolved_at && t.sla_due_at && new Date(t.sla_due_at) < now))
  const ttrList = tickets.filter(t => t.ttr_minutes != null).map(t => t.ttr_minutes as number)
  const mttr = ttrList.length ? ttrList.reduce((a, b) => a + b, 0) / ttrList.length : null
@@ -114,9 +118,55 @@ export default function Dashboard() {
  .slice(0, 20)
  }, [tickets])
 
- return (
+ 
+ /* Aksi cepat: buat tiket gangguan langsung dari dashboard.
+    Nilai status memakai sumber kebenaran di lib/status.ts agar cocok dengan CHECK constraint. */
+ const SLA_DEFAULT: Record<string, number> = { kritis: 240, tinggi: 480, sedang: 1440, rendah: 2880 }
+ async function simpanTiket() {
+ if (!formTiket?.customer_name || !formTiket?.description) {
+ toast.push('Nama pelanggan dan uraian gangguan wajib diisi.', 'error'); return
+ }
+ setSimpan(true)
+ try {
+ const no = await nextDocNo(profile!.company_id, 'TKT')
+ const menit = Number(formTiket.sla_minutes) || SLA_DEFAULT[formTiket.severity] || 1440
+ await insert('tickets', {
+ company_id: profile!.company_id,
+ ticket_no: no,
+ source: formTiket.source,
+ ticket_type: formTiket.ticket_type,
+ customer_name: formTiket.customer_name,
+ customer_no: formTiket.customer_no || null,
+ customer_phone: formTiket.customer_phone || null,
+ address: formTiket.address || null,
+ branch_id: formTiket.branch_id || null,
+ severity: formTiket.severity,
+ description: formTiket.description,
+ reported_at: new Date().toISOString(),
+ sla_minutes: menit,
+ sla_due_at: new Date(Date.now() + menit * 60000).toISOString(),
+ sla_status: 'on_track',
+ status: TICKET_STATUS.OPEN,
+ })
+ toast.push(`Tiket ${no} dibuat.`)
+ setFormTiket(null); load()
+ } catch (e: any) {
+ toast.push(e?.message?.includes('row-level security')
+ ? 'Gagal menyimpan: jabatan Anda tidak punya hak tulis pada modul Operations.'
+ : (e?.message ?? 'Gagal menyimpan tiket.'), 'error')
+ } finally { setSimpan(false) }
+ }
+
+return (
  <div>
- <PageHeader title="Dashboard Operations" subtitle="Ringkasan tiket gangguan, SLA & work order" />
+ <PageHeader title="Dashboard Operations" subtitle="Ringkasan tiket gangguan, SLA & work order"
+ actions={can('OPERATIONS', 'write') ? (
+ <Button icon={<span>+</span>} onClick={() => setFormTiket({
+ source: 'pelanggan', ticket_type: 'gangguan', severity: 'sedang',
+ customer_name: '', customer_no: '', customer_phone: '', address: '',
+ branch_id: '', description: '', sla_minutes: 1440,
+ })}>Buat Tiket</Button>) : null}
+ />
 
  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
  <KpiCard label="Tiket Terbuka" value={loading ? '…' : kpi.terbuka} />
@@ -218,6 +268,52 @@ export default function Dashboard() {
  <p className="text-caption text-ink-400 mt-2">
  Sumber data: tabel <code>tickets</code> &amp; <code>work_orders</code> (hingga 3.000 tiket terbaru). Ditarik pada {pulledAt ? tgl(pulledAt.toISOString()) + ' ' + pulledAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}.
  </p>
- </div>
+ 
+ <Modal open={!!formTiket} onClose={() => setFormTiket(null)} title="Buat Tiket Gangguan"
+ subtitle="Formulir ringkas — rincian lanjutan bisa dilengkapi di halaman Tiket Gangguan."
+ footer={<>
+ <Button variant="outline" onClick={() => setFormTiket(null)}>Batal</Button>
+ <Button loading={simpan} onClick={simpanTiket}>Simpan Tiket</Button>
+ </>}>
+ {formTiket && (
+ <div className="grid sm:grid-cols-2 gap-3">
+ <Field label="Nama Pelanggan" required>
+ <Input value={formTiket.customer_name} onChange={e => setFormTiket({ ...formTiket, customer_name: e.target.value })} />
+ </Field>
+ <Field label="Nomor Pelanggan">
+ <Input value={formTiket.customer_no} onChange={e => setFormTiket({ ...formTiket, customer_no: e.target.value })} />
+ </Field>
+ <Field label="Telepon">
+ <Input value={formTiket.customer_phone} onChange={e => setFormTiket({ ...formTiket, customer_phone: e.target.value })} />
+ </Field>
+ <Field label="Cabang">
+ <Select value={formTiket.branch_id} options={branches.map((b: any) => ({ value: b.id, label: b.name }))}
+ onChange={(e: any) => setFormTiket({ ...formTiket, branch_id: e.target.value })} />
+ </Field>
+ <Field label="Sumber">
+ <Select value={formTiket.source} options={optionsOf('tickets.source')}
+ onChange={(e: any) => setFormTiket({ ...formTiket, source: e.target.value })} placeholder="" />
+ </Field>
+ <Field label="Jenis Tiket">
+ <Select value={formTiket.ticket_type} options={optionsOf('tickets.ticket_type')}
+ onChange={(e: any) => setFormTiket({ ...formTiket, ticket_type: e.target.value })} placeholder="" />
+ </Field>
+ <Field label="Tingkat Keparahan">
+ <Select value={formTiket.severity} options={optionsOf('tickets.severity')}
+ onChange={(e: any) => setFormTiket({ ...formTiket, severity: e.target.value, sla_minutes: SLA_DEFAULT[e.target.value] ?? 1440 })} placeholder="" />
+ </Field>
+ <Field label="Target SLA (menit)" hint="Nilai bawaan sistem menurut keparahan — sesuaikan dengan SLA kontrak.">
+ <Input type="number" value={formTiket.sla_minutes}
+ onChange={e => setFormTiket({ ...formTiket, sla_minutes: e.target.value })} />
+ </Field>
+ <Field label="Alamat" className="sm:col-span-2">
+ <Input value={formTiket.address} onChange={e => setFormTiket({ ...formTiket, address: e.target.value })} />
+ </Field>
+ <Field label="Uraian Gangguan" required className="sm:col-span-2">
+ <Textarea value={formTiket.description} onChange={e => setFormTiket({ ...formTiket, description: e.target.value })} />
+ </Field>
+ </div>)}
+ </Modal>
+</div>
  )
 }

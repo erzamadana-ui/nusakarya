@@ -13,7 +13,14 @@ export const PTKP_OPTIONS = [
 ]
 export const TER_CATEGORY_OPTIONS = ['A', 'B', 'C']
 export const CERT_TYPE_OPTIONS = ['K3', 'Kompetensi Teknis', 'BNSP', 'Vendor/Mitra', 'Lainnya']
-export const LEAVE_TYPE_OPTIONS = ['Tahunan', 'Sakit', 'Melahirkan', 'Menikah', 'Duka', 'Tanpa Gaji', 'Lainnya']
+/** Nilai WAJIB sama dengan CHECK constraint leave_requests.leave_type. */
+export const LEAVE_TYPE_OPTIONS = [
+  { value: 'cuti_tahunan', label: 'Cuti Tahunan' },
+  { value: 'sakit', label: 'Sakit' },
+  { value: 'izin', label: 'Izin' },
+  { value: 'melahirkan', label: 'Melahirkan' },
+  { value: 'tanpa_keterangan', label: 'Tanpa Keterangan' },
+]
 export const LEAVE_STATUS_TABS = [
   { value: 'diajukan', label: 'Diajukan' },
   { value: 'disetujui', label: 'Disetujui' },

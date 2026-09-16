@@ -11,7 +11,7 @@ import { num, tgl, periodCode } from '@/lib/format'
 import { REVIEW_TYPE_OPTIONS, REVIEW_STATUS_TABS, GRADE_ORDER, GRADE_TONE, gradeFromScore } from '../lib/constants'
 
 const emptyItem = () => ({ key: Math.random().toString(36).slice(2), aspect: '', weight_percent: 0, target_value: 0, actual_value: 0, score: 0 })
-const emptyForm = () => ({ employee_id: '', period_code: periodCode(), review_type: 'Bulanan', strengths: '', improvements: '', items: [emptyItem()] })
+const emptyForm = () => ({ employee_id: '', period_code: periodCode(), review_type: 'bulanan', strengths: '', improvements: '', items: [emptyItem()] })
 
 export default function Penilaian() {
  const { profile, can } = useAuth()

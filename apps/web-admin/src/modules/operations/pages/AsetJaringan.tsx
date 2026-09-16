@@ -6,10 +6,15 @@ import {
  Progress, FilterBar, Desc, Section, ConfirmDialog, useToast, Plus,
 } from '@/components/ui'
 import { tgl, tglJam, num } from '@/lib/format'
-import { ELEMENT_TYPES } from '../lib/constants'
+import { ELEMENT_TYPES, NETWORK_ELEMENT_STATUSES, ticketStatusLabel, ticketStatusTone } from '../lib/constants'
 import { tautanPeta } from '../lib/helpers'
 
-const STATUSES = ['aktif', 'nonaktif', 'rusak', 'pemeliharaan']
+/**
+ * BUG DIPERBAIKI: daftar lama ['aktif','nonaktif','rusak','pemeliharaan'] memuat 'pemeliharaan' yang
+ * TIDAK ADA di CHECK constraint network_elements_status_check, dan tidak pernah menawarkan 'penuh'
+ * yang sah. Sekarang diambil dari sumber kebenaran status.ts (nilai asli CHECK constraint).
+ */
+const STATUSES = NETWORK_ELEMENT_STATUSES
 
 function newForm() {
  return { element_type: 'ODP', code: '', name: '', parent_id: '', branch_id: '', sto: '', lat: '', lng: '', capacity: '', used: '0', status: 'aktif', install_date: '' }
@@ -177,7 +182,7 @@ export default function AsetJaringan() {
  <ul className="space-y-1.5">{riwayatTiket(selected.id).map(t => (
  <li key={t.id} className="flex items-center justify-between text-body">
  <span className="text-ink-700">{t.ticket_no} · {tgl(t.reported_at)}</span>
- <Badge>{t.status}</Badge>
+ <Badge tone={ticketStatusTone(t.status)}>{ticketStatusLabel(t.status)}</Badge>
  </li>))}</ul>)}
  </Section>
  <Section title={`Jadwal Maintenance (${jadwalMaint(selected.id).length})`}>

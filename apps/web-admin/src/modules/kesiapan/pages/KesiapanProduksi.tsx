@@ -56,6 +56,7 @@ export default function KesiapanProduksi() {
   const [loading, setLoading] = useState(true)
   const [butir, setButir] = useState<ButirKesiapan[]>([])
   const [tarikPada, setTarikPada] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<'semua' | 'bahaya' | 'perhatian' | 'aman'>('semua')
 
   const [akun, setAkun] = useState<AkunPeragaan[]>([])
   const [akunLoading, setAkunLoading] = useState(true)
@@ -103,11 +104,16 @@ export default function KesiapanProduksi() {
   const layakDenganCatatan = totalButir > 0 && bahayaCount === 0 && perhatianCount > 0
   const belumLayak = bahayaCount > 0
 
+  const butirTersaring = useMemo(
+    () => filterStatus === 'semua' ? butir : butir.filter(b => b.status === filterStatus),
+    [butir, filterStatus]
+  )
+
   const grouped = useMemo(() => {
     const m = new Map<string, ButirKesiapan[]>()
-    butir.forEach(b => { const arr = m.get(b.kategori) ?? []; arr.push(b); m.set(b.kategori, arr) })
+    butirTersaring.forEach(b => { const arr = m.get(b.kategori) ?? []; arr.push(b); m.set(b.kategori, arr) })
     return Array.from(m.entries())
-  }, [butir])
+  }, [butirTersaring])
 
   const runSimulasi = async () => {
     if (!profile) return
@@ -193,8 +199,25 @@ export default function KesiapanProduksi() {
       </Card>
 
       {/* ---------------- Daftar Butir ---------------- */}
+      {!loading && totalButir > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {([
+            { value: 'semua', label: `Semua (${totalButir})` },
+            { value: 'bahaya', label: `Bahaya (${bahayaCount})` },
+            { value: 'perhatian', label: `Perhatian (${perhatianCount})` },
+            { value: 'aman', label: `Aman (${amanCount})` },
+          ] as const).map(opt => (
+            <button key={opt.value} onClick={() => setFilterStatus(opt.value)}
+              className={cxFilterChip(filterStatus === opt.value)}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
       {loading ? <Card><TableSkeleton rows={8} /></Card> : totalButir === 0 ? (
         <EmptyState title="Belum ada butir pemeriksaan" message="Coba muat ulang halaman ini." />
+      ) : butirTersaring.length === 0 ? (
+        <EmptyState title="Tidak ada butir dengan status ini" message="Coba pilih status lain pada penyaring di atas." />
       ) : (
         grouped.map(([kategori, items]) => (
           <Section title={kategori} key={kategori}>
@@ -323,4 +346,7 @@ function cxTone(tone: string) {
     emerald: 'w-9 h-9 rounded-full grid place-items-center shrink-0 bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300',
   }
   return map[tone] ?? map.emerald
+}
+function cxFilterChip(active: boolean) {
+  return `h-8 px-3 rounded-full text-caption font-medium border transition-colors ${active ? 'bg-primary-500 border-primary-500 text-white' : 'bg-surface border-ink-200 text-ink-600 hover:bg-ink-50'}`
 }

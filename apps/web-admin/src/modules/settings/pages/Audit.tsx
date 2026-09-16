@@ -18,6 +18,7 @@ export default function Audit() {
  const [to, setTo] = useState('')
  const [action, setAction] = useState('')
  const [entity, setEntity] = useState('')
+ const [user, setUser] = useState('')
  const [detail, setDetail] = useState<AuditRow | null>(null)
 
  const load = async () => {
@@ -29,6 +30,7 @@ export default function Audit() {
  if (to) q = q.lte('created_at', `${to}T23:59:59`)
  if (action) q = q.ilike('action', `%${action}%`)
  if (entity) q = q.ilike('entity_type', `%${entity}%`)
+ if (user) q = q.eq('user_id', user)
  const [{ data, error }, { data: profs }] = await Promise.all([q, supabase.from('profiles').select('id, full_name')])
  if (error) throw error
  setRows((data ?? []) as AuditRow[])
@@ -39,6 +41,10 @@ export default function Audit() {
 
  const actions = useMemo(() => Array.from(new Set(rows.map(r => r.action))).sort(), [rows])
  const entities = useMemo(() => Array.from(new Set(rows.map(r => r.entity_type))).sort(), [rows])
+ const userOptions = useMemo(
+ () => Object.entries(userNames).map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, 'id')),
+ [userNames]
+ )
 
  const columns: Column[] = [
  { key: 'created_at', header: 'Waktu', width: '160px', render: r => tglJam(r.created_at) },
@@ -56,6 +62,7 @@ export default function Audit() {
  <Field label="Sampai Tanggal"><Input type="date" value={to} min={from} max={todayISO()} onChange={(e: any) => setTo(e.target.value)} /></Field>
  <Field label="Aksi"><Select value={action} onChange={(e: any) => setAction(e.target.value)} options={actions} placeholder="Semua aksi" /></Field>
  <Field label="Entitas"><Select value={entity} onChange={(e: any) => setEntity(e.target.value)} options={entities} placeholder="Semua entitas" /></Field>
+ <Field label="Pengguna"><Select value={user} onChange={(e: any) => setUser(e.target.value)} options={userOptions} placeholder="Semua pengguna" /></Field>
  <button onClick={load} className="h-10 px-4 rounded-sm text-body font-medium bg-primary-500 text-white hover:bg-primary-600">Terapkan</button>
  </FilterBar>
 

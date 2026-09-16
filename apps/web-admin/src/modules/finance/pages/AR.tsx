@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { list, insert, update, nextDocNo } from '@/lib/db'
 import { rupiah, tgl, todayISO } from '@/lib/format'
 import {
- PageHeader, Tabs, DataTable, Badge, Drawer, Modal, Field, Input, Select, Money, Button,
+ PageHeader, Tabs, DataTable, Badge, Drawer, Modal, Field, Input, Select, Money, Textarea, Button,
  useToast, EmptyState, Section, Desc,
 } from '@/components/ui'
 import { sisaTagihan, umurLabel, daysSince, rekomendasiTindakLanjut } from '../lib/helpers'
@@ -29,7 +29,7 @@ export default function AR() {
  const [detail, setDetail] = useState<any | null>(null)
  const [detailPayments, setDetailPayments] = useState<any[]>([])
  const [payOpen, setPayOpen] = useState(false)
- const [payForm, setPayForm] = useState<any>({ payment_date: todayISO(), amount: 0, method: 'Transfer Bank', bank_ref: '' })
+ const [payForm, setPayForm] = useState<any>({ payment_date: todayISO(), amount: 0, method: 'Transfer Bank', bank_ref: '', note: '' })
  const [busy, setBusy] = useState(false)
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
@@ -60,7 +60,7 @@ export default function AR() {
 
  async function openDetail(row: any) {
  setDetail(row)
- setPayForm({ payment_date: todayISO(), amount: sisaTagihan(row.total, row.paid_amount), method: 'Transfer Bank', bank_ref: '' })
+ setPayForm({ payment_date: todayISO(), amount: sisaTagihan(row.total, row.paid_amount), method: 'Transfer Bank', bank_ref: '', note: '' })
  try {
  const pays = await list('ar_payments', { eq: { invoice_id: row.id }, order: { col: 'payment_date', asc: false }, limit: 100 })
  setDetailPayments(pays)
@@ -70,13 +70,16 @@ export default function AR() {
  async function catatPembayaran() {
  if (!detail) return
  const amount = Number(payForm.amount) || 0
+ const sisa = sisaTagihan(detail.total, detail.paid_amount)
  if (amount <= 0) { toast.push('Jumlah pembayaran harus lebih dari 0.', 'error'); return }
+ if (amount > sisa) { toast.push('Jumlah pembayaran tidak boleh melebihi sisa tagihan.', 'error'); return }
  setBusy(true)
  try {
  const paymentNo = await nextDocNo(profile!.company_id, 'RCV')
  const payment = await insert('ar_payments', {
  company_id: profile!.company_id, payment_no: paymentNo, payment_date: payForm.payment_date,
  customer_id: detail.customer_id, invoice_id: detail.id, amount, method: payForm.method, bank_ref: payForm.bank_ref || null,
+ note: payForm.note || null,
  })
  const newPaid = Number(detail.paid_amount || 0) + amount
  const newStatus = newPaid >= Number(detail.total || 0) ? 'lunas' : 'dibayar_sebagian'
@@ -90,7 +93,13 @@ export default function AR() {
  } catch { /* pencatatan kas gagal tidak membatalkan pembayaran yang sudah tercatat */ }
  toast.push('Pembayaran berhasil dicatat.', 'success')
  setPayOpen(false); setDetail(null); await load()
- } catch (e: any) { toast.push(e.message ?? 'Gagal mencatat pembayaran', 'error') } finally { setBusy(false) }
+ } catch (e: any) {
+ const msg = String(e?.message ?? '')
+ const friendly = /row-level security|permission denied|RLS/i.test(msg)
+ ? 'Gagal mencatat pembayaran: Anda tidak memiliki hak Tulis pada modul Finance. Hubungi admin untuk memberi hak akses.'
+ : (msg || 'Gagal mencatat pembayaran')
+ toast.push(friendly, 'error')
+ } finally { setBusy(false) }
  }
 
  const tabs = [
@@ -178,6 +187,7 @@ export default function AR() {
  <Field label="Jumlah" required><Money value={payForm.amount} onChange={(v: number) => setPayForm((f: any) => ({ ...f, amount: v }))} /></Field>
  <Field label="Metode"><Select value={payForm.method} onChange={(e: any) => setPayForm((f: any) => ({ ...f, method: e.target.value }))} options={['Transfer Bank', 'Giro', 'Tunai', 'Kliring']} /></Field>
  <Field label="Referensi Bank"><Input value={payForm.bank_ref} onChange={(e: any) => setPayForm((f: any) => ({ ...f, bank_ref: e.target.value }))} placeholder="Opsional" /></Field>
+ <Field label="Catatan"><Textarea rows={2} value={payForm.note} onChange={(e: any) => setPayForm((f: any) => ({ ...f, note: e.target.value }))} placeholder="Opsional" /></Field>
  </div>
  </Modal>
  </div>

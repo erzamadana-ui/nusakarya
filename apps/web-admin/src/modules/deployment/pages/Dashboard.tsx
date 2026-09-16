@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { chartColors } from '@/lib/theme'
 import { useAuth } from '@/lib/auth'
-import { list } from '@/lib/db'
-import { PageHeader, Card, CardHeader, KpiCard, DataTable, TableSkeleton, Badge } from '@/components/ui'
+import { list, insert, nextDocNo } from '@/lib/db'
+import { PageHeader, Card, CardHeader, KpiCard, DataTable, TableSkeleton, Badge, Button, Modal, Field, Select, Input, useToast, Plus } from '@/components/ui'
 import { rupiah, num, pct, tgl, todayISO } from '@/lib/format'
 import { PROJECT_STATUS_ACTIVE, CHART_COLORS, deviationTone } from '../lib/shared'
 import {
@@ -15,15 +15,27 @@ const STATUS_LABEL: Record<string, string> = {
  perencanaan: 'Perencanaan', survey: 'Survey', design: 'Design', approval: 'Approval',
  pelaksanaan: 'Pelaksanaan', testing: 'Testing', bast: 'BAST', selesai: 'Selesai', hold: 'Hold', batal: 'Batal',
 }
+const emptyProject = { project_name: '', customer_id: '', project_type: 'deployment', start_date: '', target_date: '' }
+const emptyProgres = { project_id: '', report_date: todayISO(), plan_percent: 0, actual_percent: 0 }
 
 export default function Dashboard() {
- const { profile } = useAuth()
+ const { profile, can } = useAuth()
+ const toast = useToast()
  const [loading, setLoading] = useState(true)
  const [projects, setProjects] = useState<any[]>([])
  const [employees, setEmployees] = useState<any[]>([])
  const [statusView, setStatusView] = useState<any[]>([])
  const [reports, setReports] = useState<any[]>([])
  const [rfsCount, setRfsCount] = useState(0)
+ const [customers, setCustomers] = useState<any[]>([])
+
+ const [projectOpen, setProjectOpen] = useState(false)
+ const [projectForm, setProjectForm] = useState<any>(emptyProject)
+ const [projectSaving, setProjectSaving] = useState(false)
+
+ const [progresOpen, setProgresOpen] = useState(false)
+ const [progresForm, setProgresForm] = useState<any>(emptyProgres)
+ const [progresSaving, setProgresSaving] = useState(false)
 
  useEffect(() => {
  (async () => {
@@ -33,17 +45,62 @@ export default function Dashboard() {
  const monthStart = todayISO().slice(0, 7) + '-01'
  const d = new Date(monthStart); d.setMonth(d.getMonth() + 1)
  const monthEnd = d.toISOString().slice(0, 10)
- const [p, e, sv, pr, rfs] = await Promise.all([
+ const [p, e, sv, pr, rfs, cu] = await Promise.all([
  list('projects', { select: 'id,project_code,project_name,status,progress_percent,contract_value,budget_cost,target_date,actual_finish_date,pm_id', order: { col: 'created_at', asc: false }, limit: 500 }),
  list('employees', { select: 'id,full_name' }),
  list('v_dashboard_deployment', { select: '*' }),
  list('progress_reports', { select: 'project_id,report_date,plan_percent,actual_percent,deviation', order: { col: 'report_date', asc: true }, limit: 3000 }),
  list('rfs_records', { select: 'id,rfs_date', gte: { rfs_date: monthStart }, lte: { rfs_date: monthEnd } }),
+ list('customers', { select: 'id,name', order: { col: 'name', asc: true } }),
  ])
- setProjects(p); setEmployees(e); setStatusView(sv); setReports(pr); setRfsCount((rfs ?? []).length)
+ setProjects(p); setEmployees(e); setStatusView(sv); setReports(pr); setRfsCount((rfs ?? []).length); setCustomers(cu)
  } finally { setLoading(false) }
  })()
  }, [profile?.company_id])
+
+ function friendlyDeployError(e: any, fallback: string) {
+ const msg = e?.message ?? ''
+ if (/row-level security|permission denied/i.test(msg)) return 'Gagal menyimpan — hak akses Anda pada modul Deployment tidak mengizinkan tindakan ini.'
+ return msg || fallback
+ }
+
+ async function reloadDashboard() {
+ const p = await list('projects', { select: 'id,project_code,project_name,status,progress_percent,contract_value,budget_cost,target_date,actual_finish_date,pm_id', order: { col: 'created_at', asc: false }, limit: 500 })
+ setProjects(p)
+ const pr = await list('progress_reports', { select: 'project_id,report_date,plan_percent,actual_percent,deviation', order: { col: 'report_date', asc: true }, limit: 3000 })
+ setReports(pr)
+ }
+
+ function openProject() { setProjectForm(emptyProject); setProjectOpen(true) }
+ async function saveProject() {
+ if (!projectForm.project_name || !projectForm.customer_id) { toast.push('Nama proyek dan pelanggan wajib diisi', 'error'); return }
+ setProjectSaving(true)
+ try {
+ const project_code = await nextDocNo(profile!.company_id, 'PRJ')
+ await insert('projects', {
+ company_id: profile!.company_id, project_code, project_name: projectForm.project_name, customer_id: projectForm.customer_id,
+ project_type: projectForm.project_type || null, start_date: projectForm.start_date || null, target_date: projectForm.target_date || null,
+ status: 'perencanaan', created_by: profile!.id,
+ })
+ toast.push(`Proyek ${project_code} ditambahkan`); setProjectOpen(false); reloadDashboard()
+ } catch (e: any) { toast.push(friendlyDeployError(e, 'Gagal menyimpan proyek'), 'error') }
+ finally { setProjectSaving(false) }
+ }
+
+ function openProgres() { setProgresForm(emptyProgres); setProgresOpen(true) }
+ async function saveProgres() {
+ if (!progresForm.project_id) { toast.push('Proyek wajib dipilih', 'error'); return }
+ setProgresSaving(true)
+ try {
+ const plan = Number(progresForm.plan_percent ?? 0), actual = Number(progresForm.actual_percent ?? 0)
+ await insert('progress_reports', {
+ company_id: profile!.company_id, project_id: progresForm.project_id, report_date: progresForm.report_date || todayISO(),
+ plan_percent: plan, actual_percent: actual, deviation: actual - plan, photo_urls: [], reported_by: profile!.id, created_by: profile!.id,
+ })
+ toast.push('Laporan progres ditambahkan'); setProgresOpen(false); reloadDashboard()
+ } catch (e: any) { toast.push(friendlyDeployError(e, 'Gagal menyimpan laporan progres'), 'error') }
+ finally { setProgresSaving(false) }
+ }
 
  const empName = (id?: string) => employees.find(e => e.id === id)?.full_name ?? '-'
 
@@ -104,6 +161,13 @@ export default function Dashboard() {
  return (
  <div>
  <PageHeader title="Dashboard Deployment" subtitle="Ringkasan portofolio proyek Design & Deployment" />
+
+ {can('DEPLOYMENT', 'write') && (
+ <div className="flex flex-wrap gap-2 mb-5">
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openProject}>Buat Proyek</Button>
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openProgres}>Catat Progres</Button>
+ </div>
+ )}
 
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-1">
  <KpiCard label="Proyek Aktif" value={num(kpi.aktif)} tone="teal" />
@@ -183,6 +247,27 @@ export default function Dashboard() {
  emptyMessage="Semua proyek berjalan sesuai atau lebih cepat dari rencana."
  />
  </Card>
+
+ <Modal open={projectOpen} onClose={() => setProjectOpen(false)} title="Buat Proyek"
+ footer={<><Button variant="outline" onClick={() => setProjectOpen(false)}>Batal</Button><Button loading={projectSaving} onClick={saveProject}>Simpan</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Nama Proyek" required className="sm:col-span-2"><Input value={projectForm.project_name} onChange={(e: any) => setProjectForm({ ...projectForm, project_name: e.target.value })} /></Field>
+ <Field label="Pelanggan" required className="sm:col-span-2"><Select value={projectForm.customer_id} onChange={(e: any) => setProjectForm({ ...projectForm, customer_id: e.target.value })} options={customers.map(c => ({ value: c.id, label: c.name }))} /></Field>
+ <Field label="Tipe Proyek"><Select value={projectForm.project_type} onChange={(e: any) => setProjectForm({ ...projectForm, project_type: e.target.value })} options={[{ value: 'deployment', label: 'Deployment' }, { value: 'relokasi', label: 'Relokasi' }, { value: 'upgrade', label: 'Upgrade' }, { value: 'recovery', label: 'Recovery' }, { value: 'manage_service', label: 'Manage Service' }]} /></Field>
+ <Field label="Tanggal Mulai"><Input type="date" value={projectForm.start_date} onChange={(e: any) => setProjectForm({ ...projectForm, start_date: e.target.value })} /></Field>
+ <Field label="Target Selesai"><Input type="date" value={projectForm.target_date} onChange={(e: any) => setProjectForm({ ...projectForm, target_date: e.target.value })} /></Field>
+ </div>
+ </Modal>
+
+ <Modal open={progresOpen} onClose={() => setProgresOpen(false)} title="Catat Progres"
+ footer={<><Button variant="outline" onClick={() => setProgresOpen(false)}>Batal</Button><Button loading={progresSaving} onClick={saveProgres}>Simpan</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Proyek" required className="sm:col-span-2"><Select value={progresForm.project_id} onChange={(e: any) => setProgresForm({ ...progresForm, project_id: e.target.value })} options={projects.map(p => ({ value: p.id, label: `${p.project_code} · ${p.project_name}` }))} /></Field>
+ <Field label="Tanggal Laporan"><Input type="date" value={progresForm.report_date} onChange={(e: any) => setProgresForm({ ...progresForm, report_date: e.target.value })} /></Field>
+ <Field label="Rencana (%)"><Input type="number" min="0" max="100" value={progresForm.plan_percent} onChange={(e: any) => setProgresForm({ ...progresForm, plan_percent: e.target.value })} /></Field>
+ <Field label="Realisasi (%)"><Input type="number" min="0" max="100" value={progresForm.actual_percent} onChange={(e: any) => setProgresForm({ ...progresForm, actual_percent: e.target.value })} /></Field>
+ </div>
+ </Modal>
  </div>
  )
 }

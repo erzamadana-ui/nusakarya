@@ -22,6 +22,16 @@ export default function Penalti() {
  const [saving, setSaving] = useState(false)
  const [delId, setDelId] = useState<string | null>(null)
 
+ // Perhitungan otomatis nilai penalti = jumlah pelanggaran × tarif per pelanggaran, dengan opsi menimpa manual.
+ const [rate, setRate] = useState(0)
+ const [manualPenalty, setManualPenalty] = useState(false)
+ useEffect(() => {
+ if (manualPenalty) return
+ const computed = (Number(form.breach_count) || 0) * (Number(rate) || 0)
+ setForm((f: any) => (f.penalty_amount === computed ? f : { ...f, penalty_amount: computed }))
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [rate, form.breach_count, manualPenalty])
+
  const contractMap = useMemo(() => Object.fromEntries(contracts.map(c => [c.id, c.contract_name])), [contracts])
 
  const summary = useMemo(() => {
@@ -48,8 +58,14 @@ export default function Penalti() {
  }
  useEffect(() => { load() }, [])
 
- const openAdd = () => { setEditing(null); setForm(emptyForm); setModal(true) }
- const openEdit = (row: any) => { setEditing(row); setForm({ ...emptyForm, ...row }); setModal(true) }
+ const openAdd = () => { setEditing(null); setForm(emptyForm); setRate(0); setManualPenalty(false); setModal(true) }
+ const openEdit = (row: any) => {
+ setEditing(row); setForm({ ...emptyForm, ...row })
+ const bc = Number(row.breach_count) || 0
+ setRate(bc > 0 ? Math.round((Number(row.penalty_amount) || 0) / bc) : 0)
+ setManualPenalty(true) // nilai tersimpan dianggap final; klik "Hitung Otomatis" untuk menghitung ulang dari tarif
+ setModal(true)
+ }
 
  const save = async () => {
  if (!form.contract_id || !form.period_code) { toast.push('Kontrak dan periode wajib diisi', 'error'); return }
@@ -120,8 +136,17 @@ export default function Penalti() {
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <Field label="Kontrak" required className="sm:col-span-2"><Select value={form.contract_id} options={contracts.map(c => ({ value: c.id, label: c.contract_name }))} onChange={(e: any) => setForm({ ...form, contract_id: e.target.value })} /></Field>
  <Field label="Periode" required hint="Format: YYYY-MM"><Input value={form.period_code} onChange={e => setForm({ ...form, period_code: e.target.value })} placeholder="2026-09" /></Field>
- <Field label="Jumlah Pelanggaran"><Input type="number" value={form.breach_count} onChange={e => setForm({ ...form, breach_count: e.target.value })} /></Field>
- <Field label="Nilai Penalti"><Input type="number" value={form.penalty_amount} onChange={e => setForm({ ...form, penalty_amount: e.target.value })} /></Field>
+ <Field label="Jumlah Pelanggaran" hint="Dasar perhitungan otomatis nilai penalti"><Input type="number" min="0" value={form.breach_count} onChange={e => setForm({ ...form, breach_count: e.target.value })} /></Field>
+ <Field label="Tarif per Pelanggaran (Rp)" hint="Dikalikan dengan jumlah pelanggaran untuk hitung otomatis">
+ <Input type="number" min="0" value={rate} onChange={e => { setRate(Number(e.target.value)); setManualPenalty(false) }} />
+ </Field>
+ <Field label="Nilai Penalti" hint={manualPenalty ? 'Ditimpa manual — tidak lagi mengikuti tarif × jumlah pelanggaran' : 'Dihitung otomatis: jumlah pelanggaran × tarif'}>
+ <div className="flex items-center gap-2">
+ <Input type="number" value={form.penalty_amount} onChange={e => { setForm({ ...form, penalty_amount: Number(e.target.value) }); setManualPenalty(true) }} />
+ {manualPenalty && <Button type="button" size="sm" variant="outline" onClick={() => setManualPenalty(false)}>Hitung Otomatis</Button>}
+ </div>
+ {!manualPenalty && <Badge tone="teal" className="mt-1.5">Perhitungan Otomatis</Badge>}
+ </Field>
  <Field label="Status"><Select value={form.status} options={PENALTY_STATUS_OPTIONS} onChange={(e: any) => setForm({ ...form, status: e.target.value })} /></Field>
  <Field label="Keterangan" className="sm:col-span-2"><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></Field>
  <Field label="Catatan" className="sm:col-span-2"><Textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} /></Field>

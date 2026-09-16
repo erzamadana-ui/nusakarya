@@ -7,7 +7,7 @@ import {
 import { tgl } from '@/lib/format'
 import { LEAVE_TYPE_OPTIONS, LEAVE_STATUS_TABS } from '../lib/constants'
 
-const emptyForm = { employee_id: '', leave_type: 'Tahunan', start_date: '', end_date: '', reason: '' }
+const emptyForm = { employee_id: '', leave_type: 'cuti_tahunan', start_date: '', end_date: '', reason: '' }
 
 export default function Cuti() {
  const { profile, can } = useAuth()

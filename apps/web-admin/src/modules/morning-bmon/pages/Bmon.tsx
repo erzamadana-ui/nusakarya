@@ -12,7 +12,7 @@ import {
 } from '@/components/ui'
 import { num, pct, durasi, tglJam } from '@/lib/format'
 import {
-  SEVERITY_OPTIONS, severityLabel, TICKET_STATUS_OPTIONS, ASPEK_RCA,
+  SEVERITY_OPTIONS, severityLabel, TICKET_STATUS_OPTIONS, ticketStatusLabel, ticketStatusTone, ASPEK_RCA,
   AMBANG_KEPATUHAN_KUNING, AMBANG_KEPATUHAN_MERAH, ALARM_UNHANDLED_STATUS,
 } from '../lib/constants'
 import { dateBounds, withinBounds, avg, last30Days, warnaKepatuhan, KELAS_WARNA, umurMenit, formatUmur, waktuTarik } from '../lib/helpers'
@@ -242,7 +242,7 @@ export default function Bmon() {
             { key: 'customer_name', header: 'Pelanggan', render: r => r.customer_name || '-' },
             { key: 'branch_id', header: 'Cabang', render: r => branchName(r.branch_id) },
             { key: 'severity', header: 'Keparahan', render: r => <Badge tone={{ kritis: 'red', tinggi: 'orange', sedang: 'amber', rendah: 'slate' }[r.severity] ?? 'slate'}>{severityLabel(r.severity)}</Badge> },
-            { key: 'status', header: 'Status', render: r => <Badge>{r.status}</Badge> },
+            { key: 'status', header: 'Status', render: r => <Badge tone={ticketStatusTone(r.status)}>{ticketStatusLabel(r.status)}</Badge> },
             { key: 'reported_at', header: 'Umur Tiket', render: r => formatUmur(umurMenit(r.reported_at)) },
             { key: 'sla_due_at', header: 'Sisa SLA', render: r => <SlaCountdown dueAt={r.sla_due_at} slaMenit={r.sla_minutes} /> },
           ]}

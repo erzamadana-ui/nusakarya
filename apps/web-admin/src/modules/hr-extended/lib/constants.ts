@@ -12,7 +12,15 @@ export const OVERTIME_STATUS_TABS = STATUS_TABS_STD
 
 /* --------- Perjalanan Dinas --------- */
 export const TRANSPORT_TYPE_OPTIONS = ['Pesawat', 'Kereta Api', 'Bus', 'Kendaraan Dinas', 'Kendaraan Pribadi', 'Lainnya']
-export const EXPENSE_CATEGORY_OPTIONS = ['Transportasi', 'Akomodasi/Hotel', 'Uang Makan', 'Komunikasi', 'Lain-lain']
+/** Nilai WAJIB sama dengan CHECK constraint trip_expenses.category. */
+export const EXPENSE_CATEGORY_OPTIONS = [
+  { value: 'transport', label: 'Transportasi' },
+  { value: 'penginapan', label: 'Penginapan/Hotel' },
+  { value: 'makan', label: 'Uang Makan' },
+  { value: 'bbm', label: 'BBM' },
+  { value: 'tol', label: 'Tol & Parkir' },
+  { value: 'lain', label: 'Lain-lain' },
+]
 export const TRIP_STEPS = [
   { key: 'diajukan', label: 'Diajukan' },
   { key: 'diverifikasi', label: 'Diverifikasi' },
@@ -23,11 +31,14 @@ export const TRIP_STEPS = [
 /* --------- Kasbon --------- */
 export const ADVANCE_STATUS_TABS = [
   { value: 'diajukan', label: 'Diajukan' },
-  { value: 'disetujui', label: 'Berjalan' },
+  { value: 'disetujui', label: 'Disetujui' },
+  { value: 'dicairkan', label: 'Dicairkan' },
+  { value: 'sebagian_lunas', label: 'Sebagian Lunas' },
   { value: 'lunas', label: 'Lunas' },
   { value: 'ditolak', label: 'Ditolak' },
   { value: 'semua', label: 'Semua' },
 ]
+export const DISBURSEMENT_METHOD_OPTIONS = ['Transfer Bank', 'Tunai', 'Lainnya']
 
 /* --------- Rekrutmen --------- */
 export const VACANCY_STATUS_OPTIONS = ['draft', 'dibuka', 'ditutup']
@@ -50,7 +61,13 @@ export const COMPETENCY_LEVEL_OPTIONS = [
 ]
 export const COMPETENCY_LEVEL_TONE: Record<string, string> = { dasar: 'blue', madya: 'amber', utama: 'emerald' }
 export const COMPETENCY_CATEGORY_OPTIONS = ['Teknis', 'Manajerial', 'K3', 'Sertifikasi Vendor', 'Lainnya']
-export const TRAINING_TYPE_OPTIONS = ['Internal', 'Eksternal', 'Sertifikasi', 'Vendor/Principal']
+/** Nilai WAJIB sama dengan CHECK constraint trainings.training_type. */
+export const TRAINING_TYPE_OPTIONS = [
+  { value: 'internal', label: 'Internal' },
+  { value: 'eksternal', label: 'Eksternal' },
+  { value: 'sertifikasi', label: 'Sertifikasi' },
+  { value: 'induksi_K3', label: 'Induksi K3' },
+]
 export const TRAINING_STATUS_OPTIONS = ['rencana', 'berjalan', 'selesai', 'batal']
 export const ATTENDANCE_OPTIONS = [
   { value: 'terdaftar', label: 'Terdaftar' },
@@ -59,7 +76,13 @@ export const ATTENDANCE_OPTIONS = [
 ]
 
 /* --------- Penilaian Kinerja --------- */
-export const REVIEW_TYPE_OPTIONS = ['Bulanan', 'Triwulan', 'Semester', 'Tahunan', 'Proyek']
+/** Nilai WAJIB sama dengan CHECK constraint performance_reviews.review_type. */
+export const REVIEW_TYPE_OPTIONS = [
+  { value: 'bulanan', label: 'Bulanan' },
+  { value: 'triwulan', label: 'Triwulan' },
+  { value: 'semester', label: 'Semester' },
+  { value: 'tahunan', label: 'Tahunan' },
+]
 export const REVIEW_STATUS_TABS = [
   { value: 'draft', label: 'Draft' },
   { value: 'diajukan', label: 'Diajukan' },

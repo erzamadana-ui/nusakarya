@@ -23,6 +23,7 @@ export default function Nte() {
  const [items, setItems] = useState<any[]>([])
  const [warehouses, setWarehouses] = useState<any[]>([])
  const [employees, setEmployees] = useState<any[]>([])
+ const [workOrders, setWorkOrders] = useState<any[]>([])
  const [loading, setLoading] = useState(true)
  const [tab, setTab] = useState('')
 
@@ -38,20 +39,25 @@ export default function Nte() {
  const [statusForm, setStatusForm] = useState<any>({ aksi: 'issue_teknisi', to_employee_id: '', to_warehouse_id: '', customer_ref: '', note: '' })
  const [statusSaving, setStatusSaving] = useState(false)
 
+ const [detailModal, setDetailModal] = useState<any | null>(null)
+ const [detailForm, setDetailForm] = useState<any>({ mac_address: '', warranty_until: '', work_order_id: '', note: '' })
+ const [detailSaving, setDetailSaving] = useState(false)
+
  const load = useCallback(async () => {
  setLoading(true)
  try {
- const [sr, it, w, em] = await Promise.all([
+ const [sr, it, w, em, wo] = await Promise.all([
  list('serials', {
- select: 'id,serial_no,mac_address,status,item_id,warehouse_id,holder_employee_id,customer_ref,install_date,warranty_until,principal,is_consignment,created_at,item:item_catalog!item_id(code,name,principal),warehouse:warehouses!warehouse_id(name),holder:employees!holder_employee_id(full_name)',
+ select: 'id,serial_no,mac_address,status,item_id,warehouse_id,holder_employee_id,customer_ref,work_order_id,install_date,warranty_until,principal,is_consignment,note,created_at,item:item_catalog!item_id(code,name,principal),warehouse:warehouses!warehouse_id(name),holder:employees!holder_employee_id(full_name)',
  order: { col: 'created_at', asc: false }, limit: 2000,
  }),
  list('item_catalog', { eq: { category: 'NTE' }, order: { col: 'name', asc: true } }),
  list('warehouses', { order: { col: 'name', asc: true } }),
  list('employees', { eq: { status: 'aktif' }, order: { col: 'full_name', asc: true } }),
+ list('work_orders', { select: 'id,wo_no,title', order: { col: 'created_at', asc: false }, limit: 500 }),
  ])
  setRows((sr as any[]).map(r => ({ ...r, item_code: r.item?.code, item_name: r.item?.name, warehouse_name: r.warehouse?.name, holder_name: r.holder?.full_name })))
- setItems(it); setWarehouses(w); setEmployees(em)
+ setItems(it); setWarehouses(w); setEmployees(em); setWorkOrders(wo)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat data NTE', 'error') }
  finally { setLoading(false) }
  }, [toast])
@@ -126,6 +132,25 @@ export default function Nte() {
  finally { setStatusSaving(false) }
  }
 
+ function openDetail(row: any) {
+ setDetailForm({ mac_address: row.mac_address ?? '', warranty_until: row.warranty_until ?? '', work_order_id: row.work_order_id ?? '', note: row.note ?? '' })
+ setDetailModal(row)
+ }
+
+ async function saveDetail() {
+ if (!detailModal) return
+ setDetailSaving(true)
+ try {
+ await update('serials', detailModal.id, {
+ mac_address: detailForm.mac_address || null, warranty_until: detailForm.warranty_until || null,
+ work_order_id: detailForm.work_order_id || null, note: detailForm.note || null,
+ })
+ toast.push('Detail serial diperbarui')
+ setDetailModal(null); load()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan detail serial', 'error') }
+ finally { setDetailSaving(false) }
+ }
+
  const columns = [
  { key: 'serial_no', header: 'Nomor Seri' },
  { key: 'mac_address', header: 'MAC Address' },
@@ -137,9 +162,10 @@ export default function Nte() {
  { key: 'install_date', header: 'Tgl Pasang', render: (r: any) => tgl(r.install_date) },
  { key: 'is_consignment', header: 'Konsinyasi', align: 'center' as const, render: (r: any) => r.is_consignment ? <Badge tone="amber">{r.principal || 'Konsinyasi'}</Badge> : '-' },
  {
- key: 'aksi', header: '', sortable: false, width: '190px', render: (r: any) => (
+ key: 'aksi', header: '', sortable: false, width: '260px', render: (r: any) => (
  <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
  <Button size="sm" variant="outline" onClick={() => openHistory(r)}>Riwayat</Button>
+ {can('INVENTORY', 'write') && <Button size="sm" variant="outline" onClick={() => openDetail(r)}>Detail</Button>}
  {can('INVENTORY', 'write') && !['scrapped', 'lost'].includes(r.status) && <Button size="sm" onClick={() => openStatus(r)}>Ubah Status</Button>}
  </div>
  ),
@@ -177,6 +203,18 @@ export default function Nte() {
  <Field label="Daftar Nomor Seri" hint="Contoh: ONT2024000123 (satu per baris)">
  <Textarea rows={10} value={bulkForm.text} onChange={(e: any) => setBulkForm({ ...bulkForm, text: e.target.value })} className="min-h-[220px] font-mono" />
  </Field>
+ </Modal>
+
+ <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title="Detail Serial" subtitle={detailModal?.serial_no}
+ footer={<><Button variant="outline" onClick={() => setDetailModal(null)}>Batal</Button>
+ <Button loading={detailSaving} onClick={saveDetail}>Simpan</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="MAC Address"><Input value={detailForm.mac_address} onChange={(e: any) => setDetailForm({ ...detailForm, mac_address: e.target.value })} placeholder="00:1A:2B:3C:4D:5E" /></Field>
+ <Field label="Garansi Sampai"><Input type="date" value={detailForm.warranty_until} onChange={(e: any) => setDetailForm({ ...detailForm, warranty_until: e.target.value })} /></Field>
+ <Field label="Tautan Work Order" className="sm:col-span-2"><Select value={detailForm.work_order_id} onChange={(e: any) => setDetailForm({ ...detailForm, work_order_id: e.target.value })}
+ options={workOrders.map(w => ({ value: w.id, label: w.wo_no }))} /></Field>
+ <Field label="Catatan" className="sm:col-span-2"><Textarea value={detailForm.note} onChange={(e: any) => setDetailForm({ ...detailForm, note: e.target.value })} /></Field>
+ </div>
  </Modal>
 
  <Modal open={!!statusModal} onClose={() => setStatusModal(null)} title="Ubah Status Serial" subtitle={statusModal?.serial_no}

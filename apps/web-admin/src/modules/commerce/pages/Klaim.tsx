@@ -9,7 +9,7 @@ import {
 import { Printer, AlertTriangle } from 'lucide-react'
 import { CLAIM_STATUS_STEPS } from '../lib/constants'
 
-type Item = { price_list_id: string | null; description: string; uom: string; unit_price: number; qty: number }
+type Item = { id?: string; price_list_id: string | null; description: string; uom: string; unit_price: number; qty: number }
 
 export default function Klaim() {
  const { profile, company, can } = useAuth()
@@ -30,6 +30,9 @@ export default function Klaim() {
  const [fNote, setFNote] = useState('')
  const [items, setItems] = useState<Item[]>([])
  const [itemsLoading, setItemsLoading] = useState(false)
+ const [priceListOptions, setPriceListOptions] = useState<any[]>([])
+ const [editingId, setEditingId] = useState<string | null>(null)
+ const [formContractId, setFormContractId] = useState<string | null>(null)
 
  const [detail, setDetail] = useState<any>(null)
  const [detailItems, setDetailItems] = useState<any[]>([])
@@ -63,24 +66,67 @@ export default function Klaim() {
  useEffect(() => { load() }, [])
 
  const resetForm = () => {
- setFSpkId(''); setFPeriodStart(todayISO()); setFPeriodEnd(todayISO()); setFBaNo(''); setFBaDate(todayISO()); setFNote(''); setItems([])
+ setFSpkId(''); setFPeriodStart(todayISO()); setFPeriodEnd(todayISO()); setFBaNo(''); setFBaDate(todayISO()); setFNote(''); setItems([]); setPriceListOptions([]); setFormContractId(null)
  }
- const openAdd = () => { resetForm(); setModal(true) }
+ const openAdd = () => { resetForm(); setEditingId(null); setModal(true) }
 
  const pullPriceList = async (spkId: string) => {
  setFSpkId(spkId)
  const spk = spkMap[spkId]
- if (!spk) { setItems([]); return }
+ setFormContractId(spk?.contract_id ?? null)
+ if (!spk) { setItems([]); setPriceListOptions([]); return }
  setItemsLoading(true)
  try {
  const pl = await list('contract_price_list', { eq: { contract_id: spk.contract_id, is_active: true }, order: { col: 'item_code', asc: true }, limit: 500 })
+ setPriceListOptions(pl)
  setItems(pl.map((p: any) => ({ price_list_id: p.id, description: `${p.item_code ? p.item_code + ' — ' : ''}${p.description ?? ''}`, uom: p.uom ?? '', unit_price: Number(p.unit_price) || 0, qty: 0 })))
  } catch (e: any) { toast.push(e.message ?? 'Gagal menarik item price list', 'error') }
  finally { setItemsLoading(false) }
  }
 
+ // Ubah klaim yang masih draft: item bisa ditambah/dihapus/diubah qty-nya.
+ const openEditItems = async (row: any) => {
+ setEditingId(row.id)
+ setFSpkId(row.spk_id || ''); setFormContractId(row.contract_id || null)
+ setFPeriodStart(row.period_start || todayISO()); setFPeriodEnd(row.period_end || todayISO())
+ setFBaNo(row.ba_no || ''); setFBaDate(row.ba_date || todayISO()); setFNote(row.note || '')
+ setItemsLoading(true)
+ try {
+ const [pl, existing] = await Promise.all([
+ list('contract_price_list', { eq: { contract_id: row.contract_id, is_active: true }, order: { col: 'item_code', asc: true }, limit: 500 }),
+ list('progress_claim_items', { eq: { claim_id: row.id }, order: { col: 'created_at', asc: true } }),
+ ])
+ setPriceListOptions(pl)
+ const existingByPl: Record<string, any> = Object.fromEntries(existing.map((it: any) => [it.price_list_id, it]))
+ const merged: Item[] = pl.map((p: any) => {
+ const ex = existingByPl[p.id]
+ return ex
+ ? { id: ex.id, price_list_id: p.id, description: ex.description, uom: ex.uom, unit_price: Number(ex.unit_price) || 0, qty: Number(ex.qty) || 0 }
+ : { price_list_id: p.id, description: `${p.item_code ? p.item_code + ' — ' : ''}${p.description ?? ''}`, uom: p.uom ?? '', unit_price: Number(p.unit_price) || 0, qty: 0 }
+ })
+ const plIds = new Set(pl.map((p: any) => p.id))
+ const extras: Item[] = existing.filter((it: any) => !plIds.has(it.price_list_id)).map((it: any) => ({ id: it.id, price_list_id: it.price_list_id, description: it.description, uom: it.uom, unit_price: Number(it.unit_price) || 0, qty: Number(it.qty) || 0 }))
+ setItems([...merged, ...extras])
+ } catch (e: any) { toast.push(e.message ?? 'Gagal memuat item klaim untuk diubah', 'error') }
+ finally { setItemsLoading(false) }
+ setDetail(null)
+ setModal(true)
+ }
+
+ function addItemRow() { setItems(v => [...v, { price_list_id: '', description: '', uom: '', unit_price: 0, qty: 0 }]) }
+ function removeItemRow(idx: number) { setItems(v => v.filter((_, i) => i !== idx)) }
+ function patchItemQty(idx: number, qty: number) { setItems(v => v.map((it, i) => i === idx ? { ...it, qty } : it)) }
+ function onPickPriceItem(idx: number, priceListId: string) {
+ const p = priceListOptions.find(x => x.id === priceListId)
+ setItems(v => v.map((it, i) => i === idx ? {
+ ...it, price_list_id: priceListId,
+ description: p ? `${p.item_code ? p.item_code + ' — ' : ''}${p.description ?? ''}` : it.description,
+ uom: p?.uom ?? it.uom, unit_price: p ? Number(p.unit_price) || 0 : it.unit_price,
+ } : it))
+ }
+
  const claimAmount = useMemo(() => items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0), [items])
- const contractIdForForm = fSpkId ? spkMap[fSpkId]?.contract_id : null
+ const contractIdForForm = formContractId ?? (fSpkId ? spkMap[fSpkId]?.contract_id : null)
  const retentionPercent = contractIdForForm ? Number(contractMap[contractIdForForm]?.retention_percent ?? 0) : 0
  const retentionAmount = Math.round(claimAmount * retentionPercent / 100)
  const netAmount = claimAmount - retentionAmount
@@ -89,8 +135,24 @@ export default function Klaim() {
  if (!fSpkId) { toast.push('Pilih SPK terlebih dahulu', 'error'); return }
  const filledItems = items.filter(it => Number(it.qty) > 0)
  if (filledItems.length === 0) { toast.push('Isi minimal satu qty realisasi', 'error'); return }
+ if (filledItems.some(it => !it.price_list_id)) { toast.push('Setiap baris item yang terisi wajib memilih item dari price list', 'error'); return }
  setSaving(true)
  try {
+ if (editingId) {
+ await update('progress_claims', editingId, {
+ period_start: fPeriodStart || null, period_end: fPeriodEnd || null,
+ claim_amount: claimAmount, retention_amount: retentionAmount,
+ ba_no: fBaNo, ba_date: fBaDate || null, note: fNote,
+ })
+ const existing = await list('progress_claim_items', { eq: { claim_id: editingId } })
+ for (const ex of existing) if (!filledItems.some(it => it.id === ex.id)) await remove('progress_claim_items', ex.id)
+ for (const it of filledItems) {
+ const amount = Number(it.qty) * Number(it.unit_price)
+ if (it.id) await update('progress_claim_items', it.id, { price_list_id: it.price_list_id, description: it.description, uom: it.uom, qty: Number(it.qty), unit_price: Number(it.unit_price), amount })
+ else await insert('progress_claim_items', { company_id: profile!.company_id, claim_id: editingId, price_list_id: it.price_list_id, description: it.description, uom: it.uom, qty: Number(it.qty), unit_price: Number(it.unit_price), amount })
+ }
+ toast.push('Klaim progres diperbarui', 'success')
+ } else {
  const spk = spkMap[fSpkId]
  const claimNo = await nextDocNo(profile!.company_id, 'CLM')
  const claim = await insert<any>('progress_claims', {
@@ -107,7 +169,8 @@ export default function Klaim() {
  })
  }
  toast.push('Klaim progres ditambahkan', 'success')
- setModal(false); load()
+ }
+ setModal(false); setEditingId(null); load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan klaim', 'error') }
  finally { setSaving(false) }
  }
@@ -175,11 +238,11 @@ export default function Klaim() {
  emptyAction={can('COMMERCE', 'write') && <Button size="sm" icon={<Plus size={16} />} onClick={openAdd}>Tambah Klaim</Button>} />
  )}
 
- <Modal open={modal} onClose={() => setModal(false)} title="Tambah Klaim Progres" size="xl"
- footer={<><Button variant="outline" onClick={() => setModal(false)}>Batal</Button><Button loading={saving} onClick={save}>Simpan Klaim</Button></>}>
+ <Modal open={modal} onClose={() => { setModal(false); setEditingId(null) }} title={editingId ? 'Ubah Klaim Progres' : 'Tambah Klaim Progres'} size="xl"
+ footer={<><Button variant="outline" onClick={() => { setModal(false); setEditingId(null) }}>Batal</Button><Button loading={saving} onClick={save}>{editingId ? 'Simpan Perubahan' : 'Simpan Klaim'}</Button></>}>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
  <Field label="SPK" required className="sm:col-span-2">
- <Select value={fSpkId} options={spkList.map(s => ({ value: s.id, label: `${s.spk_no} — ${s.title}` }))} onChange={(e: any) => pullPriceList(e.target.value)} />
+ <Select disabled={!!editingId} value={fSpkId} options={spkList.map(s => ({ value: s.id, label: `${s.spk_no} — ${s.title}` }))} onChange={(e: any) => pullPriceList(e.target.value)} />
  </Field>
  <Field label="Periode Mulai"><Input type="date" value={fPeriodStart} onChange={e => setFPeriodStart(e.target.value)} /></Field>
  <Field label="Periode Selesai"><Input type="date" value={fPeriodEnd} onChange={e => setFPeriodEnd(e.target.value)} /></Field>
@@ -188,30 +251,37 @@ export default function Klaim() {
  <Field label="Catatan" className="sm:col-span-2"><Textarea value={fNote} onChange={e => setFNote(e.target.value)} /></Field>
  </div>
 
+ <div className="flex items-center justify-between mb-2">
+ <h4 className="font-display font-semibold text-[13px] uppercase tracking-wide text-ink-500">Item Realisasi</h4>
+ {(fSpkId || editingId) && <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={addItemRow}>Tambah Baris</Button>}
+ </div>
  {itemsLoading ? <TableSkeleton rows={3} /> : items.length === 0 ? (
- <EmptyState title="Belum ada item" message="Pilih SPK untuk menarik item price list dari kontrak terkait." />
+ <EmptyState title="Belum ada item" message="Pilih SPK untuk menarik item price list dari kontrak terkait, lalu isi qty realisasi atau tambah baris." />
  ) : (
- <div className="border border-ink-200 rounded-sm overflow-hidden mb-4">
+ <div className="border border-ink-200 rounded-sm overflow-hidden mb-4 overflow-x-auto">
  <table className="w-full text-body">
  <thead className="bg-ink-50"><tr>
- <th className="px-3 py-2 text-left text-caption font-semibold text-ink-500">Deskripsi</th>
+ <th className="px-3 py-2 text-left text-caption font-semibold text-ink-500 min-w-[220px]">Item</th>
  <th className="px-3 py-2 text-left text-caption font-semibold text-ink-500 w-20">Satuan</th>
  <th className="px-3 py-2 text-right text-caption font-semibold text-ink-500 w-32">Harga Satuan</th>
  <th className="px-3 py-2 text-right text-caption font-semibold text-ink-500 w-28">Qty Realisasi</th>
  <th className="px-3 py-2 text-right text-caption font-semibold text-ink-500 w-32">Nilai</th>
+ <th className="px-3 py-2 w-10" />
  </tr></thead>
  <tbody>{items.map((it, i) => (
  <tr key={i} className="border-t border-ink-100">
- <td className="px-3 py-2">{it.description}</td>
+ <td className="px-3 py-2">
+ <Select value={it.price_list_id ?? ''} onChange={(e: any) => onPickPriceItem(i, e.target.value)}
+ options={priceListOptions.map((p: any) => ({ value: p.id, label: `${p.item_code ? p.item_code + ' — ' : ''}${p.description ?? ''}` }))} />
+ </td>
  <td className="px-3 py-2">{it.uom}</td>
  <td className="px-3 py-2 text-right tabular">{rupiah(it.unit_price)}</td>
  <td className="px-3 py-2">
- <input type="number" min={0} value={it.qty || ''} onChange={e => {
- const v = Number(e.target.value) || 0
- setItems(arr => arr.map((x, xi) => xi === i ? { ...x, qty: v } : x))
- }} className="w-full h-8 px-2 text-right rounded-xs border border-ink-200 bg-surface" />
+ <input type="number" min={0} value={it.qty || ''} onChange={e => patchItemQty(i, Number(e.target.value) || 0)}
+ className="w-full h-8 px-2 text-right rounded-xs border border-ink-200 bg-surface" />
  </td>
  <td className="px-3 py-2 text-right tabular">{rupiah((Number(it.qty) || 0) * it.unit_price)}</td>
+ <td className="px-3 py-2 text-center"><button onClick={() => removeItemRow(i)} className="text-red-500 hover:text-red-700 text-caption">Hapus</button></td>
  </tr>))}</tbody>
  </table>
  </div>
@@ -228,6 +298,7 @@ export default function Klaim() {
 
  <Drawer open={!!detail} onClose={() => setDetail(null)} title={detail?.claim_no} width="max-w-2xl"
  footer={detail && <>
+ {detail.status === 'draft' && can('COMMERCE', 'write') && <Button variant="outline" onClick={() => openEditItems(detail)}>Ubah</Button>}
  {detail.status === 'draft' && can('COMMERCE', 'write') && <Button variant="outline" onClick={() => changeStatus('diajukan')}>Ajukan</Button>}
  {detail.status === 'diajukan' && can('COMMERCE', 'write') && <Button variant="outline" onClick={() => changeStatus('diverifikasi')}>Verifikasi</Button>}
  {detail.status === 'diverifikasi' && can('COMMERCE', 'approve') && <>

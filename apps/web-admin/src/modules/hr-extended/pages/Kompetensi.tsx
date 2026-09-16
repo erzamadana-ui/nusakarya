@@ -12,7 +12,7 @@ import {
 } from '../lib/constants'
 
 const emptyAssess = { employee_id: '', competency_id: '', level: 'dasar', assessed_at: todayISO(), expiry_date: '' }
-const emptyTraining = { id: null, title: '', provider: '', training_type: 'Internal', competency_id: '', start_date: todayISO(), end_date: '', location: '', quota: 20, cost: 0, status: 'rencana' }
+const emptyTraining = { id: null, title: '', provider: '', training_type: 'internal', competency_id: '', start_date: todayISO(), end_date: '', location: '', quota: 20, cost: 0, status: 'rencana' }
 
 export default function Kompetensi() {
  const { profile, can } = useAuth()

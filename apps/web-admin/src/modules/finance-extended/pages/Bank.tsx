@@ -114,7 +114,7 @@ function Rekening({ profile, can, toast, accounts, loading, reload }: any) {
 
 function Rekonsiliasi({ profile, can, toast, accounts, recons, loading, reload }: any) {
  const [modalOpen, setModalOpen] = useState(false)
- const [form, setForm] = useState<any>({ bank_account_id: '', period_start: todayISO().slice(0, 8) + '01', period_end: todayISO(), statement_balance: 0, book_balance: 0 })
+ const [form, setForm] = useState<any>({ bank_account_id: '', period_start: todayISO().slice(0, 8) + '01', period_end: todayISO(), statement_balance: 0, book_balance: 0, note: '' })
  const [busy, setBusy] = useState(false)
  const [selected, setSelected] = useState<any | null>(null)
 
@@ -123,7 +123,7 @@ function Rekonsiliasi({ profile, can, toast, accounts, recons, loading, reload }
 
  function openAdd() {
  const acc = accounts[0]
- setForm({ bank_account_id: acc?.id ?? '', period_start: todayISO().slice(0, 8) + '01', period_end: todayISO(), statement_balance: 0, book_balance: acc?.current_balance ?? 0 })
+ setForm({ bank_account_id: acc?.id ?? '', period_start: todayISO().slice(0, 8) + '01', period_end: todayISO(), statement_balance: 0, book_balance: acc?.current_balance ?? 0, note: '' })
  setModalOpen(true)
  }
  function pickAccount(id: string) { setForm((f: any) => ({ ...f, bank_account_id: id, book_balance: accountMap[id]?.current_balance ?? 0 })) }
@@ -137,7 +137,7 @@ function Rekonsiliasi({ profile, can, toast, accounts, recons, loading, reload }
  const row = await insert('bank_reconciliations', {
  company_id: profile!.company_id, recon_no: reconNo, bank_account_id: form.bank_account_id,
  period_start: form.period_start, period_end: form.period_end, statement_balance: Number(form.statement_balance) || 0,
- book_balance: Number(form.book_balance) || 0, difference, status: 'draft', created_by: profile!.id,
+ book_balance: Number(form.book_balance) || 0, difference, note: form.note || null, status: 'draft', created_by: profile!.id,
  })
  toast.push('Rekonsiliasi dibuat.', 'success')
  setModalOpen(false); await reload(); setSelected(row)
@@ -167,6 +167,7 @@ function Rekonsiliasi({ profile, can, toast, accounts, recons, loading, reload }
  <Field label="Akhir Periode" required><Input type="date" value={form.period_end} onChange={(e: any) => setForm((f: any) => ({ ...f, period_end: e.target.value }))} /></Field>
  <Field label="Saldo Buku" hint="Diambil dari saldo berjalan rekening, dapat diubah."><Money value={form.book_balance} onChange={(v: number) => setForm((f: any) => ({ ...f, book_balance: v }))} /></Field>
  <Field label="Saldo Rekening Koran" required><Money value={form.statement_balance} onChange={(v: number) => setForm((f: any) => ({ ...f, statement_balance: v }))} /></Field>
+ <Field label="Catatan" className="sm:col-span-2"><Textarea rows={2} value={form.note} onChange={(e: any) => setForm((f: any) => ({ ...f, note: e.target.value }))} placeholder="Opsional" /></Field>
  </div>
  </Modal>
 
@@ -239,10 +240,22 @@ function ReconDetail({ profile, can, toast, recon, account, onUpdated }: any) {
  } catch (e: any) { toast.push(e.message ?? 'Gagal mencocokkan baris', 'error') }
  }
 
+ function pesanGagal(e: any, aksi: string) {
+ const msg = String(e?.message ?? '')
+ if (/row-level security|permission denied|RLS/i.test(msg)) {
+ return `Gagal ${aksi}: Anda tidak memiliki hak yang cukup pada modul Finance. Hubungi admin untuk memberi hak akses.`
+ }
+ return msg || `Gagal ${aksi}`
+ }
+
  async function tandaiSelesai() {
  if (Number(recon.difference) !== 0) { toast.push('Selisih belum nol — rekonsiliasi belum bisa ditandai selesai.', 'error'); return }
  try { await update('bank_reconciliations', recon.id, { status: 'selesai' }); toast.push('Rekonsiliasi ditandai selesai.', 'success'); onUpdated({ status: 'selesai' }) }
- catch (e: any) { toast.push(e.message ?? 'Gagal memperbarui status', 'error') }
+ catch (e: any) { toast.push(pesanGagal(e, 'memperbarui status'), 'error') }
+ }
+ async function setujuiRekonsiliasi() {
+ try { await update('bank_reconciliations', recon.id, { status: 'disetujui' }); toast.push('Rekonsiliasi disetujui.', 'success'); onUpdated({ status: 'disetujui' }) }
+ catch (e: any) { toast.push(pesanGagal(e, 'menyetujui rekonsiliasi'), 'error') }
  }
 
  const belumCocok = lines.filter(l => !l.is_matched).length
@@ -257,8 +270,13 @@ function ReconDetail({ profile, can, toast, recon, account, onUpdated }: any) {
  <KpiCard label="Belum Cocok" value={String(belumCocok)} tone={belumCocok > 0 ? 'red' : 'emerald'} />
  </div>
  <p className="text-caption text-ink-400 mt-2">Rekening: {account ? `${account.bank_name} — ${account.account_no}` : '-'} · Periode {tgl(recon.period_start)} – {tgl(recon.period_end)}</p>
- {can('FINANCE', 'approve') && recon.status !== 'selesai' && (
+ {recon.note && <p className="text-caption text-ink-500 mt-1">Catatan: {recon.note}</p>}
+ {recon.status === 'disetujui' && <div className="mt-3"><Badge tone="emerald">Disetujui</Badge></div>}
+ {can('FINANCE', 'write') && recon.status === 'draft' && (
  <Button className="mt-3" size="sm" disabled={Number(recon.difference) !== 0} onClick={tandaiSelesai}>Tandai Selesai</Button>
+ )}
+ {can('FINANCE', 'approve') && recon.status === 'selesai' && (
+ <Button className="mt-3" size="sm" onClick={setujuiRekonsiliasi}>Setujui Rekonsiliasi</Button>
  )}
  </Section>
 

@@ -22,8 +22,10 @@ export default function JobCosting() {
  const [detail, setDetail] = useState<any | null>(null)
  const [detailLoading, setDetailLoading] = useState(false)
  const [costs, setCosts] = useState<any[]>([])
+ const [spkList, setSpkList] = useState<any[]>([])
+ const [woList, setWoList] = useState<any[]>([])
  const [addOpen, setAddOpen] = useState(false)
- const [form, setForm] = useState<any>({ cost_date: todayISO(), cost_category_id: '', description: '', amount: 0 })
+ const [form, setForm] = useState<any>({ cost_date: todayISO(), cost_category_id: '', description: '', amount: 0, spk_id: '', work_order_id: '' })
  const [newCatName, setNewCatName] = useState('')
  const [newCatType, setNewCatType] = useState('material')
  const [showNewCat, setShowNewCat] = useState(false)
@@ -39,22 +41,26 @@ export default function JobCosting() {
  async function load() {
  setLoading(true)
  try {
- const [pm, cc] = await Promise.all([
+ const [pm, cc, spk] = await Promise.all([
  list('v_project_margin', { eq: { company_id: profile!.company_id }, order: { col: 'project_name', asc: true }, limit: 500 }),
  list('cost_categories', { eq: { company_id: profile!.company_id }, order: { col: 'name', asc: true }, limit: 200 }),
+ list('spk', { select: 'id,spk_no,title', eq: { company_id: profile!.company_id }, order: { col: 'spk_no', asc: false }, limit: 1000 }),
  ])
- setProjects(pm); setCategories(cc)
+ setProjects(pm); setCategories(cc); setSpkList(spk)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat data job costing', 'error') } finally { setLoading(false) }
  }
 
  async function openDetail(row: any) {
  setDetail(row); setDetailLoading(true)
  try {
- const jc = await list('job_costs', {
- select: 'id,cost_date,description,amount,source_type,cost_category_id,cost_category:cost_categories(name,cost_type)',
+ const [jc, wo] = await Promise.all([
+ list('job_costs', {
+ select: 'id,cost_date,description,amount,source_type,cost_category_id,spk_id,work_order_id,cost_category:cost_categories(name,cost_type)',
  eq: { company_id: profile!.company_id, project_id: row.project_id }, order: { col: 'cost_date', asc: false }, limit: 1000,
- })
- setCosts(jc)
+ }),
+ list('work_orders', { select: 'id,wo_no,title', eq: { company_id: profile!.company_id, project_id: row.project_id }, order: { col: 'wo_no', asc: false }, limit: 500 }),
+ ])
+ setCosts(jc); setWoList(wo)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat rincian biaya', 'error') } finally { setDetailLoading(false) }
  }
 
@@ -85,9 +91,10 @@ export default function JobCosting() {
  await insert('job_costs', {
  company_id: profile!.company_id, project_id: detail.project_id, cost_category_id: form.cost_category_id,
  cost_date: form.cost_date, description: form.description || null, amount: Number(form.amount), source_type: 'manual',
+ spk_id: form.spk_id || null, work_order_id: form.work_order_id || null,
  })
  toast.push('Biaya proyek ditambahkan.', 'success')
- setAddOpen(false); setForm({ cost_date: todayISO(), cost_category_id: '', description: '', amount: 0 })
+ setAddOpen(false); setForm({ cost_date: todayISO(), cost_category_id: '', description: '', amount: 0, spk_id: '', work_order_id: '' })
  await openDetail(detail); await load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan biaya', 'error') } finally { setBusy(false) }
  }
@@ -216,6 +223,14 @@ export default function JobCosting() {
  </Field>
  <Field label="Keterangan"><Textarea value={form.description} onChange={(e: any) => setForm((f: any) => ({ ...f, description: e.target.value }))} /></Field>
  <Field label="Nominal" required><Money value={form.amount} onChange={(v: number) => setForm((f: any) => ({ ...f, amount: v }))} /></Field>
+ <Field label="Tautkan ke SPK" hint="Opsional — untuk menelusuri biaya per SPK.">
+ <Select value={form.spk_id} onChange={(e: any) => setForm((f: any) => ({ ...f, spk_id: e.target.value }))}
+ options={spkList.map(s => ({ value: s.id, label: `${s.spk_no} — ${s.title}` }))} placeholder="Tidak terikat SPK" />
+ </Field>
+ <Field label="Tautkan ke Work Order" hint="Opsional — hanya WO milik proyek ini yang ditampilkan.">
+ <Select value={form.work_order_id} onChange={(e: any) => setForm((f: any) => ({ ...f, work_order_id: e.target.value }))}
+ options={woList.map(w => ({ value: w.id, label: `${w.wo_no} — ${w.title ?? '-'}` }))} placeholder="Tidak terikat WO" />
+ </Field>
  </div>
  </Modal>
 

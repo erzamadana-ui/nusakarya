@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { list, insert, update } from '@/lib/db'
 import {
-  PageHeader, Card, CardHeader, Section, DataTable, Badge, Button, Field, Input, Money, useToast,
+  PageHeader, Card, CardHeader, Section, DataTable, Badge, Button, Modal, Field, Input, Money, useToast,
   EmptyState, TableSkeleton, Skeleton, cx,
 } from '@/components/ui'
 import { rupiah, pct, tgl, tglJam, todayISO } from '@/lib/format'
 import { toPct, toDec, JKK_RISK_CLASS_LABEL } from '../lib/constants'
-import { ShieldAlert, ShieldCheck, CheckCircle2 } from 'lucide-react'
+import { ShieldAlert, ShieldCheck, CheckCircle2, Pencil } from 'lucide-react'
 
 const emptyForm = {
   jht_company_pct: 3.7, jht_employee_pct: 2,
@@ -36,6 +36,10 @@ export default function SetelanBpjs() {
   const [saving, setSaving] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [simUpah, setSimUpah] = useState<number>(6000000)
+
+  const [rateEdit, setRateEdit] = useState<any>(null)
+  const [rateForm, setRateForm] = useState<any>(null)
+  const [rateSaving, setRateSaving] = useState(false)
 
   useEffect(() => { load() }, [profile?.company_id])
 
@@ -83,6 +87,35 @@ export default function SetelanBpjs() {
       ...f, jkk_risk_class: r.class_code, jkk_pct: toPct(r.rate),
       jkk_source_note: `Dipilih manual oleh ${profile?.full_name ?? 'pengguna'} pada ${tgl(todayISO())} dari referensi Kelompok ${r.class_code} (${r.class_name}), tarif pasca-rekomposisi PP 49/2023: ${pct(toPct(r.rate), 2)}. Belum diverifikasi — cocokkan dengan sertifikat kepesertaan BPJS Ketenagakerjaan perusahaan sebelum ditandai terverifikasi.`,
     }))
+  }
+
+  function openRateEdit(r: any) {
+    if (!can('PAYROLL', 'approve')) return
+    setRateEdit(r)
+    setRateForm({ class_name: r.class_name, description: r.description ?? '', rate_pct: toPct(r.rate), effective_from: todayISO(), source_note: '' })
+  }
+  async function saveRate() {
+    if (!can('PAYROLL', 'approve') || !rateEdit) return
+    if (!rateForm.class_name || !rateForm.effective_from || rateForm.rate_pct === '' || rateForm.rate_pct == null) {
+      toast.push('Nama kelompok, tarif, dan tanggal berlaku wajib diisi', 'error'); return
+    }
+    setRateSaving(true)
+    try {
+      await insert('jkk_risk_rates', {
+        company_id: null,
+        class_code: rateEdit.class_code,
+        class_name: rateForm.class_name,
+        description: rateForm.description || null,
+        rate: toDec(rateForm.rate_pct),
+        effective_from: rateForm.effective_from,
+        source_note: rateForm.source_note || null,
+      })
+      toast.push(`Tarif Kelompok ${rateEdit.class_code} diperbarui, berlaku mulai ${tgl(rateForm.effective_from)}`)
+      setRateEdit(null); load()
+    } catch (e: any) {
+      const msg = /row-level security|permission denied/i.test(e.message ?? '') ? 'Gagal menyimpan — hak akses Anda pada modul PAYROLL tidak mengizinkan tindakan approve (ubah tarif kelompok risiko JKK).' : (e.message ?? 'Gagal menyimpan tarif kelompok risiko')
+      toast.push(msg, 'error')
+    } finally { setRateSaving(false) }
   }
 
   async function save() {
@@ -185,7 +218,17 @@ export default function SetelanBpjs() {
                     selected && 'border-primary-400 ring-2 ring-primary-200 bg-primary-50')}>
                   <div className="flex items-center justify-between">
                     <Badge tone={selected ? 'teal' : 'slate'}>Kelompok {r.class_code}</Badge>
-                    {selected && <CheckCircle2 size={16} className="text-primary-600" />}
+                    <div className="flex items-center gap-1.5">
+                      {can('PAYROLL', 'approve') && (
+                        <button
+                          onClick={(e: any) => { e.stopPropagation(); openRateEdit(r) }}
+                          title="Ubah tarif kelompok ini (mis. peraturan baru)"
+                          className="p-1 rounded-xs text-ink-400 hover:text-primary-600 hover:bg-primary-50">
+                          <Pencil size={13} />
+                        </button>
+                      )}
+                      {selected && <CheckCircle2 size={16} className="text-primary-600" />}
+                    </div>
                   </div>
                   <p className="mt-2 font-display font-semibold text-[15px] text-ink-900">{r.class_name}</p>
                   <p className="mt-0.5 font-display font-bold text-[20px] tabular text-primary-700">{pct(toPct(r.rate), 2)}</p>
@@ -295,6 +338,20 @@ export default function SetelanBpjs() {
         selalu tercantum pada sertifikat kepesertaan BPJS Ketenagakerjaan &amp; BPJS Kesehatan serta peraturan pemerintah yang berlaku
         saat periode payroll berjalan — halaman ini adalah alat bantu administrasi, bukan pengganti dokumen resmi tersebut.
       </p>
+
+      <Modal open={!!rateEdit} onClose={() => setRateEdit(null)} title={`Ubah Tarif Kelompok Risiko ${rateEdit?.class_code ?? ''}`} size="sm"
+        footer={<><Button variant="outline" onClick={() => setRateEdit(null)}>Batal</Button><Button loading={rateSaving} onClick={saveRate}>Simpan Tarif Baru</Button></>}>
+        {rateEdit && rateForm && (
+          <div className="space-y-3">
+            <p className="text-caption text-ink-500">Tarif saat ini: <span className="font-medium text-ink-800">{pct(toPct(rateEdit.rate), 2)}</span>, berlaku sejak {tgl(rateEdit.effective_from)}. Menyimpan akan menambah versi baru — riwayat lama tetap tersimpan.</p>
+            <Field label="Nama Kelompok" required><Input value={rateForm.class_name} onChange={(e: any) => setRateForm({ ...rateForm, class_name: e.target.value })} /></Field>
+            <Field label="Deskripsi"><Input value={rateForm.description} onChange={(e: any) => setRateForm({ ...rateForm, description: e.target.value })} /></Field>
+            <Field label="Tarif Baru (%)" required><Input type="number" step="0.01" value={rateForm.rate_pct} onChange={(e: any) => setRateForm({ ...rateForm, rate_pct: e.target.value })} className="text-right tabular" /></Field>
+            <Field label="Berlaku Mulai" required><Input type="date" value={rateForm.effective_from} onChange={(e: any) => setRateForm({ ...rateForm, effective_from: e.target.value })} /></Field>
+            <Field label="Sumber/Alasan Perubahan" hint="Mis. rujukan peraturan baru."><Input value={rateForm.source_note} onChange={(e: any) => setRateForm({ ...rateForm, source_note: e.target.value })} /></Field>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

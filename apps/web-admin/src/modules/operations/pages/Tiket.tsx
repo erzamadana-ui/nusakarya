@@ -11,6 +11,7 @@ import {
  TICKET_SOURCES, TICKET_TYPES, TICKET_STATUSES, ticketStatusLabel, ticketStatusTone,
  SEVERITAS, severityLabel, severityTone, slaDefaultMenit, SLA_DEFAULT_NOTE,
 } from '../lib/constants'
+import { TICKET_STATUS } from '../lib/status'
 import { tautanPeta } from '../lib/helpers'
 
 const emptyForm = () => ({
@@ -103,7 +104,7 @@ export default function Tiket() {
  address: form.address || null, branch_id: form.branch_id, network_element_id: form.network_element_id || null,
  category: form.category || null, sub_category: form.sub_category || null, severity: form.severity,
  reported_at: reportedAt.toISOString(), sla_minutes: Number(form.sla_minutes), sla_due_at: dueAt.toISOString(),
- status: 'baru', description: form.description || null, created_by: profile!.id,
+ status: TICKET_STATUS.OPEN, description: form.description || null, created_by: profile!.id,
  })
  await insert('ticket_activities', {
  company_id: profile!.company_id, ticket_id: row.id, activity_type: 'dibuat',
@@ -154,7 +155,7 @@ export default function Tiket() {
  async function doAssign() {
  if (!assignTo) { toast.push('Pilih teknisi terlebih dahulu', 'error'); return }
  try {
- await update('tickets', selected.id, { assigned_to: assignTo, status: selected.status === 'baru' ? 'ditugaskan' : selected.status })
+ await update('tickets', selected.id, { assigned_to: assignTo, status: selected.status === TICKET_STATUS.OPEN ? TICKET_STATUS.ASSIGNED : selected.status })
  await insert('ticket_activities', { company_id: profile!.company_id, ticket_id: selected.id, activity_type: 'tugaskan', note: `Ditugaskan kepada ${empName(assignTo)}.`, created_by: profile!.id })
  toast.push('Teknisi berhasil ditugaskan', 'success'); setAssignOpen(false); setAssignTo(''); await refreshDetail()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menugaskan teknisi', 'error') }
@@ -164,7 +165,7 @@ export default function Tiket() {
  if (!pauseReason.trim()) { toast.push('Alasan pause SLA wajib diisi', 'error'); return }
  try {
  await insert('ticket_sla_events', { company_id: profile!.company_id, ticket_id: selected.id, event_type: 'pause', reason: pauseReason.trim(), created_by: profile!.id })
- await update('tickets', selected.id, { status: 'pause' })
+ await update('tickets', selected.id, { status: TICKET_STATUS.PENDING })
  await insert('ticket_activities', { company_id: profile!.company_id, ticket_id: selected.id, activity_type: 'pause_sla', note: `SLA dijeda — ${pauseReason.trim()}`, created_by: profile!.id })
  toast.push('SLA dijeda', 'success'); setPauseOpen(false); setPauseReason(''); await refreshDetail()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menjeda SLA', 'error') }
@@ -173,7 +174,7 @@ export default function Tiket() {
  async function doResume() {
  try {
  await insert('ticket_sla_events', { company_id: profile!.company_id, ticket_id: selected.id, event_type: 'resume', created_by: profile!.id })
- await update('tickets', selected.id, { status: 'dikerjakan' })
+ await update('tickets', selected.id, { status: TICKET_STATUS.ON_PROGRESS })
  await insert('ticket_activities', { company_id: profile!.company_id, ticket_id: selected.id, activity_type: 'resume_sla', note: 'SLA dilanjutkan.', created_by: profile!.id })
  toast.push('SLA dilanjutkan', 'success'); await refreshDetail()
  } catch (e: any) { toast.push(e.message ?? 'Gagal melanjutkan SLA', 'error') }
@@ -186,7 +187,7 @@ export default function Tiket() {
  const reported = new Date(selected.reported_at)
  const ttr = Math.max(0, Math.round((now.getTime() - reported.getTime()) / 60000))
  const slaStatus = ttr <= (selected.sla_minutes ?? 0) ? 'met' : 'breach'
- await update('tickets', selected.id, { status: 'selesai', resolved_at: now.toISOString(), ttr_minutes: ttr, sla_status: slaStatus, root_cause_id: completeForm.root_cause_id })
+ await update('tickets', selected.id, { status: TICKET_STATUS.RESOLVED, resolved_at: now.toISOString(), ttr_minutes: ttr, sla_status: slaStatus, root_cause_id: completeForm.root_cause_id })
  await insert('ticket_activities', { company_id: profile!.company_id, ticket_id: selected.id, activity_type: 'rca', note: `Root cause: ${rcName(completeForm.root_cause_id)}. ${completeForm.note || ''}`.trim(), created_by: profile!.id })
  toast.push('Tiket ditandai selesai', 'success'); setCompleteOpen(false); setCompleteForm({ root_cause_id: '', note: '' }); await refreshDetail()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyelesaikan tiket', 'error') }
@@ -194,7 +195,7 @@ export default function Tiket() {
 
  async function doClose() {
  try {
- await update('tickets', selected.id, { status: 'ditutup', closed_at: new Date().toISOString() })
+ await update('tickets', selected.id, { status: TICKET_STATUS.CLOSED, closed_at: new Date().toISOString() })
  await insert('ticket_activities', { company_id: profile!.company_id, ticket_id: selected.id, activity_type: 'tutup', note: 'Tiket ditutup.', created_by: profile!.id })
  toast.push('Tiket ditutup', 'success'); await refreshDetail()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menutup tiket', 'error') }
@@ -283,11 +284,11 @@ export default function Tiket() {
  title={selected ? `${selected.ticket_no} — ${selected.customer_name}` : ''}
  footer={selected && writable && (
  <div className="flex flex-wrap gap-2 w-full">
- {!['selesai', 'ditutup'].includes(selected.status) && <Button size="sm" variant="outline" onClick={() => setAssignOpen(true)}>Tugaskan Teknisi</Button>}
- {selected.status !== 'pause' && !['selesai', 'ditutup'].includes(selected.status) && <Button size="sm" variant="outline" onClick={() => setPauseOpen(true)}>Pause SLA</Button>}
- {selected.status === 'pause' && <Button size="sm" variant="outline" onClick={() => setResumeConfirm(true)}>Resume SLA</Button>}
- {!['selesai', 'ditutup'].includes(selected.status) && <Button size="sm" onClick={() => setCompleteOpen(true)}>Selesaikan</Button>}
- {selected.status === 'selesai' && <Button size="sm" variant="secondary" onClick={() => setCloseConfirm(true)}>Tutup Tiket</Button>}
+ {!['resolved', 'closed', 'cancelled'].includes(selected.status) && <Button size="sm" variant="outline" onClick={() => setAssignOpen(true)}>Tugaskan Teknisi</Button>}
+ {selected.status !== 'pending' && !['resolved', 'closed', 'cancelled'].includes(selected.status) && <Button size="sm" variant="outline" onClick={() => setPauseOpen(true)}>Pause SLA</Button>}
+ {selected.status === 'pending' && <Button size="sm" variant="outline" onClick={() => setResumeConfirm(true)}>Resume SLA</Button>}
+ {!['resolved', 'closed', 'cancelled'].includes(selected.status) && <Button size="sm" onClick={() => setCompleteOpen(true)}>Selesaikan</Button>}
+ {selected.status === 'resolved' && <Button size="sm" variant="secondary" onClick={() => setCloseConfirm(true)}>Tutup Tiket</Button>}
  </div>)}>
  {selected && (
  <div>

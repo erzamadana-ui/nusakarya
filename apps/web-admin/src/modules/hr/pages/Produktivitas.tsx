@@ -15,6 +15,12 @@ const emptyJobType = {
  price_source: 'asumsi_sistem', price_source_ref: '',
 }
 
+const TARGET_MODE_OPTIONS = [
+ { value: 'employee', label: 'Per Karyawan (bisa pilih banyak sekaligus)' },
+ { value: 'position', label: 'Per Jabatan' },
+]
+const emptyTargetForm = { mode: 'employee', employee_ids: [] as string[], position: '', period_code: periodCode(), target_points: '' }
+
 export default function Produktivitas() {
  const { profile, can } = useAuth()
  const toast = useToast()
@@ -34,8 +40,19 @@ export default function Produktivitas() {
  const [jtForm, setJtForm] = useState<any>(emptyJobType)
  const [jtSaving, setJtSaving] = useState(false)
 
+ const [targets, setTargets] = useState<any[]>([])
+ const [targetsLoading, setTargetsLoading] = useState(true)
+ const [targetEmployees, setTargetEmployees] = useState<any[]>([])
+ const [targetModal, setTargetModal] = useState(false)
+ const [targetForm, setTargetForm] = useState<any>(emptyTargetForm)
+ const [targetSaving, setTargetSaving] = useState(false)
+
  useEffect(() => { loadPeringkat() }, [period])
  useEffect(() => { if (can('PRODUCTIVITY', 'write')) loadJobTypes() }, [])
+ useEffect(() => { if (can('PRODUCTIVITY', 'write')) loadTargets() }, [period])
+ useEffect(() => {
+ if (can('PRODUCTIVITY', 'write')) list<any>('employees', { select: 'id,full_name,position', eq: { status: 'aktif' }, order: { col: 'full_name', asc: true } }).then(setTargetEmployees).catch(() => {})
+ }, [])
 
  async function loadPeringkat() {
  setLoading(true)
@@ -91,6 +108,55 @@ export default function Produktivitas() {
  finally { setJtSaving(false) }
  }
 
+ async function loadTargets() {
+ setTargetsLoading(true)
+ try { setTargets(await list('productivity_targets', { select: '*,employees(full_name,position)', eq: { period_code: period }, order: { col: 'created_at', asc: false } })) }
+ catch (e: any) { toast.push(e.message ?? 'Gagal memuat target produktivitas', 'error') }
+ finally { setTargetsLoading(false) }
+ }
+
+ const distinctPositions = useMemo(() => Array.from(new Set(targetEmployees.map(e => e.position).filter(Boolean))).sort(), [targetEmployees])
+
+ function openAddTarget() { setTargetForm({ ...emptyTargetForm, period_code: period }); setTargetModal(true) }
+ function openEditTarget(row: any) {
+ setTargetForm({
+ mode: row.employee_id ? 'employee' : 'position',
+ employee_ids: row.employee_id ? [row.employee_id] : [],
+ position: row.position ?? '',
+ period_code: row.period_code, target_points: row.target_points,
+ })
+ setTargetModal(true)
+ }
+
+ async function saveTarget() {
+ if (!targetForm.period_code || targetForm.target_points === '' || targetForm.target_points == null) { toast.push('Periode dan target poin wajib diisi', 'error'); return }
+ if (targetForm.mode === 'employee' && !targetForm.employee_ids.length) { toast.push('Pilih minimal satu karyawan', 'error'); return }
+ if (targetForm.mode === 'position' && !targetForm.position) { toast.push('Pilih jabatan', 'error'); return }
+ setTargetSaving(true)
+ try {
+ if (targetForm.mode === 'employee') {
+ const existing = await list<any>('productivity_targets', { eq: { period_code: targetForm.period_code }, in: { employee_id: targetForm.employee_ids } })
+ const existingByEmp: Record<string, any> = {}
+ existing.forEach((t: any) => { if (t.employee_id) existingByEmp[t.employee_id] = t })
+ for (const empId of targetForm.employee_ids) {
+ if (existingByEmp[empId]) await update('productivity_targets', existingByEmp[empId].id, { target_points: targetForm.target_points })
+ else await insert('productivity_targets', { company_id: profile?.company_id, employee_id: empId, period_code: targetForm.period_code, target_points: targetForm.target_points, created_by: profile?.id })
+ }
+ toast.push(`Target poin ditetapkan untuk ${targetForm.employee_ids.length} karyawan`)
+ } else {
+ const existing = await list<any>('productivity_targets', { eq: { period_code: targetForm.period_code, position: targetForm.position } })
+ const row = existing.find((t: any) => !t.employee_id)
+ if (row) await update('productivity_targets', row.id, { target_points: targetForm.target_points })
+ else await insert('productivity_targets', { company_id: profile?.company_id, position: targetForm.position, period_code: targetForm.period_code, target_points: targetForm.target_points, created_by: profile?.id })
+ toast.push(`Target poin jabatan "${targetForm.position}" ditetapkan`)
+ }
+ setTargetModal(false); loadTargets(); loadPeringkat()
+ } catch (e: any) {
+ const msg = /row-level security|permission denied/i.test(e.message ?? '') ? 'Gagal menyimpan — hak akses Anda pada modul PRODUCTIVITY tidak mengizinkan penulisan (perlu izin write).' : (e.message ?? 'Gagal menetapkan target produktivitas')
+ toast.push(msg, 'error')
+ } finally { setTargetSaving(false) }
+ }
+
  async function markJtVerified(row: any) {
  try {
  await update('job_types', row.id, { price_verified_at: new Date().toISOString(), price_verified_by: profile?.id })
@@ -98,12 +164,15 @@ export default function Produktivitas() {
  } catch (e: any) { toast.push(e.message ?? 'Gagal menandai verifikasi', 'error') }
  }
 
- const tabs = [{ value: 'peringkat', label: 'Peringkat & Tren' }, ...(can('PRODUCTIVITY', 'write') ? [{ value: 'jenis', label: 'Master Jenis Pekerjaan' }] : [])]
+ const tabs = [
+ { value: 'peringkat', label: 'Peringkat & Tren' },
+ ...(can('PRODUCTIVITY', 'write') ? [{ value: 'target', label: 'Target Poin' }, { value: 'jenis', label: 'Master Jenis Pekerjaan' }] : []),
+ ]
 
  return (
  <div>
  <PageHeader title="Produktivitas Teknisi" subtitle="Poin & nilai produktivitas teknisi terhadap target"
- actions={tab === 'peringkat' && <Field label="" className="w-36"><Input type="month" value={period} onChange={(e: any) => setPeriod(e.target.value)} /></Field>} />
+ actions={(tab === 'peringkat' || tab === 'target') && <Field label="" className="w-36"><Input type="month" value={period} onChange={(e: any) => setPeriod(e.target.value)} /></Field>} />
 
  <Tabs className="mb-4" value={tab} onChange={setTab} tabs={tabs} />
 
@@ -182,6 +251,25 @@ export default function Produktivitas() {
  </Card>
  </>}
 
+ {tab === 'target' && can('PRODUCTIVITY', 'write') && <>
+ <div className="flex justify-between items-center mb-4">
+ <p className="text-caption text-ink-500">Target poin periode {period} — dipakai untuk kolom "Pencapaian %" pada peringkat.</p>
+ <Button icon={<Plus size={16} />} onClick={openAddTarget}>Tetapkan Target</Button>
+ </div>
+ <Card className="overflow-hidden">
+ <DataTable
+ loading={targetsLoading} rows={targets} onRowClick={openEditTarget} searchable={false}
+ emptyTitle="Belum ada target poin untuk periode ini"
+ columns={[
+ { key: 'jenis', header: 'Jenis', render: (r: any) => r.employee_id ? <Badge tone="teal">Per Karyawan</Badge> : <Badge tone="slate">Per Jabatan</Badge> },
+ { key: 'nama', header: 'Karyawan / Jabatan', render: (r: any) => r.employee_id ? (r.employees?.full_name ?? '-') : r.position },
+ { key: 'period_code', header: 'Periode' },
+ { key: 'target_points', header: 'Target Poin', align: 'right', render: (r: any) => num(r.target_points, 1) },
+ ]}
+ />
+ </Card>
+ </>}
+
  {tab === 'jenis' && can('PRODUCTIVITY', 'write') && <>
  <div className="flex justify-end mb-4"><Button icon={<Plus size={16} />} onClick={openAddJt}>Tambah Jenis Pekerjaan</Button></div>
  <DataTable
@@ -228,6 +316,42 @@ export default function Produktivitas() {
  </Field>
  <Field label="Rujukan (No Kontrak/SPK/Dokumen)"><Input value={jtForm.price_source_ref ?? ''} onChange={(e: any) => setJtForm({ ...jtForm, price_source_ref: e.target.value })} /></Field>
  <Checkbox label="Aktif" checked={jtForm.is_active} onChange={(e: any) => setJtForm({ ...jtForm, is_active: e.target.checked })} />
+ </div>
+ </Modal>
+
+ <Modal open={targetModal} onClose={() => setTargetModal(false)} title="Tetapkan Target Poin Produktivitas" size="lg"
+ footer={<><Button variant="outline" onClick={() => setTargetModal(false)}>Batal</Button><Button loading={targetSaving} onClick={saveTarget}>Simpan Target</Button></>}>
+ <div className="space-y-4">
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Jenis Target" required>
+ <Select value={targetForm.mode} onChange={(e: any) => setTargetForm({ ...targetForm, mode: e.target.value, employee_ids: [], position: '' })} options={TARGET_MODE_OPTIONS} />
+ </Field>
+ <Field label="Periode" required><Input type="month" value={targetForm.period_code} onChange={(e: any) => setTargetForm({ ...targetForm, period_code: e.target.value })} /></Field>
+ </div>
+
+ {targetForm.mode === 'position' && (
+ <Field label="Jabatan" required hint="Diambil dari jabatan karyawan aktif yang sudah tercatat.">
+ <Select value={targetForm.position} onChange={(e: any) => setTargetForm({ ...targetForm, position: e.target.value })} options={distinctPositions} />
+ </Field>
+ )}
+
+ {targetForm.mode === 'employee' && (
+ <Field label={`Pilih Karyawan (${targetForm.employee_ids.length} dipilih)`} required hint="Bisa pilih lebih dari satu untuk menetapkan target yang sama sekaligus (penetapan massal).">
+ <div className="max-h-64 overflow-y-auto border border-ink-200 rounded-md">
+ <DataTable
+ rows={targetEmployees} searchKeys={['full_name', 'position']} searchable dense
+ selectable onSelect={(ids: string[]) => setTargetForm((f: any) => ({ ...f, employee_ids: ids }))}
+ emptyTitle="Belum ada karyawan aktif"
+ columns={[
+ { key: 'full_name', header: 'Nama' },
+ { key: 'position', header: 'Jabatan' },
+ ]}
+ />
+ </div>
+ </Field>
+ )}
+
+ <Field label="Target Poin" required><Input type="number" step="0.1" value={targetForm.target_points} onChange={(e: any) => setTargetForm({ ...targetForm, target_points: e.target.value === '' ? '' : Number(e.target.value) })} className="text-right tabular" /></Field>
  </div>
  </Modal>
  </div>

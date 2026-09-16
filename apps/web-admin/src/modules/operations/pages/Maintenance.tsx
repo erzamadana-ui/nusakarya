@@ -48,6 +48,10 @@ export default function Maintenance() {
  const [taskOpen, setTaskOpen] = useState<any>(null)
  const [taskForm, setTaskForm] = useState({ findings: '', files: [] as File[] })
 
+ const [newTaskOpen, setNewTaskOpen] = useState(false)
+ const [newTaskForm, setNewTaskForm] = useState({ plan_id: '', task_date: todayISO(), assigned_to: '', note: '' })
+ const [newTaskSaving, setNewTaskSaving] = useState(false)
+
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
 
  async function load() {
@@ -137,6 +141,21 @@ export default function Maintenance() {
  finally { setGenerating(false) }
  }
 
+ /* ---------------- Tugas manual (di luar rencana terjadwal otomatis) ---------------- */
+ function openNewTask() { setNewTaskForm({ plan_id: '', task_date: todayISO(), assigned_to: '', note: '' }); setNewTaskOpen(true) }
+ async function submitNewTask() {
+ if (!newTaskForm.plan_id || !newTaskForm.task_date) { toast.push('Pilih rencana dan tanggal tugas terlebih dahulu', 'error'); return }
+ setNewTaskSaving(true)
+ try {
+ await insert('maintenance_tasks', {
+ company_id: profile!.company_id, plan_id: newTaskForm.plan_id, task_date: newTaskForm.task_date,
+ assigned_to: newTaskForm.assigned_to || null, note: newTaskForm.note || null, status: 'terjadwal', created_by: profile!.id,
+ })
+ toast.push('Tugas maintenance manual berhasil dibuat', 'success'); setNewTaskOpen(false); await load()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal membuat tugas maintenance', 'error') }
+ finally { setNewTaskSaving(false) }
+ }
+
  /* ---------------- Tugas ---------------- */
  async function startTask(t: any) {
  try { await update('maintenance_tasks', t.id, { status: 'berjalan', started_at: new Date().toISOString() }); toast.push('Tugas dimulai', 'success'); await load() }
@@ -187,7 +206,12 @@ export default function Maintenance() {
  </Card>
 
  <Card>
- <CardHeader title="Tugas Terjadwal — Bulan Berjalan" action={writable && <Button size="sm" variant="outline" loading={generating} onClick={generateTasks}>Bangkitkan Tugas Periode Ini</Button>} />
+ <CardHeader title="Tugas Terjadwal — Bulan Berjalan" action={writable && (
+ <div className="flex gap-2">
+ <Button size="sm" icon={<Plus size={14} />} onClick={openNewTask}>Tugas Manual</Button>
+ <Button size="sm" variant="outline" loading={generating} onClick={generateTasks}>Bangkitkan Tugas Periode Ini</Button>
+ </div>
+ )} />
  <DataTable
  loading={loading} rows={tasksThisMonth} searchable={false} emptyTitle="Belum ada tugas bulan ini"
  emptyMessage='Gunakan tombol "Bangkitkan Tugas Periode Ini" untuk membuat tugas dari rencana aktif.'
@@ -238,6 +262,18 @@ export default function Maintenance() {
  <Field label="Foto Dokumentasi">
  <input type="file" accept="image/*" multiple onChange={e => setTaskForm({ ...taskForm, files: Array.from(e.target.files ?? []) })} />
  </Field>
+ </div>
+ </Modal>
+
+ <Modal open={newTaskOpen} onClose={() => setNewTaskOpen(false)} title="Tugas Maintenance Manual"
+ footer={<><Button variant="outline" onClick={() => setNewTaskOpen(false)}>Batal</Button><Button loading={newTaskSaving} onClick={submitNewTask}>Simpan</Button></>}>
+ <div className="space-y-4">
+ <Field label="Rencana Maintenance" required hint="Tugas manual tetap harus tertaut ke rencana (kolom plan_id wajib diisi).">
+ <Select options={plans.map(p => ({ value: p.id, label: `${p.plan_no} — ${p.plan_name}` }))} value={newTaskForm.plan_id} onChange={(e: any) => setNewTaskForm({ ...newTaskForm, plan_id: e.target.value })} />
+ </Field>
+ <Field label="Tanggal Tugas" required><Input type="date" value={newTaskForm.task_date} onChange={(e: any) => setNewTaskForm({ ...newTaskForm, task_date: e.target.value })} /></Field>
+ <Field label="Petugas"><Select options={technicians.map(t => ({ value: t.id, label: t.full_name }))} value={newTaskForm.assigned_to} onChange={(e: any) => setNewTaskForm({ ...newTaskForm, assigned_to: e.target.value })} /></Field>
+ <Field label="Catatan"><Textarea value={newTaskForm.note} onChange={(e: any) => setNewTaskForm({ ...newTaskForm, note: e.target.value })} /></Field>
  </div>
  </Modal>
  </div>

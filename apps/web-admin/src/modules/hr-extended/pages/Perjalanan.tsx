@@ -9,7 +9,7 @@ import { rupiah, tgl, todayISO } from '@/lib/format'
 import { TRANSPORT_TYPE_OPTIONS, EXPENSE_CATEGORY_OPTIONS, TRIP_STEPS, isThisMonth } from '../lib/constants'
 
 const emptyForm = { employee_id: '', destination: '', purpose: '', start_date: todayISO(), end_date: todayISO(), transport_type: 'Kendaraan Dinas', daily_allowance: 0, total_advance: 0 }
-const emptyExpense = { category: 'Transportasi', expense_date: todayISO(), description: '', amount: 0 }
+const emptyExpense = { category: 'transport', expense_date: todayISO(), description: '', amount: 0 }
 
 export default function Perjalanan() {
  const { profile, can } = useAuth()

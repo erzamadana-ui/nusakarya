@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
+import { MapPin } from 'lucide-react'
 import { list, insert, update, remove } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import {
  PageHeader, DataTable, Badge, Modal, Drawer, Field, Input, Checkbox, Button, ConfirmDialog, useToast, Plus, type Column,
 } from '@/components/ui'
 
-type Branch = { id: string; code: string; name: string; city: string | null; province: string | null; is_active: boolean }
-const empty = { code: '', name: '', city: '', province: '', is_active: true }
+type Branch = { id: string; code: string; name: string; city: string | null; province: string | null; lat: number | null; lng: number | null; is_active: boolean }
+const empty = { code: '', name: '', city: '', province: '', lat: '', lng: '', is_active: true }
 
 export default function Cabang() {
  const { profile, can } = useAuth()
@@ -15,6 +16,7 @@ export default function Cabang() {
  const [loading, setLoading] = useState(true)
  const [form, setForm] = useState<any>(null)
  const [saving, setSaving] = useState(false)
+ const [locating, setLocating] = useState(false)
  const [del, setDel] = useState<Branch | null>(null)
 
  const load = async () => {
@@ -24,13 +26,29 @@ export default function Cabang() {
  }
  useEffect(() => { if (profile) load() }, [profile])
 
+ const ambilKoordinat = () => {
+ if (!navigator.geolocation) { toast.push('Perangkat tidak mendukung geolokasi', 'error'); return }
+ setLocating(true)
+ navigator.geolocation.getCurrentPosition(
+ (pos) => { setForm((f: any) => ({ ...f, lat: pos.coords.latitude, lng: pos.coords.longitude })); setLocating(false); toast.push('Koordinat berhasil diambil') },
+ (err) => { setLocating(false); toast.push(err.message || 'Gagal mengambil koordinat', 'error') },
+ { enableHighAccuracy: true, timeout: 10000 }
+ )
+ }
+
  const save = async () => {
  if (!profile || !form) return
  if (!form.code || !form.name) { toast.push('Kode dan nama cabang wajib diisi', 'error'); return }
  setSaving(true)
  try {
- if (form.id) await update('branches', form.id, { code: form.code, name: form.name, city: form.city || null, province: form.province || null, is_active: form.is_active })
- else await insert('branches', { company_id: profile.company_id, code: form.code, name: form.name, city: form.city || null, province: form.province || null, is_active: form.is_active })
+ const payload = {
+ code: form.code, name: form.name, city: form.city || null, province: form.province || null,
+ lat: form.lat === '' || form.lat == null ? null : Number(form.lat),
+ lng: form.lng === '' || form.lng == null ? null : Number(form.lng),
+ is_active: form.is_active,
+ }
+ if (form.id) await update('branches', form.id, payload)
+ else await insert('branches', { company_id: profile.company_id, ...payload })
  toast.push('Cabang disimpan'); setForm(null); load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan cabang', 'error') } finally { setSaving(false) }
  }
@@ -46,6 +64,7 @@ export default function Cabang() {
  { key: 'name', header: 'Nama Cabang' },
  { key: 'city', header: 'Kota', render: r => r.city ?? '-' },
  { key: 'province', header: 'Provinsi', render: r => r.province ?? '-' },
+ { key: 'koordinat', header: 'Koordinat', render: r => r.lat != null && r.lng != null ? `${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}` : '-' },
  { key: 'is_active', header: 'Status', align: 'center', render: r => <Badge>{r.is_active ? 'Aktif' : 'Nonaktif'}</Badge> },
  ]
 
@@ -72,6 +91,13 @@ export default function Cabang() {
  <Field label="Nama Cabang" required><Input value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} placeholder="mis. Cabang Jakarta" /></Field>
  <Field label="Kota"><Input value={form.city ?? ''} onChange={(e: any) => setForm({ ...form, city: e.target.value })} /></Field>
  <Field label="Provinsi"><Input value={form.province ?? ''} onChange={(e: any) => setForm({ ...form, province: e.target.value })} /></Field>
+ <Field label="Koordinat (Lat, Lng)" hint="Klik Ambil Lokasi untuk mengisi otomatis dari posisi perangkat">
+ <div className="flex items-center gap-2">
+ <Input type="number" step="any" placeholder="Lintang" value={form.lat ?? ''} onChange={(e: any) => setForm({ ...form, lat: e.target.value })} />
+ <Input type="number" step="any" placeholder="Bujur" value={form.lng ?? ''} onChange={(e: any) => setForm({ ...form, lng: e.target.value })} />
+ <Button type="button" variant="outline" size="sm" icon={<MapPin size={14} />} loading={locating} onClick={ambilKoordinat}>Ambil Lokasi</Button>
+ </div>
+ </Field>
  <Checkbox label="Cabang aktif" checked={form.is_active} onChange={(e: any) => setForm({ ...form, is_active: e.target.checked })} />
  </div>
  )}

@@ -23,12 +23,13 @@ export default function Permintaan() {
  const [fStatus, setFStatus] = useState('')
 
  const [modalOpen, setModalOpen] = useState(false)
- const [form, setForm] = useState<any>({ warehouse_id: '', work_order_id: '', project_id: '', purpose: '' })
+ const [form, setForm] = useState<any>({ warehouse_id: '', work_order_id: '', project_id: '', purpose: '', note: '' })
  const [lines, setLines] = useState<{ item_id: string; qty_request: string }[]>([{ item_id: '', qty_request: '' }])
  const [saving, setSaving] = useState(false)
 
  const [detail, setDetail] = useState<any | null>(null)
  const [detailItems, setDetailItems] = useState<any[]>([])
+ const [approvedQty, setApprovedQty] = useState<Record<string, string>>({})
  const [rejectConfirm, setRejectConfirm] = useState(false)
  const [busy, setBusy] = useState(false)
 
@@ -58,7 +59,7 @@ export default function Permintaan() {
  const filtered = rows.filter(r => !fStatus || r.status === fStatus)
 
  function openAdd() {
- setForm({ warehouse_id: '', work_order_id: '', project_id: '', purpose: '' })
+ setForm({ warehouse_id: '', work_order_id: '', project_id: '', purpose: '', note: '' })
  setLines([{ item_id: '', qty_request: '' }])
  setModalOpen(true)
  }
@@ -76,7 +77,7 @@ export default function Permintaan() {
  const mr = await insert<any>('material_requests', {
  company_id: profile!.company_id, mr_no, request_date: todayISO(), requester_id: profile!.id,
  warehouse_id: form.warehouse_id, work_order_id: form.work_order_id || null, project_id: form.project_id || null,
- purpose: form.purpose || null, status: 'diajukan', created_by: profile!.id,
+ purpose: form.purpose || null, note: form.note || null, status: 'diajukan', created_by: profile!.id,
  })
  const itemRows = valid.map(l => {
  const item = items.find(i => i.id === l.item_id)
@@ -95,17 +96,25 @@ export default function Permintaan() {
  try {
  const it = await list('material_request_items', { eq: { mr_id: row.id }, select: 'id,item_id,qty_request,qty_approved,qty_issued,uom,item:item_catalog!item_id(code,name)' })
  setDetailItems((it as any[]).map(r => ({ ...r, item_code: r.item?.code, item_name: r.item?.name })))
+ const aq: Record<string, string> = {}
+ ;(it as any[]).forEach(r => { aq[r.id] = String(r.qty_approved ?? r.qty_request ?? 0) })
+ setApprovedQty(aq)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat item permintaan', 'error') }
  }
 
  async function approve() {
  if (!detail) return
+ for (const it of detailItems) {
+ const q = Number(approvedQty[it.id] ?? it.qty_request)
+ if (q < 0 || q > Number(it.qty_request)) { toast.push(`Qty disetujui untuk "${it.item_name}" harus di antara 0 dan qty diminta`, 'error'); return }
+ }
  setBusy(true)
  try {
- await Promise.all(detailItems.map(it => update('material_request_items', it.id, { qty_approved: it.qty_approved ?? it.qty_request })))
+ await Promise.all(detailItems.map(it => update('material_request_items', it.id, { qty_approved: Number(approvedQty[it.id] ?? it.qty_request) })))
  await update('material_requests', detail.id, { status: 'disetujui' })
  toast.push('Permintaan disetujui')
- setDetail({ ...detail, status: 'disetujui' }); load()
+ const updated = { ...detail, status: 'disetujui' }
+ setDetail(updated); await openDetail(updated); load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyetujui permintaan', 'error') }
  finally { setBusy(false) }
  }
@@ -179,6 +188,7 @@ export default function Permintaan() {
  <Field label="Proyek (opsional)"><Select value={form.project_id} onChange={(e: any) => setForm({ ...form, project_id: e.target.value })}
  options={projects.map(p => ({ value: p.id, label: p.project_code }))} /></Field>
  <Field label="Tujuan Penggunaan" className="sm:col-span-3"><Textarea value={form.purpose} onChange={(e: any) => setForm({ ...form, purpose: e.target.value })} /></Field>
+ <Field label="Catatan" className="sm:col-span-3"><Textarea value={form.note} onChange={(e: any) => setForm({ ...form, note: e.target.value })} /></Field>
  </div>
  <div className="mb-2 flex items-center justify-between">
  <span className="text-caption font-medium text-ink-500 uppercase tracking-wide">Item Diminta</span>
@@ -204,12 +214,18 @@ export default function Permintaan() {
  <div><span className="text-caption text-ink-400 block">Pemohon</span>{requesterName(detail.requester_id)}</div>
  <div><span className="text-caption text-ink-400 block">Referensi</span>{woLabel(detail.work_order_id) ?? prLabel(detail.project_id) ?? '-'}</div>
  <div><span className="text-caption text-ink-400 block">Tujuan</span>{detail.purpose ?? '-'}</div>
+ <div className="sm:col-span-2"><span className="text-caption text-ink-400 block">Catatan</span>{detail.note ?? '-'}</div>
  </div>
  <DataTable searchable={false} rows={detailItems}
  columns={[
  { key: 'item_name', header: 'Item', render: (r: any) => <span>{r.item_code} · {r.item_name}</span> },
  { key: 'qty_request', header: 'Diminta', align: 'right', render: (r: any) => num(r.qty_request) },
- { key: 'qty_approved', header: 'Disetujui', align: 'right', render: (r: any) => num(r.qty_approved ?? r.qty_request) },
+ {
+ key: 'qty_approved', header: 'Disetujui', align: 'right', render: (r: any) => (detail.status === 'diajukan' && can('INVENTORY', 'approve')) ? (
+ <input type="number" min="0" max={r.qty_request} value={approvedQty[r.id] ?? ''} onChange={e => setApprovedQty({ ...approvedQty, [r.id]: e.target.value })}
+ className="w-24 h-8 px-2 text-right rounded-sm border border-ink-200 bg-surface text-body focus:outline-none focus:ring-2 focus:ring-primary-400" />
+ ) : num(r.qty_approved ?? r.qty_request),
+ },
  { key: 'qty_issued', header: 'Dikeluarkan', align: 'right', render: (r: any) => num(r.qty_issued ?? 0) },
  ]} emptyTitle="Belum ada item" />
  {can('INVENTORY', 'approve') && (

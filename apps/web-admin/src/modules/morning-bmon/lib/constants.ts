@@ -32,7 +32,7 @@ export const SEVERITY_TONE: Record<string, string> = { kritis: 'red', tinggi: 'o
 export const severityLabel = (v?: string) => SEVERITY_OPTIONS.find(s => s.value === v)?.label ?? (v || '-')
 export const severityTone = (v?: string) => SEVERITY_TONE[v ?? ''] ?? 'slate'
 
-/** Status tiket (tickets.status). */
+/** Status tiket (tickets.status) — nilai persis CHECK constraint tickets_status_check. */
 export const TICKET_STATUS_OPTIONS: Opt[] = [
   { value: 'open', label: 'Baru / Terbuka' },
   { value: 'assigned', label: 'Ditugaskan' },
@@ -42,6 +42,11 @@ export const TICKET_STATUS_OPTIONS: Opt[] = [
   { value: 'closed', label: 'Ditutup' },
   { value: 'cancelled', label: 'Dibatalkan' },
 ]
+export const TICKET_STATUS_TONE: Record<string, string> = {
+  open: 'slate', assigned: 'blue', on_progress: 'blue', pending: 'amber', resolved: 'emerald', closed: 'zinc', cancelled: 'rose',
+}
+export const ticketStatusLabel = (v?: string) => TICKET_STATUS_OPTIONS.find(s => s.value === v)?.label ?? (v || '-')
+export const ticketStatusTone = (v?: string) => TICKET_STATUS_TONE[v ?? ''] ?? 'slate'
 
 /** Aspek RCA 4-aspek. */
 export const ASPEK_RCA = ['People', 'Process', 'Tools', 'Partnership']

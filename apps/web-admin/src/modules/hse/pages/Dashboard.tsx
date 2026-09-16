@@ -3,9 +3,9 @@ import {
  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell,
 } from 'recharts'
 import { useAuth } from '@/lib/auth'
-import { list, count } from '@/lib/db'
-import { Card, CardHeader, PageHeader, KpiCard, DataTable, Badge, TableSkeleton } from '@/components/ui'
-import { num, pct, tgl } from '@/lib/format'
+import { list, count, insert, nextDocNo } from '@/lib/db'
+import { Card, CardHeader, PageHeader, KpiCard, DataTable, Badge, TableSkeleton, Button, Modal, Field, Select, Input, Textarea, useToast, Plus } from '@/components/ui'
+import { num, pct, tgl, todayISO } from '@/lib/format'
 import {
  INCIDENT_TYPES, incidentTypeLabel, incidentTypeTone, isMajorIncident, isInjuryIncident,
  incidentStatusLabel, incidentStatusTone, inspectionResultLabel, CHART_COLORS, INCIDENT_TYPE_COLORS,
@@ -13,14 +13,21 @@ import {
 } from '../lib/constants'
 import { lastNMonths, monthKey, monthLabel, monthsAgoISODate, daysBetween } from '../lib/helpers'
 
+const emptyIncident = { incident_date: todayISO(), incident_type: '', location: '', branch_id: '', description: '' }
+
 export default function Dashboard() {
- const { profile } = useAuth()
+ const { profile, can } = useAuth()
+ const toast = useToast()
  const [loading, setLoading] = useState(true)
  const [incidents, setIncidents] = useState<any[]>([])
  const [branches, setBranches] = useState<any[]>([])
  const [hseView, setHseView] = useState<any[]>([])
  const [activeEmployees, setActiveEmployees] = useState<number>(0)
  const [pulledAt, setPulledAt] = useState<Date | null>(null)
+
+ const [incidentOpen, setIncidentOpen] = useState(false)
+ const [incidentForm, setIncidentForm] = useState<any>(emptyIncident)
+ const [incidentSaving, setIncidentSaving] = useState(false)
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
 
@@ -39,6 +46,26 @@ export default function Dashboard() {
  setIncidents(inc); setBranches(br); setHseView(view); setActiveEmployees(empCount); setPulledAt(new Date())
  } catch (e: any) { /* toast tidak wajib di dashboard baca-saja */ console.error(e) }
  finally { setLoading(false) }
+ }
+
+ function openIncident() { setIncidentForm({ ...emptyIncident, incident_date: todayISO() }); setIncidentOpen(true) }
+ async function saveIncident() {
+ if (!incidentForm.incident_date || !incidentForm.incident_type || !incidentForm.location || !incidentForm.branch_id || !incidentForm.description) {
+ toast.push('Tanggal, jenis, lokasi, cabang, dan uraian wajib diisi', 'error'); return
+ }
+ setIncidentSaving(true)
+ try {
+ const incidentNo = await nextDocNo(profile!.company_id, 'INC')
+ await insert('hse_incidents', {
+ company_id: profile!.company_id, incident_no: incidentNo, incident_date: incidentForm.incident_date,
+ incident_type: incidentForm.incident_type, location: incidentForm.location, branch_id: incidentForm.branch_id,
+ description: incidentForm.description, photo_urls: [], status: 'dilaporkan', reported_by: profile!.id, created_by: profile!.id,
+ })
+ toast.push(`Insiden ${incidentNo} berhasil dilaporkan`); setIncidentOpen(false); load()
+ } catch (e: any) {
+ const msg = /row-level security|permission denied/i.test(e?.message ?? '') ? 'Gagal menyimpan — hak akses Anda pada modul Operations tidak mengizinkan tindakan ini.' : (e.message ?? 'Gagal menyimpan laporan insiden')
+ toast.push(msg, 'error')
+ } finally { setIncidentSaving(false) }
  }
 
  const branchName = (id?: string) => branches.find(b => b.id === id)?.name ?? '-'
@@ -111,6 +138,12 @@ export default function Dashboard() {
  return (
  <div>
  <PageHeader title="Dashboard K3" subtitle="Ringkasan kinerja keselamatan kerja — insiden, inspeksi & izin kerja" />
+
+ {can('OPERATIONS', 'write') && (
+ <div className="flex flex-wrap gap-2 mb-5">
+ <Button size="sm" variant="outline" icon={<Plus size={14} />} onClick={openIncident}>Lapor Insiden</Button>
+ </div>
+ )}
 
  {/* Papan Hari Tanpa Insiden */}
  <Card className="mb-5 bg-gradient-to-br from-primary-600 to-primary-700 border-0 text-white overflow-hidden">
@@ -228,6 +261,17 @@ export default function Dashboard() {
  Sumber data: tabel <code>hse_incidents</code> (hingga 3.000 terbaru), <code>employees</code>, dan view <code>v_dashboard_hse</code> (izin aktif, hari kerja hilang bulan ini, hasil inspeksi).
  Ditarik pada {pulledAt ? tgl(pulledAt.toISOString()) + ' ' + pulledAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}.
  </p>
+
+ <Modal open={incidentOpen} onClose={() => setIncidentOpen(false)} title="Lapor Insiden"
+ footer={<><Button variant="outline" onClick={() => setIncidentOpen(false)}>Batal</Button><Button loading={incidentSaving} onClick={saveIncident}>Simpan Laporan</Button></>}>
+ <div className="grid sm:grid-cols-2 gap-4">
+ <Field label="Tanggal" required><Input type="date" value={incidentForm.incident_date} onChange={(e: any) => setIncidentForm({ ...incidentForm, incident_date: e.target.value })} /></Field>
+ <Field label="Jenis Insiden" required><Select value={incidentForm.incident_type} onChange={(e: any) => setIncidentForm({ ...incidentForm, incident_type: e.target.value })} options={INCIDENT_TYPES} /></Field>
+ <Field label="Cabang" required><Select value={incidentForm.branch_id} onChange={(e: any) => setIncidentForm({ ...incidentForm, branch_id: e.target.value })} options={branches.map(b => ({ value: b.id, label: b.name }))} /></Field>
+ <Field label="Lokasi" required><Input value={incidentForm.location} onChange={(e: any) => setIncidentForm({ ...incidentForm, location: e.target.value })} /></Field>
+ <Field label="Uraian Kejadian" required className="sm:col-span-2"><Textarea value={incidentForm.description} onChange={(e: any) => setIncidentForm({ ...incidentForm, description: e.target.value })} /></Field>
+ </div>
+ </Modal>
  </div>
  )
 }

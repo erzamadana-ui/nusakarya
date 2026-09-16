@@ -100,6 +100,15 @@ export default function AlarmNms() {
  ...ALARM_STATUSES.map(s => ({ value: s.value, label: s.label, count: alarms.filter(a => a.status === s.value).length })),
  ]
 
+ /* ---------------- Aksi: tandai clear (manual — sampai ada integrasi NMS otomatis) ---------------- */
+ async function clearSatu(id: string) {
+ try {
+ await update('nms_alarms', id, { status: 'clear', cleared_at: new Date().toISOString() })
+ toast.push('Alarm ditandai clear', 'success')
+ await loadAll()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menandai alarm clear', 'error') }
+ }
+
  /* ---------------- Aksi: akui ---------------- */
  async function akuiSatu(id: string) {
  try {
@@ -231,12 +240,14 @@ export default function AlarmNms() {
  <div className="flex gap-1.5" onClick={e => e.stopPropagation()}>
  <Button size="sm" variant="outline" onClick={() => akuiSatu(r.id)}>Akui</Button>
  <Button size="sm" onClick={() => openBuatTiket(r)}>Buat Tiket</Button>
+ <Button size="sm" variant="outline" onClick={() => clearSatu(r.id)}>Clear</Button>
  <Button size="sm" variant="danger" onClick={() => openIgnore([r.id])}>Abaikan</Button>
  </div>
- ) : r.status === 'diakui' && writable ? (
+ ) : (r.status === 'diakui' || r.status === 'tiket_dibuat') && writable ? (
  <div className="flex gap-1.5" onClick={e => e.stopPropagation()}>
- <Button size="sm" onClick={() => openBuatTiket(r)}>Buat Tiket</Button>
- <Button size="sm" variant="danger" onClick={() => openIgnore([r.id])}>Abaikan</Button>
+ {r.status === 'diakui' && <Button size="sm" onClick={() => openBuatTiket(r)}>Buat Tiket</Button>}
+ <Button size="sm" variant="outline" onClick={() => clearSatu(r.id)}>Clear</Button>
+ {r.status === 'diakui' && <Button size="sm" variant="danger" onClick={() => openIgnore([r.id])}>Abaikan</Button>}
  </div>
  ) : null },
  ]}
@@ -247,11 +258,12 @@ export default function AlarmNms() {
 
  {/* Drawer detail */}
  <Drawer open={!!detail} onClose={() => setDetail(null)} title={detail ? `Alarm ${detail.alarm_id_ext ?? detail.id.slice(0, 8)}` : ''}
- footer={detail && writable && (detail.status === 'baru' || detail.status === 'diakui') && (
+ footer={detail && writable && ['baru', 'diakui', 'tiket_dibuat'].includes(detail.status) && (
  <div className="flex flex-wrap gap-2 w-full">
  {detail.status === 'baru' && <Button size="sm" variant="outline" onClick={() => { akuiSatu(detail.id); setDetail(null) }}>Akui</Button>}
- <Button size="sm" onClick={() => openBuatTiket(detail)}>Buat Tiket</Button>
- <Button size="sm" variant="danger" onClick={() => openIgnore([detail.id])}>Abaikan</Button>
+ {detail.status !== 'tiket_dibuat' && <Button size="sm" onClick={() => openBuatTiket(detail)}>Buat Tiket</Button>}
+ <Button size="sm" variant="outline" onClick={() => { clearSatu(detail.id); setDetail(null) }}>Tandai Clear</Button>
+ {detail.status !== 'tiket_dibuat' && <Button size="sm" variant="danger" onClick={() => openIgnore([detail.id])}>Abaikan</Button>}
  </div>)}>
  {detail && (
  <Section>

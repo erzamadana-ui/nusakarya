@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/auth'
-import { list, insert, update, signedUrl, uploadFile } from '@/lib/db'
+import { list, insert, update, remove, signedUrl, uploadFile } from '@/lib/db'
 import { rupiah, tgl, num } from '@/lib/format'
 import {
  PageHeader, FilterBar, KpiCard, DataTable, Modal, Drawer, ConfirmDialog, Tabs, Desc,
- Button, Field, Input, Select, Checkbox, Badge, useToast, Plus,
+ Button, Field, Input, Select, Checkbox, Badge, useToast, Plus, Card, CardHeader, Textarea,
 } from '@/components/ui'
 import { VENDOR_TYPES, VENDOR_STATUS } from '../lib/shared'
+
+const SLA_UMUM_VALUE = '__umum__'
 
 export default function Vendor() {
  const { profile, can } = useAuth()
@@ -25,11 +27,21 @@ export default function Vendor() {
  const [docs, setDocs] = useState<{ name: string; path: string }[]>([])
  const [confirmBl, setConfirmBl] = useState<any | null>(null)
 
+ // Target SLA Bayar Mitra (partner_payment_sla) — dipakai KPI "Ketepatan Bayar Mitra" di Finance.
+ const [slaRows, setSlaRows] = useState<any[]>([])
+ const [slaModal, setSlaModal] = useState<{ open: boolean; row?: any }>({ open: false })
+ const [slaForm, setSlaForm] = useState<any>({})
+ const [slaSaving, setSlaSaving] = useState(false)
+ const [slaDelId, setSlaDelId] = useState<string | null>(null)
+
  const load = useCallback(async () => {
  setLoading(true)
  try {
- const data = await list('vendors', { order: { col: 'name', asc: true } })
- setRows(data)
+ const [data, sla] = await Promise.all([
+ list('vendors', { order: { col: 'name', asc: true } }),
+ list('partner_payment_sla', { order: { col: 'created_at', asc: false }, limit: 1000 }),
+ ])
+ setRows(data); setSlaRows(sla)
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat vendor', 'error') }
  finally { setLoading(false) }
  }, [toast])
@@ -99,6 +111,37 @@ export default function Vendor() {
  else toast.push('Gagal membuka dokumen', 'error')
  }
 
+ const vendorNameById = (id: string) => rows.find(r => r.id === id)?.name ?? '-'
+
+ function openSlaAdd() {
+ setSlaForm({ vendor_id: SLA_UMUM_VALUE, target_days: 30, note: '' })
+ setSlaModal({ open: true })
+ }
+ function openSlaEdit(row: any) {
+ setSlaForm({ ...row, vendor_id: row.vendor_id ?? SLA_UMUM_VALUE })
+ setSlaModal({ open: true, row })
+ }
+ async function saveSla() {
+ if (!slaForm.target_days || Number(slaForm.target_days) <= 0) { toast.push('Target hari bayar wajib diisi dan lebih dari 0', 'error'); return }
+ setSlaSaving(true)
+ try {
+ const payload = {
+ vendor_id: slaForm.vendor_id === SLA_UMUM_VALUE ? null : slaForm.vendor_id,
+ target_days: Number(slaForm.target_days), note: slaForm.note ?? '',
+ }
+ if (slaModal.row) { await update('partner_payment_sla', slaModal.row.id, payload); toast.push('Target SLA bayar diperbarui') }
+ else { await insert('partner_payment_sla', { ...payload, company_id: profile!.company_id, created_by: profile!.id }); toast.push('Target SLA bayar ditambahkan') }
+ setSlaModal({ open: false }); load()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan target SLA bayar', 'error') }
+ finally { setSlaSaving(false) }
+ }
+ async function doDeleteSla() {
+ if (!slaDelId) return
+ try { await remove('partner_payment_sla', slaDelId); toast.push('Target SLA bayar dihapus'); load() }
+ catch (e: any) { toast.push(e.message ?? 'Gagal menghapus target SLA bayar', 'error') }
+ finally { setSlaDelId(null) }
+ }
+
  const totalAktif = rows.filter(r => r.status === 'aktif').length
  const totalBlacklist = rows.filter(r => r.status === 'blacklist').length
  const avgRating = rows.length ? rows.reduce((a, r) => a + Number(r.rating || 0), 0) / rows.length : 0
@@ -143,6 +186,27 @@ export default function Vendor() {
  <DataTable columns={columns} rows={filtered} loading={loading} onRowClick={openDetail}
  searchable searchKeys={['code', 'name', 'city', 'pic_name']} exportName="vendor"
  emptyTitle="Belum ada vendor" emptyMessage="Tambahkan vendor untuk mulai proses pengadaan." />
+
+ <Card className="mt-5">
+ <CardHeader title="Target SLA Bayar Mitra" subtitle="Target hari pembayaran yang disepakati per vendor — dasar KPI Ketepatan Bayar Mitra di Finance."
+ action={can('PROCUREMENT', 'write') && <Button size="sm" icon={<Plus size={14} />} onClick={openSlaAdd}>Tambah Target</Button>} />
+ <DataTable
+ columns={[
+ { key: 'vendor_id', header: 'Vendor', render: (r: any) => r.vendor_id ? vendorNameById(r.vendor_id) : <Badge tone="amber">Target Umum (default)</Badge> },
+ { key: 'target_days', header: 'Target Hari Bayar', align: 'right' as const, render: (r: any) => `${num(r.target_days)} hari` },
+ { key: 'note', header: 'Catatan', render: (r: any) => r.note || '-' },
+ {
+ key: 'aksi', header: '', sortable: false, width: '140px', render: (r: any) => (
+ <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
+ {can('PROCUREMENT', 'write') && <Button size="sm" variant="outline" onClick={() => openSlaEdit(r)}>Ubah</Button>}
+ {can('PROCUREMENT', 'approve') && <Button size="sm" variant="ghost" className="text-red-600" onClick={() => setSlaDelId(r.id)}>Hapus</Button>}
+ </div>
+ ),
+ },
+ ]}
+ rows={slaRows} loading={loading} searchable={false} pageSize={10} dense
+ emptyTitle="Belum ada target SLA bayar" emptyMessage="Tambahkan target hari bayar per vendor, atau satu target umum bila vendor dikosongkan." />
+ </Card>
 
  <Modal open={modal.open} onClose={() => setModal({ open: false })} size="lg"
  title={modal.row ? 'Ubah Vendor' : 'Tambah Vendor'}
@@ -236,6 +300,23 @@ export default function Vendor() {
  <ConfirmDialog open={!!confirmBl} onClose={() => setConfirmBl(null)} onConfirm={doBlacklist} danger
  title="Blacklist Vendor" confirmLabel="Ya, Blacklist"
  message={`Vendor "${confirmBl?.name}" akan ditandai blacklist dan tidak direkomendasikan untuk transaksi baru. Lanjutkan?`} />
+
+ <Modal open={slaModal.open} onClose={() => setSlaModal({ open: false })} size="md"
+ title={slaModal.row ? 'Ubah Target SLA Bayar' : 'Tambah Target SLA Bayar'}
+ footer={<><Button variant="outline" onClick={() => setSlaModal({ open: false })}>Batal</Button>
+ <Button loading={slaSaving} onClick={saveSla}>Simpan</Button></>}>
+ <div className="grid gap-4">
+ <Field label="Vendor" hint="Kosongkan (pilih Target Umum) untuk target default yang berlaku bila vendor tidak punya target khusus.">
+ <Select value={slaForm.vendor_id ?? SLA_UMUM_VALUE} onChange={(e: any) => setSlaForm({ ...slaForm, vendor_id: e.target.value })}
+ options={[{ value: SLA_UMUM_VALUE, label: '— Target Umum (Default) —' }, ...rows.map(v => ({ value: v.id, label: v.name }))]} />
+ </Field>
+ <Field label="Target Hari Bayar" required><Input type="number" min="1" value={slaForm.target_days ?? 30} onChange={(e: any) => setSlaForm({ ...slaForm, target_days: Number(e.target.value) })} /></Field>
+ <Field label="Catatan"><Textarea value={slaForm.note ?? ''} onChange={(e: any) => setSlaForm({ ...slaForm, note: e.target.value })} /></Field>
+ </div>
+ </Modal>
+
+ <ConfirmDialog open={!!slaDelId} onClose={() => setSlaDelId(null)} onConfirm={doDeleteSla} danger
+ title="Hapus Target SLA Bayar" confirmLabel="Ya, Hapus" message="Target SLA bayar ini akan dihapus permanen. Lanjutkan?" />
  </div>
  )
 }

@@ -154,11 +154,11 @@ export const PageHeader = ({ title, subtitle, breadcrumb, actions }: any) => (
 
 /* ---------------- Badge / Status ---------------- */
 const STATUS_MAP: Record<string, string> = {
- draft: 'slate', baru: 'slate', belum: 'slate', nonaktif: 'slate', obsolete: 'slate', libur: 'slate',
+ draft: 'slate', baru: 'slate', belum: 'slate', nonaktif: 'slate', obsolete: 'slate', libur: 'slate', open: 'slate',
  diajukan: 'blue', review: 'blue', on_progress: 'blue', berjalan: 'blue', assigned: 'blue', dispatched: 'blue', terkirim: 'blue', proses: 'blue', dihitung: 'blue', survey: 'blue', design: 'blue', pelaksanaan: 'blue', accepted: 'blue', dikirim: 'blue',
  menunggu: 'amber', pending: 'amber', diverifikasi: 'amber', warning: 'amber', approval: 'amber', pending_material: 'amber', hold: 'amber', sebagian_po: 'amber', diterima_sebagian: 'amber', dibayar_sebagian: 'amber', rusak_ringan: 'amber', perbaikan: 'amber', terjadwal: 'amber', shipped: 'amber',
  disetujui: 'emerald', approved: 'emerald', lulus: 'emerald', selesai: 'emerald', done: 'emerald', lunas: 'emerald', aktif: 'emerald', met: 'emerald', on_track: 'emerald', hadir: 'emerald', baik: 'emerald', resolved: 'emerald', closed: 'emerald', cocok: 'emerald', ditandatangani: 'emerald', diterima: 'emerald', tersedia: 'emerald', layak: 'emerald', dibayar: 'emerald', dikeluarkan: 'emerald',
- ditolak: 'red', rejected: 'red', tidak_lulus: 'red', failed: 'red', breach: 'red', alpa: 'red', blacklist: 'red', rusak_berat: 'red', hilang: 'red', putus: 'red', tidak_layak: 'red', selisih: 'red', unpaid: 'red',
+ ditolak: 'red', rejected: 'red', tidak_lulus: 'red', failed: 'red', breach: 'red', alpa: 'red', blacklist: 'red', rusak_berat: 'red', hilang: 'red', putus: 'red', tidak_layak: 'red', selisih: 'red', unpaid: 'red', rusak: 'red',
  overdue: 'outline', terlambat: 'outline', terlewat: 'orange', penuh: 'orange',
  batal: 'zinc', cancelled: 'rose', canceled: 'rose', dihapus: 'zinc', resign: 'zinc', refund: 'zinc',
  paid: 'lavender', completed: 'lavender', active: 'lavender',

@@ -19,6 +19,7 @@ export const PAYOUT_STATUS_TABS = [
   { value: 'diverifikasi', label: 'Diverifikasi' },
   { value: 'disetujui', label: 'Disetujui' },
   { value: 'dibayar', label: 'Dibayar' },
+  { value: 'ditolak', label: 'Ditolak' },
 ]
 
 export const PAYOUT_STEPS = [
