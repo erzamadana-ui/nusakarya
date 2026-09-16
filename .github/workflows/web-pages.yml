@@ -23,8 +23,8 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /nusakarya/
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://idlhsxamdkipnmyvewbp.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'sb_publishable_-9Cai7RVFQ4UmQjTgjNS8w_Q84U-vc8' }}
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3
         with: { path: apps/web-admin/dist }

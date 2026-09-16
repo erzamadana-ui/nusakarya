@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { useFocusEffect, useLocalSearchParams } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons } from '@expo/vector-icons'
 import { useTheme, RADIUS } from '@/components/theme'
@@ -29,7 +29,7 @@ import supabase from '@/lib/supabase'
 import { getOne, insert, list, nextDocNo, signedUrl, update, uploadFile } from '@/lib/db'
 import { ambilLokasi, bukaGoogleMaps } from '@/lib/location'
 import { num, todayISO, tglJam } from '@/lib/format'
-import type { Attachment, Bast, ItemCatalog, MaterialUsage, Serial, WoChecklist, WorkOrder } from '@/types/db'
+import type { Attachment, Bast, ItemCatalog, MaterialUsage, PunchList, Serial, WoChecklist, WorkOrder } from '@/types/db'
 
 const LANGKAH = ['ditugaskan', 'diterima', 'berjalan', 'selesai']
 const JENIS_LABEL: Record<string, string> = {
@@ -43,6 +43,7 @@ const JENIS_LABEL: Record<string, string> = {
 export default function DetailWorkOrder() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const t = useTheme()
+  const router = useRouter()
   const { profile, employee } = useAuth()
   const sigRef = useRef<SignaturePadHandle>(null)
 
@@ -54,6 +55,7 @@ export default function DetailWorkOrder() {
   const [items, setItems] = useState<ItemCatalog[]>([])
   const [serials, setSerials] = useState<Serial[]>([])
   const [bast, setBast] = useState<Bast | null>(null)
+  const [punchLists, setPunchLists] = useState<PunchList[]>([])
 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -96,6 +98,14 @@ export default function DetailWorkOrder() {
       setBast(bastRows[0] ?? null)
       setSignerName(woRow?.customer_name ?? '')
 
+      if (woRow?.project_id && employee?.id) {
+        list<PunchList>('punch_lists', { eq: { project_id: woRow.project_id, assigned_to: employee.id }, order: { col: 'due_date', asc: true } })
+          .then(setPunchLists)
+          .catch(() => setPunchLists([]))
+      } else {
+        setPunchLists([])
+      }
+
       const urls: Record<string, string> = {}
       await Promise.all(
         ev.map(async (a) => {
@@ -109,7 +119,7 @@ export default function DetailWorkOrder() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [id, profile])
+  }, [id, profile, employee?.id])
 
   useFocusEffect(
     useCallback(() => {
@@ -638,6 +648,26 @@ export default function DetailWorkOrder() {
           </View>
         )}
       </Kartu>
+
+      {punchLists.length > 0 ? (
+        <Kartu>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={[styles.judulKartu, { color: t.text }]}>Punch List Terkait</Text>
+            <Tombol label="Kelola" varian="sekunder" onPress={() => router.push('/punch-list')} />
+          </View>
+          <View style={{ gap: 8, marginTop: 10 }}>
+            {punchLists.map((p) => (
+              <View key={p.id} style={[styles.baris2, { borderColor: t.border }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: t.text, fontWeight: '600' }}>{p.punch_no} — {p.category ?? 'Temuan'}</Text>
+                  <Text style={{ color: t.textMuted, fontSize: 13 }} numberOfLines={1}>{p.description ?? '-'}</Text>
+                </View>
+                <Lencana>{p.status}</Lencana>
+              </View>
+            ))}
+          </View>
+        </Kartu>
+      ) : null}
 
       <PilihItemModal visible={pilihItemVisible} items={items} onClose={() => setPilihItemVisible(false)} onPilih={pilihMaterial} />
       <PindaiBarcodeModal

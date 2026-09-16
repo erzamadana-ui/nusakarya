@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useTheme, RADIUS } from '@/components/theme'
 import Kartu from '@/components/Kartu'
 import Tombol from '@/components/Tombol'
@@ -8,25 +9,41 @@ import Lencana from '@/components/Lencana'
 import KosongState from '@/components/KosongState'
 import { ROLE_LABEL, useAuth } from '@/lib/auth'
 import { list } from '@/lib/db'
+import supabase from '@/lib/supabase'
 import { inisial, num, periodCode, pctBulan, tgl } from '@/lib/format'
 import type { EmployeeCertification, ProductivityRow } from '@/types/db'
 
+type KompetensiRow = {
+  id: string
+  level: string
+  expiry_date: string | null
+  competencies: { name: string; category: string } | null
+}
+
 export default function Profil() {
   const t = useTheme()
+  const router = useRouter()
   const { profile, employee, company, signOut } = useAuth()
   const [produktivitas, setProduktivitas] = useState<ProductivityRow | null>(null)
   const [sertifikasi, setSertifikasi] = useState<EmployeeCertification[]>([])
+  const [kompetensi, setKompetensi] = useState<KompetensiRow[]>([])
   const [refreshing, setRefreshing] = useState(false)
 
   const muat = useCallback(async () => {
     if (!employee?.id) return
     try {
-      const [prod, sert] = await Promise.all([
+      const [prod, sert, komp] = await Promise.all([
         list<ProductivityRow>('v_dashboard_productivity', { eq: { employee_id: employee.id, period_code: periodCode() } }),
         list<EmployeeCertification>('employee_certifications', { eq: { employee_id: employee.id }, order: { col: 'expiry_date', asc: true } }),
+        supabase
+          .from('employee_competencies')
+          .select('id,level,expiry_date,competencies(name,category)')
+          .eq('employee_id', employee.id)
+          .order('expiry_date', { ascending: true }),
       ])
       setProduktivitas(prod[0] ?? null)
       setSertifikasi(sert)
+      setKompetensi(((komp.data ?? []) as any[]).map((k) => ({ ...k, competencies: k.competencies ?? null })))
     } finally {
       setRefreshing(false)
     }
@@ -128,6 +145,49 @@ export default function Profil() {
         )}
       </Kartu>
 
+      <Kartu>
+        <Text style={[styles.judul, { color: t.text }]}>Kompetensi Saya</Text>
+        {kompetensi.length === 0 ? (
+          <KosongState judul="Belum ada data kompetensi" ikon="school-outline" />
+        ) : (
+          <View style={{ gap: 10, marginTop: 10 }}>
+            {kompetensi.map((k) => {
+              const kedaluwarsa = k.expiry_date ? new Date(k.expiry_date).getTime() < Date.now() : false
+              return (
+                <View
+                  key={k.id}
+                  style={[styles.sertifikatBox, { borderColor: kedaluwarsa ? t.bahaya : t.border, backgroundColor: kedaluwarsa ? '#FDE8EC22' : undefined }]}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>{k.competencies?.name ?? '-'}</Text>
+                    <Lencana>{k.level}</Lencana>
+                  </View>
+                  <Text style={{ color: t.textMuted, fontSize: 13, marginTop: 4 }}>
+                    {k.competencies?.category ?? '-'} · {k.expiry_date ? `Berlaku s.d. ${tgl(k.expiry_date)}` : 'Tanpa batas waktu'}
+                  </Text>
+                  {kedaluwarsa ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                      <Ionicons name="warning" size={16} color={t.bahaya} />
+                      <Text style={{ color: t.bahaya, fontWeight: '700', fontSize: 13 }}>
+                        Kedaluwarsa — tidak diperbolehkan bekerja pada tugas yang mensyaratkan kompetensi ini
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              )
+            })}
+          </View>
+        )}
+      </Kartu>
+
+      <Kartu style={{ gap: 2 }}>
+        <Text style={[styles.judul, { color: t.text, marginBottom: 6 }]}>Pengajuan Saya</Text>
+        <MenuBaris t={t} ikon="time-outline" label="Lembur, Dinas & Kasbon" onPress={() => router.push('/pengajuan')} />
+        <MenuBaris t={t} ikon="cash-outline" label="Penghasilan Saya" onPress={() => router.push('/penghasilan')} />
+        <MenuBaris t={t} ikon="checkmark-done-outline" label="Punch List Saya" onPress={() => router.push('/punch-list')} />
+        <MenuBaris t={t} ikon="book-outline" label="Basis Pengetahuan" onPress={() => router.push('/basis-pengetahuan')} terakhir />
+      </Kartu>
+
       <Tombol label="Keluar" varian="bahaya" onPress={keluar} full />
       <View style={{ height: 24 }} />
     </ScrollView>
@@ -143,6 +203,31 @@ function Baris({ t, label, value }: { t: ReturnType<typeof useTheme>; label: str
   )
 }
 
+function MenuBaris({
+  t,
+  ikon,
+  label,
+  onPress,
+  terakhir,
+}: {
+  t: ReturnType<typeof useTheme>
+  ikon: keyof typeof Ionicons.glyphMap
+  label: string
+  onPress: () => void
+  terakhir?: boolean
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.menuBaris, !terakhir ? { borderBottomWidth: 1, borderBottomColor: t.border } : null]}
+    >
+      <Ionicons name={ikon} size={20} color={t.primary} />
+      <Text style={{ color: t.text, fontSize: 16, flex: 1 }}>{label}</Text>
+      <Ionicons name="chevron-forward" size={20} color={t.textMuted} />
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
   avatar: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { color: '#FFFFFF', fontSize: 28, fontWeight: '800' },
@@ -151,4 +236,5 @@ const styles = StyleSheet.create({
   progressTrack: { height: 8, borderRadius: 999, overflow: 'hidden' },
   progressFill: { height: 8, borderRadius: 999 },
   sertifikatBox: { borderWidth: 1, borderRadius: RADIUS, padding: 12 },
+  menuBaris: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 8 },
 })

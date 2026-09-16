@@ -231,3 +231,249 @@ export type Customer = {
   city: string | null
   phone: string | null
 }
+
+export type Branch = {
+  id: string
+  company_id: string
+  code: string
+  name: string
+  city: string | null
+  province: string | null
+  is_active: boolean
+}
+
+export type JobType = {
+  id: string
+  company_id: string
+  code: string
+  name: string
+  category: string
+  point_weight: number
+  tariff_amount: number
+  is_active: boolean
+}
+
+export type HseIncident = {
+  id: string
+  company_id: string
+  incident_no: string
+  incident_type: string | null
+  incident_date: string
+  branch_id: string | null
+  work_order_id: string | null
+  employee_id: string | null
+  location: string | null
+  lat: number | null
+  lng: number | null
+  description: string | null
+  immediate_action: string | null
+  corrective_action: string | null
+  root_cause_id: string | null
+  lost_days: number | null
+  cost_estimate: number | null
+  photo_urls: string[] | null
+  status: string
+  reported_by: string | null
+  closed_at: string | null
+  created_at: string
+}
+
+export type HseInspection = {
+  id: string
+  company_id: string
+  inspection_no: string
+  inspection_type: string | null
+  inspection_date: string
+  branch_id: string | null
+  inspector_id: string | null
+  target_ref: string | null
+  findings: any[] | null
+  score: number | null
+  result: string | null
+  follow_up: string | null
+  due_date: string | null
+  photo_urls: string[] | null
+  status: string
+  created_at: string
+}
+
+export type WorkPermit = {
+  id: string
+  company_id: string
+  permit_no: string
+  permit_type: string | null
+  project_id: string | null
+  work_order_id: string | null
+  location: string | null
+  lat: number | null
+  lng: number | null
+  valid_from: string | null
+  valid_to: string | null
+  safety_checklist: { label: string; checked: boolean }[] | null
+  status: string
+  requested_by: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+}
+
+export type OvertimeRequest = {
+  id: string
+  company_id: string
+  spl_no: string
+  employee_id: string
+  work_order_id: string | null
+  work_date: string
+  start_at: string | null
+  end_at: string | null
+  hours: number | null
+  reason: string | null
+  calculated_amount: number | null
+  status: string
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+}
+
+export type BusinessTrip = {
+  id: string
+  company_id: string
+  sppd_no: string
+  employee_id: string
+  purpose: string | null
+  destination: string | null
+  transport_type: string | null
+  start_date: string | null
+  end_date: string | null
+  daily_allowance: number | null
+  total_advance: number | null
+  status: string
+  approved_by: string | null
+  created_at: string
+}
+
+export type TripExpense = {
+  id: string
+  company_id: string
+  trip_id: string
+  category: string | null
+  description: string | null
+  expense_date: string | null
+  amount: number
+  receipt_url: string | null
+  status: string
+  created_at: string
+}
+
+export type EmployeeAdvance = {
+  id: string
+  company_id: string
+  advance_no: string
+  employee_id: string
+  request_date: string
+  purpose: string | null
+  amount: number
+  settled_amount: number
+  due_date: string | null
+  status: string
+  approved_by: string | null
+  note: string | null
+  created_at: string
+}
+
+export type FreelancePayout = {
+  id: string
+  company_id: string
+  payout_no: string
+  period_code: string
+  employee_id: string | null
+  vendor_id: string | null
+  payee_type: string
+  gross_amount: number
+  dpp_percent: number
+  dpp_amount: number
+  tax_rate: number | null
+  tax_amount: number
+  other_deduction: number
+  net_amount: number
+  has_npwp: boolean
+  tax_scheme: string
+  status: string
+  paid_at: string | null
+  note: string | null
+  created_at: string
+}
+
+export type FreelancePayoutLine = {
+  id: string
+  company_id: string
+  payout_id: string
+  work_order_id: string | null
+  job_type_id: string | null
+  work_date: string | null
+  description: string | null
+  qty: number
+  rate: number
+  amount: number
+  qc_passed: boolean | null
+}
+
+export type KnowledgeArticle = {
+  id: string
+  company_id: string
+  article_no: string
+  title: string
+  category: string | null
+  applicable_to: string | null
+  symptom: string | null
+  root_cause: string | null
+  resolution_steps: string | null
+  attachments: any[] | null
+  view_count: number
+  is_published: boolean
+  updated_at: string
+}
+
+export type PunchList = {
+  id: string
+  company_id: string
+  punch_no: string
+  project_id: string
+  bast_id: string | null
+  category: string | null
+  severity: string | null
+  description: string | null
+  location: string | null
+  lat: number | null
+  lng: number | null
+  found_date: string
+  due_date: string | null
+  fixed_date: string | null
+  assigned_to: string | null
+  verified_by: string | null
+  photo_urls: string[] | null
+  status: string
+  created_at: string
+}
+
+export type Competency = {
+  id: string
+  company_id: string
+  code: string
+  name: string
+  category: string
+  description: string | null
+  required_for_positions: string[] | null
+}
+
+export type EmployeeCompetency = {
+  id: string
+  company_id: string
+  employee_id: string
+  competency_id: string
+  level: string
+  assessed_by: string | null
+  assessed_at: string | null
+  expiry_date: string | null
+  evidence_url: string | null
+}

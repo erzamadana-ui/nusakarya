@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tabs } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useTheme } from '@/components/theme'
 
 export default function TabsLayout() {
@@ -43,6 +43,13 @@ export default function TabsLayout() {
         options={{
           title: 'Material',
           tabBarIcon: ({ color, size }) => <Ionicons name="cube-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="k3"
+        options={{
+          title: 'K3',
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="hard-hat" color={color} size={size} />,
         }}
       />
       <Tabs.Screen

@@ -30,6 +30,8 @@ export type Employee = {
   photo_url: string | null
   phone: string | null
   email: string | null
+  branch_id: string | null
+  payroll_scheme: string
 }
 
 type Ctx = {

@@ -46,6 +46,17 @@ function Gerbang() {
       <Stack.Screen name="tiket/[id]" options={{ title: 'Detail Tiket' }} />
       <Stack.Screen name="material/baru" options={{ title: 'Permintaan Material' }} />
       <Stack.Screen name="material/[id]" options={{ title: 'Detail Permintaan' }} />
+      <Stack.Screen name="k3/lapor-insiden" options={{ title: 'Lapor Insiden' }} />
+      <Stack.Screen name="k3/izin-kerja" options={{ title: 'Izin Kerja Saya' }} />
+      <Stack.Screen name="k3/izin-kerja-baru" options={{ title: 'Ajukan Izin Kerja' }} />
+      <Stack.Screen name="k3/izin/[id]" options={{ title: 'Detail Izin Kerja' }} />
+      <Stack.Screen name="k3/inspeksi-apd" options={{ title: 'Inspeksi APD' }} />
+      <Stack.Screen name="pengajuan/index" options={{ title: 'Pengajuan Saya' }} />
+      <Stack.Screen name="pengajuan/dinas/[id]" options={{ title: 'Detail Perjalanan Dinas' }} />
+      <Stack.Screen name="penghasilan" options={{ title: 'Penghasilan Saya' }} />
+      <Stack.Screen name="punch-list" options={{ title: 'Punch List Saya' }} />
+      <Stack.Screen name="basis-pengetahuan" options={{ title: 'Basis Pengetahuan' }} />
+      <Stack.Screen name="artikel/[id]" options={{ title: 'Artikel' }} />
     </Stack>
   )
 }
