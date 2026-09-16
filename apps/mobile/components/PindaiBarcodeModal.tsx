@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { Ionicons } from '@expo/vector-icons'
 import { useTheme, RADIUS } from './theme'
+
+// Pemindaian barcode/QR (onBarcodeScanned) belum didukung oleh implementasi
+// expo-camera untuk web, sehingga di web kamera akan terbuka tapi tidak pernah
+// mendeteksi apa pun. Daripada membiarkan itu (terlihat seperti macet), kita
+// tampilkan pesan yang jelas dan arahkan pengguna untuk mengetik manual atau
+// memakai aplikasi Android.
+const PEMINDAI_TERSEDIA_DI_WEB = Platform.OS !== 'web'
 
 /** Modal pemindai barcode/QR nomor seri perangkat memakai expo-camera. */
 export default function PindaiBarcodeModal({
@@ -19,7 +26,7 @@ export default function PindaiBarcodeModal({
   const [terkunci, setTerkunci] = useState(false)
 
   useEffect(() => {
-    if (visible) {
+    if (visible && PEMINDAI_TERSEDIA_DI_WEB) {
       setTerkunci(false)
       if (!izin?.granted) requestIzin()
     }
@@ -28,7 +35,14 @@ export default function PindaiBarcodeModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: '#000' }}>
-        {izin?.granted ? (
+        {!PEMINDAI_TERSEDIA_DI_WEB ? (
+          <View style={styles.center}>
+            <Ionicons name="phone-portrait-outline" size={40} color="#FFFFFF" style={{ marginBottom: 12 }} />
+            <Text style={{ color: '#FFFFFF', fontSize: 16, textAlign: 'center', paddingHorizontal: 24 }}>
+              Fitur ini hanya tersedia di aplikasi Android. Silakan ketik nomor seri secara manual, atau gunakan aplikasi Android untuk memindai.
+            </Text>
+          </View>
+        ) : izin?.granted ? (
           <CameraView
             style={{ flex: 1 }}
             barcodeScannerSettings={{ barcodeTypes: ['code128', 'code39', 'qr', 'ean13', 'ean8', 'upc_a'] }}
