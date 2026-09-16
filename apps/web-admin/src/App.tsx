@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ToastProvider, Skeleton } from '@/components/ui'
 import AppShell from '@/components/layout/AppShell'
+import ErrorBoundary from '@/components/layout/ErrorBoundary'
 import Login from '@/pages/Login'
 import Forbidden from '@/pages/Forbidden'
 
