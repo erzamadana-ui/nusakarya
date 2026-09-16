@@ -36,7 +36,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      # Runner ubuntu-latest sudah memuat Android SDK; tidak perlu memasang lagi.
+      - name: Periksa Android SDK bawaan runner
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          test -d "$SDK" || { echo "Android SDK tidak ditemukan di runner"; exit 1; }
+          ls "$SDK"
+          ls "$SDK/platforms" || true
+          ls "$SDK/build-tools" || true
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
+          echo "sdk.dir=$SDK" > /tmp/sdk.properties
 
       - name: Pasang dependensi
         working-directory: apps/mobile
@@ -47,6 +58,10 @@ jobs:
         env:
           EXPO_NO_TELEMETRY: '1'
         run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Tunjuk lokasi Android SDK untuk Gradle
+        working-directory: apps/mobile/android
+        run: cp /tmp/sdk.properties local.properties && cat local.properties
 
       - name: Tentukan nomor build
         id: ver
