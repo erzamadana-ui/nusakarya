@@ -4,6 +4,14 @@ import {
   LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
   Settings, Circle, ChevronsLeft, ChevronsRight, Menu, Search, Sun, Moon, Bell, LogOut,
   CornerDownLeft, AlertTriangle, Rocket, Facebook, Instagram, Youtube, Linkedin, X as XIcon,
+  Gauge, BadgeCheck, CalendarClock, CalendarDays, PlaneTakeoff, Coins, UserPlus, GraduationCap,
+  Gavel, Star, Receipt, FileText, FileSignature, ClipboardList, ClipboardCheck, PackageSearch,
+  Warehouse, ScanBarcode, ArrowLeftRight, PackageCheck, ClipboardPen, Car, Hammer, Ticket,
+  LayoutList, CalendarCheck, Network, Siren, ShieldAlert, BookOpen, Sunrise, Activity, Radar,
+  MapPinned, ListChecks, ShieldCheck, Handshake as HandshakeIcon, Building2, History, Palette,
+  Database, Inbox, BellRing, Landmark, BookOpenCheck, Percent, PiggyBank, Banknote, Calculator,
+  TrendingUp, MessageSquareWarning, FileWarning, Undo2, FileBox, Ruler, CircleDollarSign,
+  UserCog, KeySquare, Store, Target, Layers, Blocks,
 } from 'lucide-react'
 import { useAuth, ROLE_LABEL } from '@/lib/auth'
 import { NAV, ALL_ITEMS } from '@/lib/nav'
@@ -18,6 +26,48 @@ const ICONS: Record<string, any> = {
 const Icon = ({ name, ...p }: any) => {
   const C = ICONS[name] ?? Circle
   return <C {...p} />
+}
+
+/** Ikon per menu, dipetakan dari path. Referensi memberi tiap menu ikonnya sendiri,
+ *  bukan ikon kelompok yang berulang. */
+const ITEM_ICON: Record<string, any> = {
+  '/dashboard': Gauge, '/eksekutif': TrendingUp, '/persetujuan': Inbox, '/notifikasi': BellRing,
+  '/hr/dashboard': Gauge, '/hr/karyawan': Users, '/hr/sertifikasi': BadgeCheck,
+  '/hr/absensi': CalendarCheck, '/hr/roster': CalendarDays, '/hr/cuti': CalendarClock,
+  '/hr/komponen-gaji': Coins, '/hr/payroll': Banknote, '/hr/produktivitas': Target,
+  '/hr/freelance': UserCog, '/hr/payroll-freelance': CircleDollarSign, '/hr/lembur': CalendarClock,
+  '/hr/perjalanan': PlaneTakeoff, '/hr/kasbon': PiggyBank, '/hr/rekrutmen': UserPlus,
+  '/hr/kompetensi': GraduationCap, '/hr/penilaian': Star, '/hr/disiplin': Gavel,
+  '/commerce/dashboard': Gauge, '/commerce/pelanggan': Store, '/commerce/kontrak': FileSignature,
+  '/commerce/price-list': Ruler, '/commerce/spk': FileText, '/commerce/klaim': ClipboardPen,
+  '/commerce/bast': ClipboardCheck, '/commerce/invoice': Receipt, '/commerce/penalti': FileWarning,
+  '/commerce/pipeline': Target, '/commerce/komplain': MessageSquareWarning,
+  '/procurement/dashboard': Gauge, '/procurement/vendor': Building2, '/procurement/katalog': LayoutList,
+  '/procurement/pr': ClipboardList, '/procurement/rfq': Layers, '/procurement/po': ShoppingCart,
+  '/procurement/gr': PackageCheck, '/procurement/invoice-vendor': Receipt,
+  '/procurement/scorecard': Star, '/procurement/kontrak-vendor': FileSignature, '/procurement/retur': Undo2,
+  '/finance/dashboard': Gauge, '/finance/ap': Banknote, '/finance/ar': Receipt,
+  '/finance/job-costing': Calculator, '/finance/anggaran': PiggyBank, '/finance/cashflow': TrendingUp,
+  '/finance/coa': BookOpenCheck, '/finance/jurnal': BookOpen, '/finance/pajak': Percent,
+  '/finance/kas-kecil': Coins, '/finance/bank': Landmark,
+  '/inventory/dashboard': Gauge, '/inventory/gudang': Warehouse, '/inventory/stok': Boxes,
+  '/inventory/nte': ScanBarcode, '/inventory/mutasi': ArrowLeftRight,
+  '/inventory/permintaan': PackageSearch, '/inventory/pemakaian': ClipboardCheck,
+  '/inventory/opname': ListChecks,
+  '/aset/daftar': Car, '/aset/penugasan': UserCog, '/aset/pemeliharaan': Hammer,
+  '/ops/dashboard': Gauge, '/ops/tiket': Ticket, '/ops/dispatch': LayoutList,
+  '/ops/work-order': ClipboardList, '/ops/maintenance': CalendarCheck, '/ops/aset-jaringan': Network,
+  '/ops/rca': Radar, '/ops/alarm': Siren, '/ops/sla-pelanggan': ShieldCheck,
+  '/ops/eskalasi': ShieldAlert, '/ops/pengetahuan': BookOpen, '/ops/morning': Sunrise, '/ops/bmon': Activity,
+  '/k3/dashboard': Gauge, '/k3/insiden': ShieldAlert, '/k3/inspeksi': ClipboardCheck, '/k3/izin-kerja': KeySquare,
+  '/deploy/dashboard': Gauge, '/deploy/proyek': Blocks, '/deploy/survey': MapPinned,
+  '/deploy/drm': HandshakeIcon, '/deploy/boq': Calculator, '/deploy/progres': TrendingUp,
+  '/deploy/qc': BadgeCheck, '/deploy/dokumen': FileBox, '/deploy/rfs': ClipboardCheck,
+  '/deploy/perizinan': FileSignature, '/deploy/punchlist': ListChecks, '/deploy/garansi': ShieldCheck,
+  '/deploy/subkon': HandshakeIcon,
+  '/pengaturan/pengguna': Users, '/pengaturan/hak-akses': KeySquare, '/pengaturan/cabang': MapPinned,
+  '/pengaturan/perusahaan': Building2, '/pengaturan/tampilan': Palette,
+  '/pengaturan/master': Database, '/pengaturan/audit': History,
 }
 
 function Footer() {
@@ -94,7 +144,7 @@ export default function AppShell() {
                       ? 'bg-sidebar-active text-sidebar-onactive shadow-e1'
                       : 'text-sidebar-fg/85 hover:bg-sidebar-hover hover:text-sidebar-fg',
                     collapsed && 'justify-center px-0')}>
-                  <Icon name={g.icon} size={17} className="shrink-0" />
+                  {(() => { const C = ITEM_ICON[i.path] ?? ICONS[g.icon] ?? Circle; return <C size={17} className="shrink-0" /> })()}
                   {!collapsed && <span className="truncate">{i.label}</span>}
                 </NavLink>))}
             </div>
