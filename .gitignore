@@ -10,3 +10,6 @@ dist/
 rahasia/
 *.token
 credentials*.md
+
+# cache build TypeScript — bukan sumber
+*.tsbuildinfo
