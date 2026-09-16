@@ -26,6 +26,9 @@ import commerceProcExtendedRoutes from '@/modules/commerce-procurement-extended/
 import coreExtendedRoutes from '@/modules/core-extended/routes'
 import tampilanRoutes from '@/modules/tampilan/routes'
 import morningBmonRoutes from '@/modules/morning-bmon/routes'
+import setelanPayrollRoutes from '@/modules/setelan-payroll/routes'
+import referensiPajakRoutes from '@/modules/referensi-pajak/routes'
+import kesiapanRoutes from '@/modules/kesiapan/routes'
 
 export type AppRoute = { path: string; element: React.ReactNode; module: string }
 const ROUTES: AppRoute[] = [
@@ -33,7 +36,7 @@ const ROUTES: AppRoute[] = [
  ...inventoryRoutes, ...operationsRoutes, ...deploymentRoutes, ...settingsRoutes,
  ...hrExtendedRoutes, ...payrollFreelanceRoutes, ...hseRoutes, ...financeExtendedRoutes,
  ...opsExtendedRoutes, ...deployExtendedRoutes, ...commerceProcExtendedRoutes, ...coreExtendedRoutes,
-  ...tampilanRoutes, ...morningBmonRoutes,
+  ...tampilanRoutes, ...morningBmonRoutes, ...setelanPayrollRoutes, ...referensiPajakRoutes, ...kesiapanRoutes,
 ]
 
 function Guard({ module, children }: { module: string; children: React.ReactNode }) {

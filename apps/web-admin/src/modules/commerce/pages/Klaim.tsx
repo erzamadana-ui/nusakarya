@@ -6,7 +6,7 @@ import {
  PageHeader, Card, DataTable, Modal, Drawer, ConfirmDialog, Field, Input, Select, Textarea,
  Badge, Button, Stepper, useToast, TableSkeleton, EmptyState, Section, Desc, Plus,
 } from '@/components/ui'
-import { Printer } from 'lucide-react'
+import { Printer, AlertTriangle } from 'lucide-react'
 import { CLAIM_STATUS_STEPS } from '../lib/constants'
 
 type Item = { price_list_id: string | null; description: string; uom: string; unit_price: number; qty: number }
@@ -38,9 +38,15 @@ export default function Klaim() {
  const [rejectReason, setRejectReason] = useState('')
  const [delId, setDelId] = useState<string | null>(null)
  const [printMode, setPrintMode] = useState(false)
+ const [tarifAsumsiCount, setTarifAsumsiCount] = useState(0)
 
  const spkMap = useMemo(() => Object.fromEntries(spkList.map(s => [s.id, s])), [spkList])
  const contractMap = useMemo(() => Object.fromEntries(contracts.map(c => [c.id, c])), [contracts])
+
+ useEffect(() => {
+ list<any>('v_tarif_belum_terverifikasi', { select: 'id', eq: { sumber_tabel: 'contract_price_list' } })
+ .then(r => setTarifAsumsiCount(r.length)).catch(() => {})
+ }, [])
 
  const load = async () => {
  setLoading(true)
@@ -155,6 +161,13 @@ export default function Klaim() {
  <div>
  <PageHeader title="Klaim Progres / BA" subtitle="Klaim progres pekerjaan berdasarkan realisasi item price list per SPK."
  actions={can('COMMERCE', 'write') && <Button icon={<Plus size={16} />} onClick={openAdd}>Tambah Klaim</Button>} />
+
+ {tarifAsumsiCount > 0 && (
+ <div className="mb-4 px-3 py-2 rounded-sm bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-caption font-medium flex items-start gap-2">
+ <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+ <span>{tarifAsumsiCount} harga satuan price list kontrak yang dipakai untuk menghitung nilai klaim progres masih berstatus <b>asumsi sistem</b>, belum diverifikasi ke kontrak sebenarnya. Kelola di menu Price List Kontrak.</span>
+ </div>
+ )}
 
  {loading ? <Card><TableSkeleton /></Card> : (
  <DataTable columns={columns} rows={rows} searchable searchKeys={['claim_no']} exportName="klaim-progres"

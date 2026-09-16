@@ -6,7 +6,7 @@ import {
  Tabs, KpiCard, useToast, Plus, EmptyState, TableSkeleton, Desc,
 } from '@/components/ui'
 import { rupiah, num, tgl, todayISO, periodCode } from '@/lib/format'
-import { PAYROLL_SCHEME_OPTIONS, APPLIES_TO_OPTIONS, periodRange } from '../lib/constants'
+import { PAYROLL_SCHEME_OPTIONS, APPLIES_TO_OPTIONS, periodRange, PRICE_SOURCE_OPTIONS, PRICE_SOURCE_LABEL, priceSourceTone } from '../lib/constants'
 import { Copy, Upload } from 'lucide-react'
 
 const isMitra = (e: any) => e.employment_type === 'MITRA' || ['freelance', 'campuran'].includes(e.payroll_scheme)
@@ -14,6 +14,7 @@ const isMitra = (e: any) => e.employment_type === 'MITRA' || ['freelance', 'camp
 const emptyRateCard = {
  id: null, appliesTo: 'umum', employee_id: '', vendor_id: '', job_type_id: '',
  rate_amount: 0, min_qty: 1, effective_date: todayISO(), end_date: '', is_active: true, note: '',
+ price_source: 'asumsi_sistem', price_source_ref: '',
 }
 
 export default function MitraFreelance() {
@@ -110,6 +111,7 @@ export default function MitraFreelance() {
  id: r.id, appliesTo: r.employee_id ? 'mitra' : r.vendor_id ? 'vendor' : 'umum',
  employee_id: r.employee_id ?? '', vendor_id: r.vendor_id ?? '', job_type_id: r.job_type_id,
  rate_amount: r.rate_amount, min_qty: r.min_qty, effective_date: r.effective_date, end_date: r.end_date ?? '', is_active: r.is_active, note: r.note ?? '',
+ price_source: r.price_source ?? 'asumsi_sistem', price_source_ref: r.price_source_ref ?? '',
  })
  setRcModal(true)
  }
@@ -124,12 +126,20 @@ export default function MitraFreelance() {
  effective_date: rcForm.effective_date, end_date: rcForm.end_date || null, is_active: rcForm.is_active, note: rcForm.note || null,
  employee_id: rcForm.appliesTo === 'mitra' ? rcForm.employee_id : null,
  vendor_id: rcForm.appliesTo === 'vendor' ? rcForm.vendor_id : null,
+ price_source: rcForm.price_source || 'asumsi_sistem', price_source_ref: rcForm.price_source_ref || null,
  }
  if (rcForm.id) { await update('freelance_rate_cards', rcForm.id, payload); toast.push('Rate card diperbarui') }
  else { await insert('freelance_rate_cards', { ...payload, company_id: profile?.company_id, created_by: profile?.id }); toast.push('Rate card ditambahkan') }
  setRcModal(false); loadAll()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan rate card', 'error') }
  finally { setRcSaving(false) }
+ }
+
+ async function markRcVerified(row: any) {
+ try {
+ await update('freelance_rate_cards', row.id, { price_verified_at: new Date().toISOString(), price_verified_by: profile?.id })
+ toast.push('Rate card ditandai terverifikasi'); loadAll()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menandai verifikasi', 'error') }
  }
 
  async function doCopy() {
@@ -142,6 +152,7 @@ export default function MitraFreelance() {
  company_id: profile?.company_id, created_by: profile?.id, employee_id: copyDst, vendor_id: null,
  job_type_id: r.job_type_id, rate_amount: r.rate_amount, min_qty: r.min_qty, effective_date: todayISO(),
  end_date: null, is_active: true, note: `Disalin dari ${employeeName(copySrc)}`,
+ price_source: r.price_source ?? 'asumsi_sistem', price_source_ref: r.price_source_ref ?? null,
  })))
  toast.push(`${source.length} tarif disalin ke ${employeeName(copyDst)}`); setCopyModal(false); setCopySrc(''); setCopyDst(''); loadAll()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyalin rate card', 'error') }
@@ -228,7 +239,24 @@ export default function MitraFreelance() {
  { key: 'rate_amount', header: 'Tarif / Satuan', align: 'right', render: r => rupiah(r.rate_amount) },
  { key: 'min_qty', header: 'Qty Minimum', align: 'right' },
  { key: 'periode', header: 'Periode Berlaku', render: r => `${tgl(r.effective_date)} – ${r.end_date ? tgl(r.end_date) : 'seterusnya'}` },
+ {
+ key: 'price_source', header: 'Sumber Tarif', render: r => (
+ <div className="space-y-0.5">
+ <Badge tone={priceSourceTone(r.price_source)}>{r.price_source === 'asumsi_sistem' ? 'ASUMSI' : (PRICE_SOURCE_LABEL[r.price_source] ?? r.price_source)}</Badge>
+ {r.price_verified_at && <div className="text-caption text-ink-400 whitespace-nowrap">Terverifikasi {tgl(r.price_verified_at)}</div>}
+ </div>
+ ),
+ },
  { key: 'is_active', header: 'Aktif', render: r => r.is_active ? <Badge tone="emerald">Aktif</Badge> : <Badge tone="slate">Nonaktif</Badge> },
+ ...(can('PAYROLL', 'approve') ? [{
+ key: 'verif', header: '', width: '160px', sortable: false, render: (r: any) => (
+ <div onClick={(e: any) => e.stopPropagation()}>
+ {!r.price_verified_at
+ ? <Button size="sm" variant="outline" onClick={() => markRcVerified(r)}>Tandai Terverifikasi</Button>
+ : <span className="text-caption text-emerald-600">Terverifikasi</span>}
+ </div>
+ ),
+ }] : []),
  ]}
  />
  </>
@@ -254,6 +282,10 @@ export default function MitraFreelance() {
  <Field label="Qty Minimum"><Input type="number" value={rcForm.min_qty} onChange={(e: any) => setRcForm({ ...rcForm, min_qty: Number(e.target.value) })} /></Field>
  <Field label="Tanggal Mulai Berlaku" required><Input type="date" value={rcForm.effective_date} onChange={(e: any) => setRcForm({ ...rcForm, effective_date: e.target.value })} /></Field>
  <Field label="Tanggal Berakhir"><Input type="date" value={rcForm.end_date} onChange={(e: any) => setRcForm({ ...rcForm, end_date: e.target.value })} /></Field>
+ <Field label="Sumber Tarif" hint="Asumsi Sistem = angka karangan sistem, belum berdasar kontrak/negosiasi nyata.">
+ <Select options={PRICE_SOURCE_OPTIONS} value={rcForm.price_source ?? 'asumsi_sistem'} onChange={(e: any) => setRcForm({ ...rcForm, price_source: e.target.value })} />
+ </Field>
+ <Field label="Rujukan (No Kontrak/SPK/Dokumen)"><Input value={rcForm.price_source_ref ?? ''} onChange={(e: any) => setRcForm({ ...rcForm, price_source_ref: e.target.value })} /></Field>
  <Field label="Catatan" className="sm:col-span-2"><Textarea value={rcForm.note} onChange={(e: any) => setRcForm({ ...rcForm, note: e.target.value })} /></Field>
  <Checkbox label="Aktif" checked={rcForm.is_active} onChange={(e: any) => setRcForm({ ...rcForm, is_active: e.target.checked })} />
  </div>

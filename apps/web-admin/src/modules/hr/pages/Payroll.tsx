@@ -8,8 +8,8 @@ import {
 } from '@/components/ui'
 import { rupiah, tgl, periodCode, exportCSV } from '@/lib/format'
 import { PAYROLL_STEPS, periodRange } from '../lib/constants'
-import { calcPayrollForEmployee } from '../lib/payrollCalc'
-import { Calculator, Printer } from 'lucide-react'
+import { calcPayrollForEmployee, pickEffectiveBpjsConfig } from '../lib/payrollCalc'
+import { Calculator, Printer, ShieldAlert } from 'lucide-react'
 
 const emptyPeriod = { period_code: periodCode(), start_date: '', end_date: '', pay_date: '', note: '' }
 
@@ -23,6 +23,7 @@ export default function Payroll() {
  const [runsLoading, setRunsLoading] = useState(false)
  const [computing, setComputing] = useState(false)
  const [transitioning, setTransitioning] = useState(false)
+ const [bpjsConfig, setBpjsConfig] = useState<any>(null)
 
  const [modalOpen, setModalOpen] = useState(false)
  const [form, setForm] = useState<any>(emptyPeriod)
@@ -32,13 +33,20 @@ export default function Payroll() {
  const [slipLines, setSlipLines] = useState<any[] | null>(null)
 
  useEffect(() => { loadPeriods() }, [])
- useEffect(() => { if (selected) loadRuns(selected.id) }, [selected?.id])
+ useEffect(() => { if (selected) { loadRuns(selected.id); loadBpjsConfigForPeriod(selected) } else setBpjsConfig(null) }, [selected?.id])
 
  async function loadPeriods() {
  setLoading(true)
  try { setPeriods(await list('payroll_periods', { order: { col: 'start_date', asc: false } })) }
  catch (e: any) { toast.push(e.message ?? 'Gagal memuat periode payroll', 'error') }
  finally { setLoading(false) }
+ }
+ async function loadBpjsConfigForPeriod(period: any) {
+ try {
+ const [start] = period.start_date && period.end_date ? [period.start_date, period.end_date] : periodRange(period.period_code)
+ const bpjsRows = await list<any>('bpjs_config', { order: { col: 'effective_date', asc: false } })
+ setBpjsConfig(pickEffectiveBpjsConfig(bpjsRows, start) ?? bpjsRows[0] ?? null)
+ } catch { setBpjsConfig(null) }
  }
  async function loadRuns(periodId: string) {
  setRunsLoading(true)
@@ -65,12 +73,16 @@ export default function Payroll() {
  const [start, end] = selected.start_date && selected.end_date ? [selected.start_date, selected.end_date] : periodRange(selected.period_code)
  const [employees, bpjsRows, terRates, existingRuns] = await Promise.all([
  list<any>('employees', { select: 'id,full_name,ter_category', eq: { status: 'aktif' } }),
- list<any>('bpjs_config', { order: { col: 'effective_date', asc: false }, limit: 1 }),
+ list<any>('bpjs_config', { order: { col: 'effective_date', asc: false } }),
  list<any>('ter_rates', {}),
  list<any>('payroll_runs', { eq: { period_id: selected.id } }),
  ])
- const bpjs = bpjsRows[0]
+ // Pakai baris bpjs_config yang BERLAKU pada tanggal mulai periode (effective_date
+ // terbesar yang <= start), bukan sekadar baris pertama/terbaru — bpjs_config bisa
+ // punya beberapa versi riwayat (lihat halaman Setelan BPJS & Pajak).
+ const bpjs = pickEffectiveBpjsConfig(bpjsRows, start) ?? bpjsRows[0]
  if (!bpjs) { toast.push('Konfigurasi BPJS (bpjs_config) belum tersedia', 'error'); setComputing(false); return }
+ setBpjsConfig(bpjs)
  const runByEmp: Record<string, any> = {}
  existingRuns.forEach(r => { runByEmp[r.employee_id] = r })
 
@@ -190,7 +202,12 @@ export default function Payroll() {
  </div>
 
  <Card className="p-4 mb-5">
- <p className="font-display font-semibold text-[17px] mb-3">Periode {selected.period_code} <span className="text-caption text-ink-400 font-normal">({tgl(selected.start_date)} – {tgl(selected.end_date)})</span></p>
+ <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+ <p className="font-display font-semibold text-[17px]">Periode {selected.period_code} <span className="text-caption text-ink-400 font-normal">({tgl(selected.start_date)} – {tgl(selected.end_date)})</span></p>
+ {bpjsConfig && !bpjsConfig.is_verified && (
+ <span className="inline-flex items-center gap-1"><ShieldAlert size={13} className="text-amber-600" /><Badge tone="amber">Tarif belum diverifikasi</Badge></span>
+ )}
+ </div>
  <Stepper steps={PAYROLL_STEPS.map(s => s.label)} current={stepIdx} />
  </Card>
 

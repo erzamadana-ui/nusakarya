@@ -18,6 +18,7 @@ export const NAV: NavGroup[] = [
     { path: '/hr/roster', label: 'Roster & Shift', module: 'HR' },
     { path: '/hr/cuti', label: 'Cuti & Izin', module: 'HR' },
     { path: '/hr/komponen-gaji', label: 'Komponen Gaji', module: 'PAYROLL' },
+    { path: '/hr/setelan-bpjs', label: 'Setelan BPJS & Pajak', module: 'PAYROLL' },
     { path: '/hr/payroll', label: 'Payroll & Slip Gaji', module: 'PAYROLL' },
     { path: '/hr/produktivitas', label: 'Produktivitas Teknisi', module: 'PRODUCTIVITY' },
     { path: '/hr/freelance', label: 'Mitra Freelance & Rate Card', module: 'PAYROLL' },
@@ -68,6 +69,7 @@ export const NAV: NavGroup[] = [
     { path: '/finance/pajak', label: 'Pusat Pajak', module: 'FINANCE' },
     { path: '/finance/kas-kecil', label: 'Kas Kecil', module: 'FINANCE' },
     { path: '/finance/bank', label: 'Bank & Rekonsiliasi', module: 'FINANCE' },
+    { path: '/finance/referensi-pajak', label: 'Referensi Tarif Pajak', module: 'FINANCE' },
   ]},
   { key: 'inventory', label: 'Inventory', icon: 'Boxes', unit: 'INVENTORY', items: [
     { path: '/inventory/dashboard', label: 'Dashboard Inventory', module: 'INVENTORY' },
@@ -127,6 +129,7 @@ export const NAV: NavGroup[] = [
     { path: '/pengaturan/perusahaan', label: 'Profil Perusahaan', module: 'CORE' },
     { path: '/pengaturan/tampilan', label: 'Tampilan & Template', module: 'CORE' },
     { path: '/pengaturan/master', label: 'Data Master Referensi', module: 'CORE' },
+    { path: '/pengaturan/kesiapan', label: 'Kesiapan Produksi', module: 'CORE' },
     { path: '/pengaturan/audit', label: 'Log Audit', module: 'CORE' },
   ]},
 ]

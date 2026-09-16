@@ -5,6 +5,20 @@ export type BpjsConfig = {
   jkk: number; jkm: number
   jp_company: number; jp_employee: number; jp_cap: number
   kes_company: number; kes_employee: number; kes_cap: number
+  is_verified?: boolean
+}
+
+/**
+ * Pilih baris bpjs_config yang BERLAKU pada tanggal periode payroll: baris dengan
+ * effective_date terbesar yang <= tanggal acuan. bpjs_config bisa punya beberapa
+ * baris riwayat per company_id (lihat halaman Setelan BPJS & Pajak) — jangan
+ * asumsikan baris pertama/terbaru selalu yang berlaku untuk periode yang sedang
+ * dihitung (mis. saat menghitung ulang payroll periode lampau).
+ */
+export function pickEffectiveBpjsConfig<T extends { effective_date: string }>(rows: T[], asOfDate: string): T | null {
+  const eligible = rows.filter(r => r.effective_date && r.effective_date <= asOfDate)
+  if (!eligible.length) return null
+  return eligible.reduce((a, b) => (b.effective_date > a.effective_date ? b : a))
 }
 export type TerRate = { category: string; min_income: number; max_income: number | null; rate: number }
 export type SalaryLine = {

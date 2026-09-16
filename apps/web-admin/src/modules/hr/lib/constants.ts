@@ -45,6 +45,18 @@ export const PRODUCTIVITY_ENTRY_STATUS_TABS = [
   { value: 'diverifikasi', label: 'Diverifikasi' },
 ]
 
+/** Asal-usul tarif (job_types.tariff_amount, dll). 'asumsi_sistem' = angka karangan sistem,
+ *  belum ada dasar kontrak/negosiasi yang diverifikasi. */
+export const PRICE_SOURCE_OPTIONS = [
+  { value: 'asumsi_sistem', label: 'Asumsi Sistem' },
+  { value: 'kontrak', label: 'Kontrak' },
+  { value: 'negosiasi', label: 'Negosiasi' },
+  { value: 'survei_pasar', label: 'Survei Pasar' },
+  { value: 'lainnya', label: 'Lainnya' },
+]
+export const PRICE_SOURCE_LABEL: Record<string, string> = Object.fromEntries(PRICE_SOURCE_OPTIONS.map(o => [o.value, o.label]))
+export const priceSourceTone = (source?: string | null): 'amber' | 'slate' => (!source || source === 'asumsi_sistem' ? 'amber' : 'slate')
+
 export const daysUntil = (dateStr?: string | null) => {
   if (!dateStr) return null
   const today = new Date(); today.setHours(0, 0, 0, 0)

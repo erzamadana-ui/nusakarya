@@ -7,7 +7,7 @@ import {
  useToast, EmptyState, Section, Desc, ConfirmDialog,
 } from '@/components/ui'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
-import { Plus } from 'lucide-react'
+import { Plus, AlertTriangle } from 'lucide-react'
 import { chartSeries } from '@/lib/theme'
 
 const rp = (v: any) => rupiah(Number(v) || 0)
@@ -29,8 +29,12 @@ export default function JobCosting() {
  const [showNewCat, setShowNewCat] = useState(false)
  const [busy, setBusy] = useState(false)
  const [confirmDelete, setConfirmDelete] = useState<any | null>(null)
+ const [tarifAsumsiCount, setTarifAsumsiCount] = useState(0)
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
+ useEffect(() => {
+ list<any>('v_tarif_belum_terverifikasi', { select: 'id' }).then(r => setTarifAsumsiCount(r.length)).catch(() => {})
+ }, [])
 
  async function load() {
  setLoading(true)
@@ -108,6 +112,13 @@ export default function JobCosting() {
  return (
  <div>
  <PageHeader title="Job Costing & Margin" subtitle="Biaya aktual per proyek/SPK dibanding nilai kontrak." />
+
+ {tarifAsumsiCount > 0 && (
+ <div className="mb-4 px-3 py-2 rounded-sm bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-caption font-medium flex items-start gap-2">
+ <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+ <span>{tarifAsumsiCount} tarif dasar (jenis pekerjaan, harga satuan price list, atau rate card mitra) yang membentuk biaya & tagihan proyek masih berstatus <b>asumsi sistem</b>, belum diverifikasi ke kontrak sebenarnya — total biaya dan margin di bawah bisa berubah setelah tarif diverifikasi.</span>
+ </div>
+ )}
 
  <DataTable
  loading={loading}

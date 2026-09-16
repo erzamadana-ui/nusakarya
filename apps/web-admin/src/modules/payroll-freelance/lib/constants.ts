@@ -35,6 +35,18 @@ export const APPLIES_TO_OPTIONS = [
   { value: 'umum', label: 'Umum (semua mitra)' },
 ]
 
+/** Asal-usul tarif (freelance_rate_cards.rate_amount). 'asumsi_sistem' = angka karangan sistem,
+ *  belum ada dasar kontrak/negosiasi yang diverifikasi. */
+export const PRICE_SOURCE_OPTIONS = [
+  { value: 'asumsi_sistem', label: 'Asumsi Sistem' },
+  { value: 'kontrak', label: 'Kontrak' },
+  { value: 'negosiasi', label: 'Negosiasi' },
+  { value: 'survei_pasar', label: 'Survei Pasar' },
+  { value: 'lainnya', label: 'Lainnya' },
+]
+export const PRICE_SOURCE_LABEL: Record<string, string> = Object.fromEntries(PRICE_SOURCE_OPTIONS.map(o => [o.value, o.label]))
+export const priceSourceTone = (source?: string | null): 'amber' | 'slate' => (!source || source === 'asumsi_sistem' ? 'amber' : 'slate')
+
 /** Rentang tanggal awal & akhir bulan dari period_code 'YYYY-MM'. */
 export function periodRange(periodCode: string): [string, string] {
   const [y, m] = periodCode.split('-').map(Number)

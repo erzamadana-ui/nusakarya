@@ -29,3 +29,15 @@ export const PENALTY_STATUS_OPTIONS = ['draft', 'diajukan', 'disetujui', 'dibaya
 export const PAYMENT_METHOD_OPTIONS = ['Transfer Bank', 'Tunai', 'Giro', 'Lainnya']
 
 export const CHART_COLORS = () => chartSeries()
+
+/** Asal-usul tarif (contract_price_list.unit_price). 'asumsi_sistem' = angka karangan sistem,
+ *  belum ada dasar kontrak/negosiasi yang diverifikasi. */
+export const PRICE_SOURCE_OPTIONS = [
+  { value: 'asumsi_sistem', label: 'Asumsi Sistem' },
+  { value: 'kontrak', label: 'Kontrak' },
+  { value: 'negosiasi', label: 'Negosiasi' },
+  { value: 'survei_pasar', label: 'Survei Pasar' },
+  { value: 'lainnya', label: 'Lainnya' },
+]
+export const PRICE_SOURCE_LABEL: Record<string, string> = Object.fromEntries(PRICE_SOURCE_OPTIONS.map(o => [o.value, o.label]))
+export const priceSourceTone = (source?: string | null): 'amber' | 'slate' => (!source || source === 'asumsi_sistem' ? 'amber' : 'slate')

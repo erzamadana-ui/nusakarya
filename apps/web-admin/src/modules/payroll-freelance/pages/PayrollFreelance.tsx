@@ -13,7 +13,7 @@ import {
  PAYOUT_STATUS_TABS, PAYOUT_STEPS, TAX_SCHEME_OPTIONS, periodRange, lastPeriods,
  pickRateCard, calcPph21BukanPegawaiProgresif, calcPph23Jasa,
 } from '../lib/constants'
-import { Calculator, Printer } from 'lucide-react'
+import { Calculator, Printer, AlertTriangle } from 'lucide-react'
 
 const isMitra = (e: any) => e?.employment_type === 'MITRA' || ['freelance', 'campuran'].includes(e?.payroll_scheme)
 
@@ -78,9 +78,16 @@ export default function PayrollFreelance() {
  const [topMitra, setTopMitra] = useState<any[]>([])
  const [compareChart, setCompareChart] = useState<any[]>([])
 
+ // --- Peringatan tarif asumsi sistem ---
+ const [tarifAsumsiCount, setTarifAsumsiCount] = useState(0)
+
  useEffect(() => { list<any>('branches', { order: { col: 'name', asc: true } }).then(setBranches).catch(() => {}) }, [])
  useEffect(() => { loadPayouts() }, [period, branchFilter])
  useEffect(() => { loadDashboard() }, [])
+ useEffect(() => {
+ list<any>('v_tarif_belum_terverifikasi', { select: 'id', in: { sumber_tabel: ['freelance_rate_cards', 'job_types'] } })
+ .then(r => setTarifAsumsiCount(r.length)).catch(() => {})
+ }, [])
 
  async function loadPayouts() {
  setLoading(true)
@@ -306,6 +313,13 @@ export default function PayrollFreelance() {
  <div>
  <PageHeader title="Payout Mitra Freelance" subtitle="Hitung dan kelola pembayaran mitra freelance per satuan pekerjaan"
  actions={write && <Button icon={<Calculator size={16} />} onClick={openCalc}>Hitung Payout Periode</Button>} />
+
+ {tarifAsumsiCount > 0 && (
+ <div className="mb-5 px-3 py-2 rounded-sm bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-caption font-medium flex items-start gap-2">
+ <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+ <span>{tarifAsumsiCount} tarif dasar (rate card mitra / tarif standar jenis pekerjaan) yang bisa dipakai dalam perhitungan payout masih berstatus <b>asumsi sistem</b>, belum diverifikasi ke kontrak/SPK sebenarnya. Kelola di menu Mitra Freelance & Rate Card atau Produktivitas Teknisi.</span>
+ </div>
+ )}
 
  {/* Dashboard ringkas */}
  <div className="grid lg:grid-cols-2 gap-5 mb-5">

@@ -8,9 +8,12 @@ import {
  Tabs, KpiCard, useToast, Plus, EmptyState, TableSkeleton, Progress,
 } from '@/components/ui'
 import { rupiah, num, pct, tgl, periodCode } from '@/lib/format'
-import { periodRange } from '../lib/constants'
+import { periodRange, PRICE_SOURCE_OPTIONS, PRICE_SOURCE_LABEL, priceSourceTone } from '../lib/constants'
 
-const emptyJobType = { id: null, code: '', name: '', category: '', point_weight: 0, standard_minutes: 0, tariff_amount: 0, is_active: true }
+const emptyJobType = {
+ id: null, code: '', name: '', category: '', point_weight: 0, standard_minutes: 0, tariff_amount: 0, is_active: true,
+ price_source: 'asumsi_sistem', price_source_ref: '',
+}
 
 export default function Produktivitas() {
  const { profile, can } = useAuth()
@@ -77,12 +80,22 @@ export default function Produktivitas() {
  if (!jtForm.code || !jtForm.name) { toast.push('Kode dan nama jenis pekerjaan wajib diisi', 'error'); return }
  setJtSaving(true)
  try {
- const payload = { code: jtForm.code, name: jtForm.name, category: jtForm.category, point_weight: jtForm.point_weight || 0, standard_minutes: jtForm.standard_minutes || null, tariff_amount: jtForm.tariff_amount || 0, is_active: jtForm.is_active }
+ const payload = {
+ code: jtForm.code, name: jtForm.name, category: jtForm.category, point_weight: jtForm.point_weight || 0, standard_minutes: jtForm.standard_minutes || null, tariff_amount: jtForm.tariff_amount || 0, is_active: jtForm.is_active,
+ price_source: jtForm.price_source || 'asumsi_sistem', price_source_ref: jtForm.price_source_ref || null,
+ }
  if (jtForm.id) { await update('job_types', jtForm.id, payload); toast.push('Jenis pekerjaan diperbarui') }
  else { await insert('job_types', { ...payload, company_id: profile?.company_id, created_by: profile?.id }); toast.push('Jenis pekerjaan ditambahkan') }
  setJtModal(false); loadJobTypes()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan jenis pekerjaan', 'error') }
  finally { setJtSaving(false) }
+ }
+
+ async function markJtVerified(row: any) {
+ try {
+ await update('job_types', row.id, { price_verified_at: new Date().toISOString(), price_verified_by: profile?.id })
+ toast.push('Tarif jenis pekerjaan ditandai terverifikasi'); loadJobTypes()
+ } catch (e: any) { toast.push(e.message ?? 'Gagal menandai verifikasi', 'error') }
  }
 
  const tabs = [{ value: 'peringkat', label: 'Peringkat & Tren' }, ...(can('PRODUCTIVITY', 'write') ? [{ value: 'jenis', label: 'Master Jenis Pekerjaan' }] : [])]
@@ -179,7 +192,24 @@ export default function Produktivitas() {
  { key: 'point_weight', header: 'Bobot Poin', align: 'right', render: r => num(r.point_weight, 1) },
  { key: 'standard_minutes', header: 'Menit Standar', align: 'right' },
  { key: 'tariff_amount', header: 'Tarif', align: 'right', render: r => rupiah(r.tariff_amount) },
+ {
+ key: 'price_source', header: 'Sumber Tarif', render: r => (
+ <div className="space-y-0.5">
+ <Badge tone={priceSourceTone(r.price_source)}>{r.price_source === 'asumsi_sistem' ? 'ASUMSI' : (PRICE_SOURCE_LABEL[r.price_source] ?? r.price_source)}</Badge>
+ {r.price_verified_at && <div className="text-caption text-ink-400 whitespace-nowrap">Terverifikasi {tgl(r.price_verified_at)}</div>}
+ </div>
+ ),
+ },
  { key: 'is_active', header: 'Status', render: r => r.is_active ? <Badge tone="emerald">Aktif</Badge> : <Badge tone="slate">Nonaktif</Badge> },
+ ...(can('PRODUCTIVITY', 'approve') ? [{
+ key: 'verif', header: '', width: '160px', sortable: false, render: (r: any) => (
+ <div onClick={(e: any) => e.stopPropagation()}>
+ {!r.price_verified_at
+ ? <Button size="sm" variant="outline" onClick={() => markJtVerified(r)}>Tandai Terverifikasi</Button>
+ : <span className="text-caption text-emerald-600">Terverifikasi</span>}
+ </div>
+ ),
+ }] : []),
  ]}
  />
  </>}
@@ -193,6 +223,10 @@ export default function Produktivitas() {
  <Field label="Bobot Poin"><Input type="number" step="0.1" value={jtForm.point_weight} onChange={(e: any) => setJtForm({ ...jtForm, point_weight: Number(e.target.value) })} /></Field>
  <Field label="Menit Standar"><Input type="number" value={jtForm.standard_minutes ?? ''} onChange={(e: any) => setJtForm({ ...jtForm, standard_minutes: Number(e.target.value) })} /></Field>
  <Field label="Tarif per Pekerjaan"><Input type="number" value={jtForm.tariff_amount} onChange={(e: any) => setJtForm({ ...jtForm, tariff_amount: Number(e.target.value) })} /></Field>
+ <Field label="Sumber Tarif" hint="Asumsi Sistem = angka karangan sistem, belum berdasar kontrak/SPK nyata.">
+ <Select options={PRICE_SOURCE_OPTIONS} value={jtForm.price_source ?? 'asumsi_sistem'} onChange={(e: any) => setJtForm({ ...jtForm, price_source: e.target.value })} />
+ </Field>
+ <Field label="Rujukan (No Kontrak/SPK/Dokumen)"><Input value={jtForm.price_source_ref ?? ''} onChange={(e: any) => setJtForm({ ...jtForm, price_source_ref: e.target.value })} /></Field>
  <Checkbox label="Aktif" checked={jtForm.is_active} onChange={(e: any) => setJtForm({ ...jtForm, is_active: e.target.checked })} />
  </div>
  </Modal>
