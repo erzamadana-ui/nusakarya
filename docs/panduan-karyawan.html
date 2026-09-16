@@ -1,0 +1,936 @@
+<title>Panduan NUSAKARYA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --primary:#4F46E5;
+  --primary-dark:#3F37C9;
+  --accent:#F5A524;
+  --bg:#F4F4F6;
+  --card:#FFFFFF;
+  --text:#1E1B2E;
+  --text-soft:#5B5768;
+  --border:#E6E4ED;
+  --ok-bg:#E8F7EE;
+  --ok-text:#1B7A43;
+  --warn-bg:#FDEAF0;
+  --warn-text:#B0245B;
+  --chip-bg:#EEEDFB;
+  --radius:14px;
+  --shadow:0 2px 10px rgba(31,26,64,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --primary:#8B85F5;
+    --primary-dark:#A5A0FF;
+    --accent:#FFC061;
+    --bg:#15131F;
+    --card:#211E2E;
+    --text:#F1EFFA;
+    --text-soft:#B9B4CC;
+    --border:#38334A;
+    --ok-bg:#12321F;
+    --ok-text:#6FDB9B;
+    --warn-bg:#3A1826;
+    --warn-text:#F693B6;
+    --chip-bg:#2A2740;
+    --shadow:0 2px 14px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --primary:#8B85F5;
+  --primary-dark:#A5A0FF;
+  --accent:#FFC061;
+  --bg:#15131F;
+  --card:#211E2E;
+  --text:#F1EFFA;
+  --text-soft:#B9B4CC;
+  --border:#38334A;
+  --ok-bg:#12321F;
+  --ok-text:#6FDB9B;
+  --warn-bg:#3A1826;
+  --warn-text:#F693B6;
+  --chip-bg:#2A2740;
+  --shadow:0 2px 14px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+#app{max-width:760px;margin:0 auto;padding:0 16px 48px;}
+
+/* topbar */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:12px 16px;margin:0 -16px 16px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;}
+.brand svg{flex:none;}
+.toc-btn{
+  display:flex;align-items:center;gap:6px;
+  min-height:44px;padding:0 14px;border-radius:999px;
+  background:var(--chip-bg);color:var(--primary);border:none;
+  font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;
+}
+.toc-btn:active{transform:scale(.97);}
+
+/* toc panel */
+.toc-overlay{
+  position:fixed;inset:0;background:rgba(10,8,20,.5);z-index:60;
+  display:none;
+}
+.toc-overlay.open{display:block;}
+.toc-panel{
+  position:fixed;right:0;top:0;bottom:0;width:min(320px,86vw);z-index:61;
+  background:var(--card);box-shadow:-8px 0 24px rgba(0,0,0,.2);
+  padding:18px;overflow-y:auto;
+  transform:translateX(100%);transition:transform .22s ease;
+}
+.toc-panel.open{transform:translateX(0);}
+.toc-panel h3{margin:4px 0 12px;font-size:15px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.04em;}
+.toc-panel a{
+  display:block;padding:11px 10px;border-radius:10px;color:var(--text);
+  text-decoration:none;font-weight:600;font-size:15px;
+}
+.toc-panel a:active{background:var(--chip-bg);}
+.toc-close{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;
+  border:none;background:var(--chip-bg);color:var(--text);font-size:18px;cursor:pointer;
+}
+
+/* sections */
+.section{margin:0 0 30px;}
+.section h2{font-size:20px;margin:0 0 4px;}
+.section .lead{color:var(--text-soft);margin:0 0 16px;font-size:15px;}
+.card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px;margin-bottom:12px;border:1px solid var(--border);
+}
+
+/* cover */
+.cover{text-align:center;padding:28px 4px 8px;}
+.cover .logo{margin:6px auto 14px;}
+.cover h1{font-size:26px;margin:0 0 8px;letter-spacing:-.01em;}
+.cover p{color:var(--text-soft);font-size:16px;margin:0 auto 20px;max-width:36em;}
+.btn-row{display:flex;flex-direction:column;gap:10px;margin:0 0 10px;}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:52px;border-radius:var(--radius);font-weight:700;font-size:16px;
+  text-decoration:none;border:none;cursor:pointer;font-family:inherit;
+}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-secondary{background:var(--chip-bg);color:var(--primary);}
+.hint{font-size:13.5px;color:var(--text-soft);margin:6px 0 0;}
+.data-note{
+  display:inline-block;margin-top:14px;background:var(--warn-bg);color:var(--warn-text);
+  padding:8px 14px;border-radius:10px;font-size:13.5px;font-weight:600;
+}
+
+/* role chips */
+.role-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px;}
+.chip{
+  min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--border);
+  background:var(--card);color:var(--text);font-family:inherit;font-weight:700;font-size:14px;
+  cursor:pointer;
+}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+.chip.all-chip{border-color:var(--accent);}
+.chip.all-chip.active{background:var(--accent);border-color:var(--accent);color:#3A2600;}
+#roleNote{
+  background:var(--chip-bg);color:var(--primary-dark);padding:10px 14px;border-radius:10px;
+  font-size:14px;font-weight:600;margin:0;
+}
+
+/* steps */
+.step-card{display:flex;gap:14px;align-items:flex-start;}
+.step-num{
+  flex:none;width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;
+}
+.step-card h3{margin:2px 0 6px;font-size:16.5px;}
+.step-card p, .step-card li{color:var(--text-soft);font-size:15px;}
+.step-card ol{margin:6px 0 0;padding-left:20px;}
+.screen-diagram{width:100%;height:auto;display:block;margin:10px 0 4px;border-radius:10px;background:var(--bg);}
+.legend{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;}
+.legend li{display:flex;gap:8px;font-size:14px;color:var(--text-soft);}
+.legend b{
+  flex:none;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;
+  font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:800;
+}
+
+/* accordion (details) */
+details.acc{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);
+}
+details.acc>summary{
+  list-style:none;cursor:pointer;padding:15px 16px;font-weight:700;font-size:16px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
+}
+details.acc>summary::-webkit-details-marker{display:none;}
+details.acc>summary:after{
+  content:"+";flex:none;width:26px;height:26px;border-radius:50%;background:var(--chip-bg);
+  color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+details.acc[open]>summary:after{content:"–";}
+.acc-body{padding:0 16px 16px;}
+.acc-body .role-menus{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;}
+.acc-body .role-menus li{
+  background:var(--chip-bg);color:var(--primary-dark);font-size:12.5px;font-weight:700;
+  padding:4px 10px;border-radius:999px;
+}
+.task{margin-bottom:14px;}
+.task:last-child{margin-bottom:0;}
+.task h4{margin:0 0 4px;font-size:15px;}
+.task ol{margin:0;padding-left:20px;color:var(--text-soft);font-size:14.5px;}
+.task ol li{margin-bottom:2px;}
+
+.box{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;}
+.box.tips{background:var(--ok-bg);color:var(--ok-text);}
+.box.warn{background:var(--warn-bg);color:var(--warn-text);}
+.box b{display:block;font-size:12px;letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase;}
+.box ul{margin:4px 0 0;padding-left:18px;}
+
+/* workflow */
+.wf-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:4px 16px 10px;}
+.wf-scroll svg{display:block;height:auto;}
+.wf-caption{font-size:13px;color:var(--text-soft);margin:2px 0 0;}
+
+/* mobile app steps */
+.phone-step{display:flex;gap:12px;margin-bottom:14px;}
+.phone-step .ico{
+  flex:none;width:40px;height:40px;border-radius:12px;background:var(--chip-bg);
+  display:flex;align-items:center;justify-content:center;
+}
+.phone-step h4{margin:0 0 4px;font-size:15.5px;}
+.phone-step p{margin:0;color:var(--text-soft);font-size:14.5px;}
+.android-tag{
+  display:inline-block;margin-top:5px;background:var(--accent);color:#3A2600;
+  font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.02em;
+}
+
+/* rules */
+.rule-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;}
+.rule-list li{
+  display:flex;gap:10px;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;font-size:14.5px;box-shadow:var(--shadow);
+}
+.rule-list svg{flex:none;}
+
+/* faq handled by .acc too */
+
+/* cheat table */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-wrap input{
+  width:100%;min-height:48px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--card);color:var(--text);padding:0 14px 0 40px;font-size:16px;font-family:inherit;
+}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);}
+.cheat-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);font-size:14px;}
+.cheat-table th{
+  background:var(--primary);color:#fff;text-align:left;padding:10px 12px;font-size:13px;
+}
+.cheat-table td{padding:11px 12px;border-top:1px solid var(--border);color:var(--text);}
+.cheat-table td.menu{color:var(--primary-dark);font-weight:700;}
+.cheat-empty{display:none;text-align:center;color:var(--text-soft);padding:18px;font-size:14px;}
+
+/* footer */
+.contact-grid{display:grid;gap:10px;}
+.contact-row{
+  display:flex;justify-content:space-between;gap:10px;background:var(--card);
+  border:1px dashed var(--border);border-radius:12px;padding:12px 14px;font-size:14.5px;
+}
+.contact-row span:first-child{color:var(--text-soft);}
+.contact-row span:last-child{font-weight:700;color:var(--text);}
+.theme-row{display:flex;justify-content:center;margin-top:18px;}
+.theme-btn{
+  display:flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;
+  background:var(--chip-bg);color:var(--primary-dark);border:none;font-weight:700;font-size:14.5px;
+  cursor:pointer;font-family:inherit;
+}
+footer.foot{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:28px;}
+
+@media (min-width:600px){
+  .btn-row{flex-direction:row;}
+  .btn{flex:1;}
+}
+</style>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="8" fill="#4F46E5"/><path d="M7 17V9l6 8V9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19" cy="8" r="2" fill="#F5A524"/></svg>
+      NUSAKARYA
+    </div>
+    <button class="toc-btn" id="tocOpen" aria-haspopup="true">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Daftar Isi
+    </button>
+  </div>
+
+  <div class="toc-overlay" id="tocOverlay"></div>
+  <nav class="toc-panel" id="tocPanel" aria-label="Daftar isi">
+    <button class="toc-close" id="tocClose" aria-label="Tutup">✕</button>
+    <h3>Daftar Isi</h3>
+    <a href="#cover">Sampul</a>
+    <a href="#peran">Pilih peran Anda</a>
+    <a href="#langkah">Tiga langkah pertama</a>
+    <a href="#tugas">Tugas harian saya</a>
+    <a href="#alur">Empat alur kerja</a>
+    <a href="#hp">Aplikasi di ponsel</a>
+    <a href="#aturan">Aturan main</a>
+    <a href="#faq">Tanya jawab</a>
+    <a href="#contekan">Contekan</a>
+    <a href="#penutup">Butuh bantuan?</a>
+  </nav>
+
+  <main>
+    <!-- 1. COVER -->
+    <section class="section cover" id="cover">
+      <svg class="logo" width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <rect width="72" height="72" rx="20" fill="#4F46E5"/>
+        <path d="M20 48V24l16 24V24" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="52" cy="21" r="6" fill="#F5A524"/>
+      </svg>
+      <h1>Panduan NUSAKARYA</h1>
+      <p>Satu aplikasi untuk mencatat rapi pekerjaan lapangan, stok gudang, pembayaran mitra, dan gangguan pelanggan — supaya kerja Anda tercatat jelas dan mudah dibuktikan.</p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="https://erzamadana-ui.github.io/nusakarya/" target="_blank" rel="noopener">Buka Panel Admin</a>
+        <a class="btn btn-secondary" href="https://erzamadana-ui.github.io/nusakarya/teknisi/" target="_blank" rel="noopener">Pasang Aplikasi Lapangan</a>
+      </div>
+      <p class="hint">Panel Admin dibuka lewat browser komputer. Aplikasi Lapangan dipasang di HP Android lewat Chrome (lihat Bagian 6). APK Android juga tersedia di halaman Releases repo perusahaan.</p>
+      <span class="data-note">⚠️ Data yang tampil saat ini masih data contoh dan akan dibersihkan sebelum dipakai sungguhan.</span>
+    </section>
+
+    <!-- 2. PILIH PERAN -->
+    <section class="section" id="peran">
+      <h2>Pilih peran Anda</h2>
+      <p class="lead">Tekan salah satu tombol di bawah — halaman ini akan otomatis menyaring dan hanya menampilkan bagian yang relevan untuk pekerjaan Anda. Pilihan Anda akan diingat setiap kali membuka halaman ini lagi.</p>
+      <div class="role-chips" id="roleChips" role="group" aria-label="Pilih peran">
+        <button class="chip all-chip active" data-role="all">Semua peran</button>
+        <button class="chip" data-role="teknisi">Teknisi</button>
+        <button class="chip" data-role="supervisor">Supervisor / Dispatcher</button>
+        <button class="chip" data-role="gudang">Gudang</button>
+        <button class="chip" data-role="pengadaan">Pengadaan</button>
+        <button class="chip" data-role="commerce">Commerce</button>
+        <button class="chip" data-role="keuangan">Keuangan</button>
+        <button class="chip" data-role="hr">HR</button>
+        <button class="chip" data-role="pmqc">Project Manager / QC</button>
+        <button class="chip" data-role="manager">Manager</button>
+        <button class="chip" data-role="direktur">Direktur</button>
+      </div>
+      <p id="roleNote">Menampilkan semua bagian untuk semua peran.</p>
+    </section>
+
+    <!-- 3. TIGA LANGKAH PERTAMA -->
+    <section class="section" id="langkah" data-roles="all">
+      <h2>Tiga langkah pertama</h2>
+      <p class="lead">Lakukan ini saat pertama kali memakai NUSAKARYA.</p>
+
+      <div class="card step-card">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Masuk (Login)</h3>
+          <ol>
+            <li>Buka <b>erzamadana-ui.github.io/nusakarya</b> lewat browser (disarankan Chrome/Edge).</li>
+            <li>Masukkan email dan kata sandi yang diberikan administrator perusahaan.</li>
+            <li>Ketuk tombol <b>Masuk</b>.</li>
+          </ol>
+          <div class="box warn"><b>Hati-hati</b>Lupa kata sandi? Belum ada reset mandiri — hubungi administrator (lihat Bagian 10).</div>
+        </div>
+      </div>
+
+      <div class="card step-card">
+        <div class="step-num">2</div>
+        <div style="flex:1;">
+          <h3>Mengenali layar</h3>
+          <p>Enam bagian ini akan selalu Anda temui di Panel Admin:</p>
+          <svg class="screen-diagram" viewBox="0 0 340 210" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="338" height="208" rx="10" fill="var(--card)" stroke="var(--border)"/>
+            <rect x="1" y="1" width="72" height="208" rx="10" fill="var(--chip-bg)"/>
+            <rect x="12" y="20" width="50" height="7" rx="3" fill="var(--primary)" opacity=".55"/>
+            <rect x="12" y="36" width="50" height="7" rx="3" fill="var(--primary)" opacity=".3"/>
+            <rect x="12" y="52" width="50" height="7" rx="3" fill="var(--primary)" opacity=".3"/>
+            <rect x="12" y="68" width="50" height="7" rx="3" fill="var(--primary)" opacity=".3"/>
+            <rect x="86" y="12" width="150" height="18" rx="9" fill="var(--bg)" stroke="var(--border)"/>
+            <circle cx="97" cy="21" r="3" fill="var(--text-soft)"/>
+            <rect x="300" y="10" width="22" height="22" rx="11" fill="var(--primary)"/>
+            <rect x="86" y="42" width="60" height="34" rx="8" fill="var(--bg)" stroke="var(--border)"/>
+            <rect x="152" y="42" width="60" height="34" rx="8" fill="var(--bg)" stroke="var(--border)"/>
+            <rect x="218" y="42" width="60" height="34" rx="8" fill="var(--bg)" stroke="var(--border)"/>
+            <rect x="255" y="86" width="66" height="16" rx="8" fill="var(--accent)"/>
+            <rect x="86" y="110" width="235" height="12" rx="3" fill="var(--bg)" stroke="var(--border)"/>
+            <rect x="86" y="128" width="235" height="10" rx="3" fill="var(--bg)"/>
+            <rect x="86" y="144" width="235" height="10" rx="3" fill="var(--bg)"/>
+            <rect x="86" y="160" width="235" height="10" rx="3" fill="var(--bg)"/>
+            <g font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="800" fill="#fff">
+              <circle cx="46" cy="98" r="10" fill="var(--primary)"/><text x="46" y="102" text-anchor="middle">1</text>
+              <circle cx="96" cy="21" r="10" fill="var(--primary)"/><text x="96" y="25" text-anchor="middle">2</text>
+              <circle cx="311" cy="21" r="10" fill="var(--primary)"/><text x="311" y="25" text-anchor="middle">3</text>
+              <circle cx="116" cy="59" r="10" fill="var(--primary)"/><text x="116" y="63" text-anchor="middle">4</text>
+              <circle cx="288" cy="94" r="10" fill="var(--primary)"/><text x="288" y="98" text-anchor="middle">6</text>
+              <circle cx="96" cy="133" r="10" fill="var(--primary)"/><text x="96" y="137" text-anchor="middle">5</text>
+            </g>
+          </svg>
+          <ul class="legend">
+            <li><b>1</b> Sidebar — daftar menu sesuai hak jabatan Anda</li>
+            <li><b>2</b> Kotak pencarian cepat — tekan Ctrl+K / Cmd+K</li>
+            <li><b>3</b> Tombol bulat foto/inisial — akun, pengaturan, keluar</li>
+            <li><b>4</b> Kartu KPI — ringkasan angka penting</li>
+            <li><b>5</b> Tabel data — bisa dicari &amp; diurutkan</li>
+            <li><b>6</b> Tombol aksi (mis. "+ Tambah") — membuat data baru</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card step-card">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Mengganti kata sandi &amp; tampilan</h3>
+          <p>Buka menu <b>Pengaturan → Tampilan &amp; Template</b> untuk memilih mode terang/gelap dan template kesukaan Anda. Gunakan kata sandi minimal 8 karakter (huruf besar, huruf kecil, angka), jangan sama dengan akun pribadi lain, dan jangan dibagikan ke siapa pun.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. TUGAS HARIAN SAYA -->
+    <section class="section" id="tugas">
+      <h2>Tugas harian saya</h2>
+      <p class="lead">Ketuk peran Anda untuk membuka daftar tugas yang paling sering dikerjakan.</p>
+
+      <details class="acc" data-roles="teknisi">
+        <summary>Teknisi Lapangan</summary>
+        <div class="acc-body">
+          <p>Alat kerja utama Anda adalah <b>Aplikasi Lapangan di HP</b> (Bagian 6). Menu di Panel Admin ini hanya sesekali Anda pakai, misalnya untuk mengajukan cuti.</p>
+          <ul class="role-menus"><li>Cuti &amp; Izin</li><li>Lembur (SPL)</li><li>Kasbon</li><li>Dinas &amp; Reimbursement</li><li>Absensi (riwayat)</li></ul>
+          <div class="task"><h4>1. Mengajukan cuti</h4><ol><li>Buka menu Cuti &amp; Izin.</li><li>Ketuk "+ Ajukan Cuti".</li><li>Pilih jenis izin, isi tanggal, dan alasan.</li><li>Simpan — status "Diajukan" menunggu persetujuan atasan.</li></ol></div>
+          <div class="task"><h4>2. Mengajukan lembur (SPL)</h4><ol><li>Buka menu Pengajuan Lembur (SPL).</li><li>Ketuk "+ Ajukan".</li><li>Isi tanggal, jam mulai-selesai, dan pekerjaannya.</li><li>Simpan, tunggu persetujuan atasan.</li></ol></div>
+          <div class="task"><h4>3. Mengajukan kasbon</h4><ol><li>Buka menu Kasbon Karyawan.</li><li>Ketuk "+ Ajukan".</li><li>Isi nominal dan keperluan secara singkat.</li><li>Simpan, tunggu persetujuan.</li></ol></div>
+          <div class="task"><h4>4. Memeriksa riwayat absensi</h4><ol><li>Buka menu Absensi Lapangan.</li><li>Pilih bulan yang ingin dilihat.</li><li>Periksa jam masuk-pulang Anda.</li><li>Data keliru? Hubungi atasan/HR — Anda tidak bisa mengubahnya sendiri.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan mengajukan cuti/lembur mepet H-1. Tugas lapangan sehari-hari (checklist, foto bukti) dikerjakan di HP, bukan di sini.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="supervisor">
+        <summary>Supervisor / Dispatcher</summary>
+        <div class="acc-body">
+          <p>Mengatur penugasan teknisi dan memantau gangguan jaringan. Supervisor punya tambahan hak menyetujui yang tidak dimiliki Dispatcher.</p>
+          <ul class="role-menus"><li>Tiket Gangguan</li><li>Papan Dispatch</li><li>Work Order</li><li>Alarm NMS</li><li>Laporan SLA Pelanggan</li><li>Dashboard K3</li></ul>
+          <div class="task"><h4>1. Mencatat &amp; memantau tiket gangguan</h4><ol><li>Buka menu Tiket Gangguan.</li><li>Laporan masuk manual (telepon/WA)? Ketuk "+ Tambah Tiket".</li><li>Isi data pelanggan dan keluhan, Simpan.</li><li>Pantau tiket baru sepanjang hari.</li></ol></div>
+          <div class="task"><h4>2. Menugaskan teknisi</h4><ol><li>Buka menu Papan Dispatch.</li><li>Pilih tiket/WO yang belum ditugaskan.</li><li>Pilih teknisi yang tersedia.</li><li>Ketuk "Tugaskan".</li></ol></div>
+          <div class="task"><h4>3. Memverifikasi Work Order</h4><ol><li>Buka menu Work Order.</li><li>Pantau status: ditugaskan/dikerjakan/selesai.</li><li>Buka detail WO setelah bukti dikirim teknisi.</li><li>Ketuk "Verifikasi" (khusus Supervisor) bila lengkap.</li></ol></div>
+          <div class="task"><h4>4. Menindaklanjuti Alarm NMS</h4><ol><li>Buka menu Alarm NMS.</li><li>Lihat alarm baru dari sistem monitoring.</li><li>"Buat Tiket" bila perlu ditangani teknisi.</li><li>"Akui/Abaikan" bila alarm palsu.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan menugaskan teknisi yang sedang cuti/jadwal penuh, dan jangan menutup WO tanpa foto bukti lengkap.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="gudang">
+        <summary>Gudang / Inventory</summary>
+        <div class="acc-body">
+          <p>Mengelola gudang, stok material, dan aset ber-nomor seri.</p>
+          <ul class="role-menus"><li>Mutasi Stok</li><li>Permintaan Material</li><li>Pemakaian vs BoQ</li><li>Inventory NTE (Serial)</li><li>Stock Opname</li></ul>
+          <div class="task"><h4>1. Mencatat mutasi stok</h4><ol><li>Buka menu Mutasi Stok.</li><li>"+ Tambah Mutasi".</li><li>Pilih jenis: masuk, keluar, atau transfer antar gudang.</li><li>Pilih item &amp; jumlah, Simpan.</li></ol></div>
+          <div class="task"><h4>2. Memproses permintaan material</h4><ol><li>Buka menu Permintaan Material.</li><li>Pilih permintaan berstatus "Diajukan".</li><li>Periksa kebutuhan, ketuk "Setujui/Proses".</li><li>Catat pengeluaran barang dari gudang.</li></ol></div>
+          <div class="task"><h4>3. Mencatat pemakaian vs BoQ</h4><ol><li>Buka menu Pemakaian vs BoQ.</li><li>"+ Tambah Pemakaian".</li><li>Pilih proyek/BoQ, item, dan jumlah.</li><li>Simpan — sistem membandingkan dengan rencana.</li></ol></div>
+          <div class="task"><h4>4. Mendaftarkan barang ber-serial (NTE)</h4><ol><li>Buka menu Inventory NTE (Serial).</li><li>"+ Tambah".</li><li>Masukkan nomor seri dan tipe alat.</li><li>Simpan — alat siap dilacak riwayatnya.</li></ol></div>
+          <div class="task"><h4>5. Stock Opname</h4><ol><li>Buka menu Stock Opname.</li><li>"+ Buat Sesi Opname".</li><li>Hitung barang fisik, isi jumlah aktual.</li><li>Simpan — sistem tampilkan selisihnya.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan keluarkan barang fisik tanpa mencatat mutasinya lebih dulu — stok jadi tidak akurat.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="pengadaan">
+        <summary>Pengadaan / Procurement</summary>
+        <div class="acc-body">
+          <p>Mengurus pembelian barang/jasa dari vendor. Persetujuan akhir PR dan PO ada di tangan Manager Procurement.</p>
+          <ul class="role-menus"><li>Purchase Request</li><li>RFQ &amp; Penawaran</li><li>Purchase Order</li><li>Good Receive</li><li>Invoice Vendor (3-way)</li></ul>
+          <div class="task"><h4>1. Membuat Purchase Request (PR)</h4><ol><li>Buka menu Purchase Request.</li><li>"+ Tambah PR".</li><li>Pilih item dari Katalog Item, isi jumlah.</li><li>Simpan, lalu "Ajukan" ke Manager Procurement.</li></ol></div>
+          <div class="task"><h4>2. Membuat RFQ &amp; membandingkan penawaran</h4><ol><li>Buka menu RFQ &amp; Penawaran.</li><li>"+ Tambah RFQ" dari PR yang disetujui.</li><li>Undang beberapa vendor.</li><li>Masukkan &amp; bandingkan penawaran yang masuk.</li></ol></div>
+          <div class="task"><h4>3. Membuat Purchase Order (PO)</h4><ol><li>Buka menu Purchase Order.</li><li>"+ Tambah PO" dari RFQ pemenang.</li><li>Periksa kembali item &amp; harga.</li><li>Simpan, lalu "Ajukan" persetujuan.</li></ol></div>
+          <div class="task"><h4>4. Mencatat penerimaan barang (Good Receive)</h4><ol><li>Buka menu Good Receive.</li><li>Pilih PO yang barangnya sudah datang.</li><li>"+ Tambah Penerimaan", isi jumlah diterima.</li><li>Simpan.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan buat PO sebelum PR disetujui. Cocokkan selalu Invoice Vendor ke PO &amp; Good Receive (3-way match) agar pembayaran tidak tertunda.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="commerce">
+        <summary>Commerce</summary>
+        <div class="acc-body">
+          <p>Mengurus pelanggan, kontrak, dan penagihan.</p>
+          <ul class="role-menus"><li>Kontrak</li><li>SPK</li><li>Klaim Progres / BA</li><li>BAST</li><li>Invoice Pelanggan (AR)</li><li>Komplain &amp; CSAT</li></ul>
+          <div class="task"><h4>1. Mendaftarkan pelanggan &amp; kontrak</h4><ol><li>Buka Pelanggan &amp; Principal, "+ Tambah", isi data, Simpan.</li><li>Buka Kontrak, "+ Tambah Kontrak", kaitkan ke pelanggan.</li><li>Isi tanggal mulai-berakhir &amp; nilai kontrak.</li><li>Simpan.</li></ol></div>
+          <div class="task"><h4>2. Membuat SPK</h4><ol><li>Buka menu SPK.</li><li>"+ Tambah SPK", pilih kontrak dasarnya.</li><li>Isi lingkup pekerjaan &amp; nilai SPK.</li><li>Simpan.</li></ol></div>
+          <div class="task"><h4>3. Mengajukan Klaim Progres / BA</h4><ol><li>Buka Klaim Progres / BA.</li><li>"+ Tambah Klaim", pilih item BoQ yang selesai.</li><li>Simpan, lalu "Ajukan".</li></ol></div>
+          <div class="task"><h4>4. Membuat BAST &amp; Invoice Pelanggan</h4><ol><li>Setelah BAST ditandatangani pelanggan, buka BAST, "+ Tambah", Simpan.</li><li>Buka Invoice Pelanggan (AR), "+ Tambah Invoice" dari BAST.</li><li>Simpan lalu kirim ke pelanggan.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan buat invoice sebelum BAST selesai/ditandatangani. Klaim progres untuk item BoQ yang belum selesai berisiko kena Penalti SLA.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="keuangan">
+        <summary>Keuangan / Finance</summary>
+        <div class="acc-body">
+          <p>Mencatat transaksi keuangan sehari-hari. Persetujuan nilai besar tetap di tangan Manager Finance.</p>
+          <ul class="role-menus"><li>Hutang &amp; Bayar Mitra (AP)</li><li>Piutang (AR)</li><li>Jurnal Umum</li><li>Kas Kecil</li><li>Bank &amp; Rekonsiliasi</li></ul>
+          <div class="task"><h4>1. Mencatat tagihan vendor (AP)</h4><ol><li>Buka Hutang &amp; Bayar Mitra (AP).</li><li>"+ Tambah Tagihan", pilih invoice vendor terkait.</li><li>Simpan, ajukan verifikasi.</li><li>Setelah dibayar, tandai "Lunas".</li></ol></div>
+          <div class="task"><h4>2. Mengelola Piutang (AR)</h4><ol><li>Buka menu Piutang (AR).</li><li>Pantau invoice pelanggan yang belum lunas.</li><li>Saat pelanggan membayar, ubah status jadi "Lunas".</li></ol></div>
+          <div class="task"><h4>3. Membuat Jurnal Umum</h4><ol><li>Buka Jurnal Umum.</li><li>"+ Tambah Jurnal", pilih akun dari COA.</li><li>Isi debit &amp; kredit sampai seimbang.</li><li>Simpan, lalu "Posting".</li></ol></div>
+          <div class="task"><h4>4. Mengelola Kas Kecil</h4><ol><li>Buka Kas Kecil.</li><li>"+ Tambah Pengeluaran", isi keperluan &amp; nominal, lampirkan bukti.</li><li>Simpan, ajukan persetujuan.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan simpan jurnal yang debit-kreditnya tidak seimbang. Jangan tandai "Lunas" sebelum pembayaran benar-benar diterima.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="hr">
+        <summary>HR</summary>
+        <div class="acc-body">
+          <p>Mengurus administrasi karyawan sehari-hari. Persetujuan Cuti/Lembur/Kasbon dan pembuatan periode Payroll tetap wewenang Manager HR.</p>
+          <ul class="role-menus"><li>Data Karyawan</li><li>Kontrak &amp; Sertifikasi</li><li>Roster &amp; Shift</li><li>Rekrutmen</li><li>Kompetensi &amp; Pelatihan</li></ul>
+          <div class="task"><h4>1. Mengelola data karyawan</h4><ol><li>Buka Data Karyawan.</li><li>Karyawan baru: "+ Tambah Karyawan", isi data, Simpan.</li><li>Karyawan resign: buka datanya, ubah status "Nonaktif".</li></ol></div>
+          <div class="task"><h4>2. Mengelola Kontrak &amp; Sertifikasi</h4><ol><li>Buka Kontrak &amp; Sertifikasi.</li><li>"+ Tambah", pilih karyawan &amp; jenis dokumen.</li><li>Isi tanggal berlaku-berakhir, Simpan.</li><li>Pantau data yang segera kadaluarsa.</li></ol></div>
+          <div class="task"><h4>3. Menyusun Roster &amp; Shift</h4><ol><li>Buka Roster &amp; Shift.</li><li>Ketuk sel jadwal minggu yang diatur.</li><li>Pilih shift karyawan tersebut.</li><li>Simpan.</li></ol></div>
+          <div class="task"><h4>4. Memproses Rekrutmen</h4><ol><li>Buka Rekrutmen.</li><li>"+ Tambah Lowongan", isi posisi &amp; kualifikasi.</li><li>Pelamar masuk: "+ Tambah Pelamar", perbarui status seleksi.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan lupa nonaktifkan akun karyawan resign. Persetujuan Cuti/Lembur/Kasbon bukan wewenang Staf HR — itu di Manager HR.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="pmqc">
+        <summary>Project Manager / QC (Deployment)</summary>
+        <div class="acc-body">
+          <p>Menangani proyek pemasangan baru dari survei sampai serah terima. QC juga memverifikasi kualitas pekerjaan lapangan lewat Work Order.</p>
+          <ul class="role-menus"><li>Proyek</li><li>Survey</li><li>DRM</li><li>BoQ Plan vs Actual</li><li>Quality Control</li><li>BAST &amp; RFS</li></ul>
+          <div class="task"><h4>1. Membuat &amp; mengelola proyek</h4><ol><li>Buka menu Proyek.</li><li>"+ Tambah Proyek", isi nama, pelanggan, lokasi, target selesai.</li><li>Simpan.</li></ol></div>
+          <div class="task"><h4>2. Mengisi Survey &amp; DRM</h4><ol><li>Buka Survey, "+ Tambah Survey", isi hasil survei lokasi, Simpan.</li><li>Buka DRM, lengkapi rancangan desain jaringan, Simpan.</li></ol></div>
+          <div class="task"><h4>3. Mengisi BoQ &amp; Progres</h4><ol><li>Buka BoQ Plan vs Actual, masukkan rencana material, Simpan.</li><li>Buka Progres &amp; Kurva S, "+ Tambah Update Progres", isi persentase &amp; tanggal.</li></ol></div>
+          <div class="task"><h4>4. Quality Control &amp; Punch List</h4><ol><li>Buka Quality Control, "+ Tambah Hasil QC", catat temuan.</li><li>Ada cacat? Buka Punch List &amp; Defect, "+ Tambah", tugaskan perbaikan, tutup setelah selesai.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Jangan isi update progres tanpa foto bukti. Jangan tutup Punch List sebelum perbaikan di lapangan benar-benar selesai.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="manager">
+        <summary>Manager Unit (Commerce, Deployment, Finance, HR, Inventory, Operations, Procurement)</summary>
+        <div class="acc-body">
+          <p>Anda bisa melihat hampir semua modul untuk koordinasi, tetapi hanya bisa mengubah dan menyetujui data pada modul unit Anda sendiri.</p>
+          <ul class="role-menus"><li>Inbox Persetujuan</li><li>Dashboard unit Anda</li><li>Modul unit lain (mode baca)</li></ul>
+          <div class="task"><h4>1. Memeriksa Inbox Persetujuan setiap hari</h4><ol><li>Buka Inbox Persetujuan.</li><li>Tinjau dokumen yang menunggu keputusan Anda.</li><li>Buka detail sebelum menyetujui/menolak.</li></ol></div>
+          <div class="task"><h4>2. Menyetujui / menolak dokumen</h4><ol><li>Buka modul terkait unit Anda.</li><li>Pilih dokumen berstatus "Diajukan".</li><li>Periksa detail &amp; lampiran.</li><li>"Setujui", atau "Tolak" dengan alasan.</li></ol></div>
+          <div class="task"><h4>3. Memantau dashboard unit</h4><ol><li>Buka Dashboard unit Anda.</li><li>Pantau kartu KPI &amp; tren.</li><li>Tindak lanjuti angka yang tidak wajar.</li></ol></div>
+          <div class="task"><h4>4. Meninjau laporan lintas unit</h4><ol><li>Buka modul unit lain (mode baca).</li><li>Pantau data relevan untuk koordinasi tim.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Hak tulis Anda terbatas di modul unit sendiri — modul lain hanya bisa dilihat. Jangan biarkan Inbox Persetujuan menumpuk.</div>
+        </div>
+      </details>
+
+      <details class="acc" data-roles="direktur">
+        <summary>Direktur / Komisaris</summary>
+        <div class="acc-body">
+          <p>Berada di posisi tertinggi organisasi, fokus pada pemantauan menyeluruh, bukan entri data harian. Komisaris murni membaca; Direktur punya tambahan hak menyetujui dokumen yang eskalasi ke levelnya.</p>
+          <ul class="role-menus"><li>Portal Eksekutif</li><li>Ringkasan Perusahaan</li><li>Inbox Persetujuan (Direktur)</li></ul>
+          <div class="task"><h4>1. Membuka Portal Eksekutif</h4><ol><li>Buka Portal Eksekutif.</li><li>Pantau ringkasan kinerja seluruh unit.</li></ol></div>
+          <div class="task"><h4>2. Meninjau Ringkasan Perusahaan</h4><ol><li>Buka Ringkasan Perusahaan.</li><li>Lihat kartu KPI utama: pendapatan, SLA, produktivitas.</li></ol></div>
+          <div class="task"><h4>3. (Direktur) Menindaklanjuti Inbox Persetujuan</h4><ol><li>Buka Inbox Persetujuan.</li><li>Tinjau dokumen yang eskalasi ke level Direktur.</li><li>"Setujui" atau "Tolak" dengan alasan.</li></ol></div>
+          <div class="task"><h4>4. Meninjau laporan Finance &amp; Operasional</h4><ol><li>Buka Finance (mode baca): Piutang, Anggaran, Arus Kas.</li><li>Buka Dashboard Operations &amp; Deployment untuk SLA dan progres proyek.</li></ol></div>
+          <div class="box warn"><b>Hati-hati</b>Komisaris tidak punya hak menyetujui — arahkan permintaan approval ke Direktur/Manager unit terkait.</div>
+        </div>
+      </details>
+    </section>
+
+    <!-- 5. EMPAT ALUR KERJA -->
+    <section class="section" id="alur">
+      <h2>Empat alur kerja</h2>
+      <p class="lead">Satu pekerjaan sering melibatkan beberapa unit sekaligus. Geser ke samping untuk melihat urutannya.</p>
+
+      <div class="card" data-roles="supervisor teknisi commerce manager direktur">
+        <h3>Gangguan Pelanggan</h3>
+        <div class="wf-scroll"><div id="wf1"></div></div>
+        <p class="wf-caption">Tiket → Dispatch → Work Order → Bukti Foto → Verifikasi → SLA / Penalti.</p>
+      </div>
+
+      <div class="card" data-roles="commerce pmqc gudang teknisi manager direktur">
+        <h3>Pemasangan Baru</h3>
+        <div class="wf-scroll"><div id="wf2"></div></div>
+        <p class="wf-caption">Kontrak/SPK → Survey &amp; BoQ → Material → Pemasangan &amp; QC → BAST → Tagihan.</p>
+      </div>
+
+      <div class="card" data-roles="pengadaan gudang keuangan manager direktur">
+        <h3>Pengadaan Barang</h3>
+        <div class="wf-scroll"><div id="wf3"></div></div>
+        <p class="wf-caption">PR → Persetujuan → RFQ → PO → Penerimaan → Invoice → Bayar Vendor.</p>
+      </div>
+
+      <div class="card" data-roles="teknisi hr keuangan manager direktur">
+        <h3>Gaji &amp; Pembayaran Mitra</h3>
+        <div class="wf-scroll"><div id="wf4"></div></div>
+        <p class="wf-caption">Absensi/Poin → Koreksi → Payroll/Payout → Persetujuan → Pembayaran.</p>
+      </div>
+    </section>
+
+    <!-- 6. APLIKASI DI PONSEL -->
+    <section class="section" id="hp" data-roles="teknisi">
+      <h2>Aplikasi di ponsel</h2>
+      <p class="lead">Ini alat kerja utama Teknisi sehari-hari di lapangan, dibuka lewat Chrome pada <b>erzamadana-ui.github.io/nusakarya/teknisi/</b>. APK Android juga tersedia di halaman Releases repo perusahaan.</p>
+
+      <div class="card">
+        <h3>Cara memasang di layar utama</h3>
+        <div class="phone-step">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="#4F46E5" stroke-width="1.6"/></svg></div>
+          <div><h4>1. Buka Chrome di HP Android</h4><p>Ketik alamat Aplikasi Lapangan, tekan Enter.</p></div>
+        </div>
+        <div class="phone-step">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="6" cy="10" r="1.6" fill="#4F46E5"/><circle cx="10" cy="10" r="1.6" fill="#4F46E5"/><circle cx="14" cy="10" r="1.6" fill="#4F46E5"/></svg></div>
+          <div><h4>2. Ketuk titik tiga</h4><p>Pojok kanan atas Chrome.</p></div>
+        </div>
+        <div class="phone-step">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="#4F46E5" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div><h4>3. Pilih "Tambahkan ke Layar Utama"</h4><p>Ketuk Tambahkan/Add sekali lagi untuk konfirmasi. Ikon aplikasi muncul di layar utama seperti aplikasi lainnya.</p></div>
+        </div>
+        <div class="box tips"><b>Tips</b>Setelah dipasang, buka langsung dari ikonnya tanpa mengetik alamat lagi.</div>
+      </div>
+
+      <div class="card">
+        <h3>Yang bisa Anda lakukan di Aplikasi Lapangan</h3>
+        <div class="phone-step"><div class="ico">📍</div><div><h4>Absen masuk &amp; pulang</h4><p>Ketuk "Absen Masuk" saat tiba di lokasi, izinkan akses GPS. Ketuk "Absen Pulang" di akhir hari.</p></div></div>
+        <div class="phone-step"><div class="ico">📋</div><div><h4>Mengerjakan tugas (Work Order)</h4><p>Buka daftar tugas Anda, ketuk "Mulai Kerjakan", ikuti checklist yang tersedia.</p></div></div>
+        <div class="phone-step"><div class="ico">📷</div><div><h4>Foto bukti (evidence)</h4><p>Ketuk "Ambil Foto/Evidence" — foto WAJIB diambil langsung pakai kamera aplikasi saat itu juga, bukan dari galeri.<span class="android-tag">Terbaik di APK Android</span></p></div></div>
+        <div class="phone-step"><div class="ico">📦</div><div><h4>Pemakaian material</h4><p>Buka bagian Pemakaian Material pada layar tugas, pilih item &amp; jumlah, Simpan.</p></div></div>
+        <div class="phone-step"><div class="ico">🔎</div><div><h4>Pindai nomor seri</h4><p>Ketuk "Pindai Nomor Seri", arahkan kamera ke barcode/QR perangkat.<span class="android-tag">Hanya APK Android</span></p></div></div>
+        <div class="phone-step"><div class="ico">✍️</div><div><h4>Tanda tangan pelanggan</h4><p>Ketuk "Minta Tanda Tangan Pelanggan", serahkan HP untuk ditandatangani di layar.<span class="android-tag">Hanya APK Android</span></p></div></div>
+        <div class="phone-step"><div class="ico">⚠️</div><div><h4>Lapor insiden K3</h4><p>Buka "Lapor Insiden K3", isi jenis, lokasi, kronologi, lampirkan foto, "Kirim Laporan".</p></div></div>
+        <div class="phone-step"><div class="ico">🧾</div><div><h4>Ajukan lembur / kasbon</h4><p>Buka menu Pengajuan, pilih Lembur (SPL) atau Kasbon, isi data, "Ajukan".</p></div></div>
+        <div class="box warn"><b>Hati-hati</b>Fitur pindai nomor seri, tanda tangan pelanggan, dan foto ber-lokasi (GPS) otomatis hanya berjalan baik di Aplikasi Lapangan Android — tidak praktis lewat komputer.</div>
+      </div>
+    </section>
+
+    <!-- 7. ATURAN MAIN -->
+    <section class="section" id="aturan" data-roles="all">
+      <h2>Aturan main</h2>
+      <p class="lead">Berlaku untuk seluruh karyawan tanpa kecuali.</p>
+      <ul class="rule-list">
+        <li><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#FDEAF0"/><path d="M7 7l8 8M15 7l-8 8" stroke="#B0245B" stroke-width="1.8" stroke-linecap="round"/></svg>Jangan berbagi akun atau kata sandi dengan siapa pun — setiap tindakan tercatat atas nama pemilik akun.</li>
+        <li><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#EEEDFB"/><path d="M6 11l3.5 3.5L16 8" stroke="#4F46E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Foto bukti pekerjaan harus asli dan diambil langsung di lokasi saat itu juga, bukan dari galeri.</li>
+        <li><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#FDEAF0"/><path d="M7 7l8 8M15 7l-8 8" stroke="#B0245B" stroke-width="1.8" stroke-linecap="round"/></svg>Data pelanggan tidak boleh disebarluaskan di luar keperluan pekerjaan resmi.</li>
+        <li><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#EEEDFB"/><path d="M6 11l3.5 3.5L16 8" stroke="#4F46E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Semua perubahan data tercatat otomatis di Log Audit — siapa mengubah apa dan kapan selalu bisa ditelusuri.</li>
+      </ul>
+      <div class="box warn" style="margin-top:12px;"><b>Hati-hati</b>Pelanggaran terhadap aturan di atas dapat dikenai Tindakan Disiplin sesuai ketentuan perusahaan.</div>
+    </section>
+
+    <!-- 8. TANYA JAWAB -->
+    <section class="section" id="faq" data-roles="all">
+      <h2>Tanya jawab</h2>
+      <details class="acc"><summary>Kenapa menu saya sedikit dibanding teman satu kantor?</summary><div class="acc-body">Karena menu diatur menurut jabatan di Pengaturan → Hak Akses Jabatan. Wajar berbeda antar jabatan — kalau merasa ada menu yang seharusnya Anda miliki, sampaikan ke administrator.</div></details>
+      <details class="acc"><summary>Saya salah input data, bagaimana membetulkannya?</summary><div class="acc-body">Selama masih berstatus Draft/Diajukan, buka datanya dan ketuk "Ubah". Kalau sudah disetujui/diproses, hubungi atasan Anda — sebagian data perlu proses pembatalan resmi, bukan dihapus, agar riwayat tetap tercatat di Log Audit.</div></details>
+      <details class="acc"><summary>Foto bukti saya gagal terunggah, bagaimana?</summary><div class="acc-body">Pastikan sinyal internet stabil lalu coba lagi, atau pindah ke tempat dengan sinyal lebih baik. Jangan tinggalkan tugas tanpa foto bukti karena tugas tidak bisa ditandai selesai tanpanya.</div></details>
+      <details class="acc"><summary>Kenapa tombol Simpan tidak bisa ditekan (abu-abu)?</summary><div class="acc-body">Biasanya ada kolom wajib yang belum terisi (ditandai merah/bintang), atau hak akses Anda pada modul itu hanya baca (tidak punya hak Tulis). Periksa keduanya.</div></details>
+      <details class="acc"><summary>HP saya tidak punya menu "Tambahkan ke Layar Utama", kenapa?</summary><div class="acc-body">Pastikan Anda membuka alamatnya lewat aplikasi Chrome (bukan browser bawaan lain), lalu ketuk titik tiga di kanan atas. Masih tidak muncul? Perbarui Chrome lewat Play Store.</div></details>
+      <details class="acc"><summary>Saya lupa kata sandi, bagaimana?</summary><div class="acc-body">Hubungi administrator perusahaan Anda (lihat Bagian 10) untuk direset. Saat ini belum ada fitur reset kata sandi mandiri.</div></details>
+      <details class="acc"><summary>Bolehkah saya pinjam akun rekan kerja?</summary><div class="acc-body">Tidak boleh sama sekali. Setiap tindakan tercatat atas nama pemilik akun. Hubungi administrator untuk masalah akun Anda sendiri.</div></details>
+      <details class="acc"><summary>Data yang saya lihat kok terlihat aneh/tidak masuk akal?</summary><div class="acc-body">Aplikasi saat ini masih berisi data contoh (dummy) untuk latihan, dan akan dibersihkan sebelum dipakai sungguhan. Tidak perlu khawatir.</div></details>
+      <details class="acc"><summary>Bagaimana mencari menu dengan cepat tanpa menggulir sidebar?</summary><div class="acc-body">Tekan Ctrl+K (Windows) atau Cmd+K (Mac) di komputer, lalu ketik nama menu yang dicari.</div></details>
+      <details class="acc"><summary>Saya salah menyetujui/menolak dokumen, bagaimana?</summary><div class="acc-body">Segera hubungi atasan/administrator. Selalu periksa detail dokumen dengan teliti sebelum menekan Setujui/Tolak agar tidak terulang.</div></details>
+      <details class="acc"><summary>Kenapa tampilan tiba-tiba berubah gelap/terang?</summary><div class="acc-body">Kemungkinan pengaturan tampilan berubah. Buka Pengaturan → Tampilan &amp; Template untuk memilih mode dan template sesuai selera Anda.</div></details>
+      <details class="acc"><summary>Bisakah dibuka di laptop dan HP bersamaan?</summary><div class="acc-body">Bisa. Panel Admin (komputer) dan Aplikasi Lapangan (HP) memakai akun yang sama, tapi alamatnya berbeda — lihat Bagian 3 dan Bagian 6.</div></details>
+      <details class="acc"><summary>Kenapa saat saya cetak/ekspor data, hasilnya kosong?</summary><div class="acc-body">Periksa filter yang aktif di halaman itu (tanggal, status, dll.) — kemungkinan sedang menyaring data yang memang tidak ada. Kosongkan filter lalu coba lagi.</div></details>
+      <details class="acc"><summary>Bolehkah membagikan data pelanggan/foto ke luar aplikasi (WA pribadi, dll.)?</summary><div class="acc-body">Tidak boleh, kecuali untuk keperluan pekerjaan resmi dan atas izin atasan. Lihat Bagian 7 tentang aturan main.</div></details>
+      <details class="acc"><summary>Saya butuh mengajukan sesuatu tapi menunya tidak ada, kenapa?</summary><div class="acc-body">Kemungkinan besar itu wewenang jabatan lain (misalnya persetujuan pembayaran adalah wewenang Manager Finance). Sampaikan permintaan Anda ke atasan langsung.</div></details>
+      <details class="acc"><summary>Kenapa nomor dokumen (misal PR/2026/0001) otomatis dan tidak bisa diubah?</summary><div class="acc-body">Nomor dibuat otomatis secara berurutan oleh sistem agar tidak ada nomor tertukar atau ganda. Ini normal, tidak perlu diubah manual.</div></details>
+      <details class="acc"><summary>Kamera tidak muncul saat memindai nomor seri, kenapa?</summary><div class="acc-body">Pastikan Anda memakai Aplikasi Lapangan di HP Android dan sudah memberi izin akses Kamera. Fitur ini tidak tersedia di komputer.</div></details>
+      <details class="acc"><summary>Setelah klik Simpan, kenapa data belum langsung muncul di daftar?</summary><div class="acc-body">Coba muat ulang (refresh) halaman. Jika ada filter tanggal/status aktif, data baru Anda mungkin tersaring keluar — coba kosongkan filternya.</div></details>
+    </section>
+
+    <!-- 9. CONTEKAN -->
+    <section class="section" id="contekan">
+      <h2>Contekan</h2>
+      <p class="lead">Cari tugas Anda, temukan menunya.</p>
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.2" stroke="#5B5768" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="#5B5768" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="cheatSearch" type="text" placeholder="Ketik: mis. 'cuti', 'invoice', 'absen'...">
+      </div>
+      <table class="cheat-table">
+        <thead><tr><th>Saya mau…</th><th>Buka menu…</th></tr></thead>
+        <tbody id="cheatBody">
+          <tr data-roles="teknisi"><td>Absen masuk / pulang</td><td class="menu">Aplikasi Lapangan (HP) — layar utama</td></tr>
+          <tr data-roles="teknisi hr"><td>Mengajukan cuti</td><td class="menu">Cuti &amp; Izin</td></tr>
+          <tr data-roles="teknisi hr"><td>Mengajukan lembur (SPL)</td><td class="menu">Pengajuan Lembur (SPL)</td></tr>
+          <tr data-roles="teknisi hr"><td>Mengajukan kasbon</td><td class="menu">Kasbon Karyawan</td></tr>
+          <tr data-roles="hr manager"><td>Melihat slip gaji</td><td class="menu">Payroll &amp; Slip Gaji</td></tr>
+          <tr data-roles="supervisor"><td>Mencatat tiket gangguan pelanggan</td><td class="menu">Tiket Gangguan</td></tr>
+          <tr data-roles="supervisor"><td>Menugaskan teknisi ke lapangan</td><td class="menu">Papan Dispatch</td></tr>
+          <tr data-roles="supervisor teknisi"><td>Memantau/menutup Work Order</td><td class="menu">Work Order</td></tr>
+          <tr data-roles="teknisi supervisor"><td>Melapor insiden K3</td><td class="menu">Laporan Insiden</td></tr>
+          <tr data-roles="teknisi supervisor"><td>Mengajukan izin kerja berbahaya</td><td class="menu">Izin Kerja (Work Permit)</td></tr>
+          <tr data-roles="gudang"><td>Mencatat mutasi stok barang</td><td class="menu">Mutasi Stok</td></tr>
+          <tr data-roles="gudang teknisi pmqc"><td>Meminta/memproses material proyek</td><td class="menu">Permintaan Material</td></tr>
+          <tr data-roles="gudang"><td>Menghitung stok fisik gudang</td><td class="menu">Stock Opname</td></tr>
+          <tr data-roles="pengadaan gudang pmqc"><td>Membuat Purchase Request</td><td class="menu">Purchase Request</td></tr>
+          <tr data-roles="pengadaan manager"><td>Membuat Purchase Order</td><td class="menu">Purchase Order</td></tr>
+          <tr data-roles="pengadaan gudang"><td>Mencatat barang diterima dari vendor</td><td class="menu">Good Receive</td></tr>
+          <tr data-roles="pengadaan"><td>Memasukkan invoice vendor</td><td class="menu">Invoice Vendor (3-way)</td></tr>
+          <tr data-roles="commerce manager"><td>Membuat/mengubah kontrak pelanggan</td><td class="menu">Kontrak</td></tr>
+          <tr data-roles="commerce"><td>Membuat SPK</td><td class="menu">SPK</td></tr>
+          <tr data-roles="commerce pmqc"><td>Membuat BAST &amp; tagihan pelanggan</td><td class="menu">BAST, lalu Invoice Pelanggan (AR)</td></tr>
+          <tr data-roles="keuangan"><td>Mencatat tagihan/bayar mitra</td><td class="menu">Hutang &amp; Bayar Mitra (AP)</td></tr>
+          <tr data-roles="keuangan"><td>Membuat jurnal akuntansi</td><td class="menu">Jurnal Umum</td></tr>
+          <tr data-roles="keuangan"><td>Mengajukan/mencairkan kas kecil</td><td class="menu">Kas Kecil</td></tr>
+          <tr data-roles="hr"><td>Menambah data karyawan baru</td><td class="menu">Data Karyawan</td></tr>
+          <tr data-roles="supervisor manager direktur"><td>Menyetujui/menolak dokumen</td><td class="menu">Inbox Persetujuan</td></tr>
+        </tbody>
+      </table>
+      <p class="cheat-empty" id="cheatEmpty">Tidak ada tugas yang cocok. Coba kata kunci lain.</p>
+      <p class="hint" style="margin-top:10px;">Tekan Ctrl+K (Windows) / Cmd+K (Mac) di Panel Admin untuk mencari menu apa saja dengan cepat.</p>
+    </section>
+
+    <!-- 10. PENUTUP -->
+    <section class="section" id="penutup" data-roles="all">
+      <h2>Butuh bantuan?</h2>
+      <div class="card">
+        <div class="contact-grid">
+          <div class="contact-row"><span>Administrator Sistem</span><span>_______________</span></div>
+          <div class="contact-row"><span>No. HP / WhatsApp</span><span>_______________</span></div>
+          <div class="contact-row"><span>Atasan langsung Anda</span><span>_______________</span></div>
+          <div class="contact-row"><span>Kontak HR</span><span>_______________</span></div>
+          <div class="contact-row"><span>Jam layanan bantuan</span><span>_______________</span></div>
+        </div>
+        <div class="box warn" style="margin-top:14px;"><b>Hati-hati</b>Lengkapi kolom di atas secara tertulis sebelum panduan ini dibagikan ke seluruh karyawan.</div>
+      </div>
+      <div class="theme-row">
+        <button class="theme-btn" id="themeToggle">🌓 Ganti tampilan terang / gelap</button>
+      </div>
+      <footer class="foot">Panduan NUSAKARYA — untuk sosialisasi internal karyawan.</footer>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Theme toggle ---------- */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  function applyTheme(t){
+    if(t === 'dark'){ root.setAttribute('data-theme','dark'); }
+    else if(t === 'light'){ root.setAttribute('data-theme','light'); }
+    else { root.removeAttribute('data-theme'); }
+  }
+  var savedTheme = null;
+  try{ savedTheme = localStorage.getItem('nk_theme'); }catch(e){}
+  applyTheme(savedTheme);
+  if(themeBtn){
+    themeBtn.addEventListener('click', function(){
+      var current = root.getAttribute('data-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var effectiveDark = current === 'dark' || (!current && prefersDark);
+      var next = effectiveDark ? 'light' : 'dark';
+      applyTheme(next);
+      try{ localStorage.setItem('nk_theme', next); }catch(e){}
+    });
+  }
+
+  /* ---------- TOC panel ---------- */
+  var tocPanel = document.getElementById('tocPanel');
+  var tocOverlay = document.getElementById('tocOverlay');
+  var tocOpen = document.getElementById('tocOpen');
+  var tocClose = document.getElementById('tocClose');
+  function openToc(){ tocPanel.classList.add('open'); tocOverlay.classList.add('open'); }
+  function closeToc(){ tocPanel.classList.remove('open'); tocOverlay.classList.remove('open'); }
+  if(tocOpen) tocOpen.addEventListener('click', openToc);
+  if(tocClose) tocClose.addEventListener('click', closeToc);
+  if(tocOverlay) tocOverlay.addEventListener('click', closeToc);
+  Array.prototype.forEach.call(tocPanel.querySelectorAll('a'), function(a){
+    a.addEventListener('click', closeToc);
+  });
+
+  /* ---------- Role filter ---------- */
+  var chips = Array.prototype.slice.call(document.querySelectorAll('#roleChips .chip'));
+  var roleNote = document.getElementById('roleNote');
+  var roleLabels = {
+    all:'semua peran', teknisi:'Teknisi', supervisor:'Supervisor / Dispatcher', gudang:'Gudang',
+    pengadaan:'Pengadaan', commerce:'Commerce', keuangan:'Keuangan', hr:'HR',
+    pmqc:'Project Manager / QC', manager:'Manager', direktur:'Direktur'
+  };
+
+  function applyRole(role){
+    chips.forEach(function(c){ c.classList.toggle('active', c.getAttribute('data-role') === role); });
+    var nodes = document.querySelectorAll('[data-roles]');
+    Array.prototype.forEach.call(nodes, function(el){
+      var roles = el.getAttribute('data-roles').split(' ');
+      var show = role === 'all' || roles.indexOf('all') !== -1 || roles.indexOf(role) !== -1;
+      el.style.display = show ? '' : 'none';
+    });
+    if(roleNote){
+      roleNote.textContent = role === 'all'
+        ? 'Menampilkan semua bagian untuk semua peran.'
+        : 'Menampilkan bagian untuk peran: ' + roleLabels[role] + '. Ketuk "Semua peran" untuk melihat kembali semuanya.';
+    }
+    filterCheat();
+  }
+
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      var role = c.getAttribute('data-role');
+      try{ localStorage.setItem('nk_role', role); }catch(e){}
+      applyRole(role);
+    });
+  });
+
+  var savedRole = 'all';
+  try{ savedRole = localStorage.getItem('nk_role') || 'all'; }catch(e){}
+  applyRole(savedRole);
+
+  /* ---------- Cheat sheet search + role filter ---------- */
+  var cheatInput = document.getElementById('cheatSearch');
+  var cheatRows = Array.prototype.slice.call(document.querySelectorAll('#cheatBody tr'));
+  var cheatEmpty = document.getElementById('cheatEmpty');
+  var currentRole = 'all';
+  function filterCheat(){
+    currentRole = document.querySelector('#roleChips .chip.active') ? document.querySelector('#roleChips .chip.active').getAttribute('data-role') : 'all';
+    var q = (cheatInput && cheatInput.value || '').toLowerCase().trim();
+    var visibleCount = 0;
+    cheatRows.forEach(function(row){
+      var roles = row.getAttribute('data-roles').split(' ');
+      var roleOk = currentRole === 'all' || roles.indexOf(currentRole) !== -1;
+      var text = row.textContent.toLowerCase();
+      var textOk = q === '' || text.indexOf(q) !== -1;
+      var show = roleOk && textOk;
+      row.style.display = show ? '' : 'none';
+      if(show) visibleCount++;
+    });
+    if(cheatEmpty) cheatEmpty.style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+  if(cheatInput) cheatInput.addEventListener('input', filterCheat);
+  filterCheat();
+
+  /* ---------- Workflow SVG diagrams ---------- */
+  function buildFlow(containerId, nodes){
+    var el = document.getElementById(containerId);
+    if(!el) return;
+    var w = 190, gap = 46, h = 118, pad = 14;
+    var totalW = nodes.length * w + (nodes.length - 1) * gap + pad * 2;
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS,'svg');
+    svg.setAttribute('viewBox','0 0 ' + totalW + ' ' + (h + pad*2));
+    svg.setAttribute('width', totalW);
+    svg.setAttribute('height', h + pad*2);
+    var css = getComputedStyle(document.documentElement);
+    var cardColor = css.getPropertyValue('--card').trim() || '#fff';
+    var borderColor = css.getPropertyValue('--border').trim() || '#E6E4ED';
+    var primary = css.getPropertyValue('--primary').trim() || '#4F46E5';
+    var textColor = css.getPropertyValue('--text').trim() || '#1E1B2E';
+    var softColor = css.getPropertyValue('--text-soft').trim() || '#5B5768';
+    var accent = css.getPropertyValue('--accent').trim() || '#F5A524';
+
+    nodes.forEach(function(n, i){
+      var x = pad + i * (w + gap);
+      var y = pad;
+      var g = document.createElementNS(svgNS,'g');
+
+      var numCircle = document.createElementNS(svgNS,'circle');
+      numCircle.setAttribute('cx', x + 18); numCircle.setAttribute('cy', y + 16); numCircle.setAttribute('r', 13);
+      numCircle.setAttribute('fill', accent);
+      g.appendChild(numCircle);
+      var numText = document.createElementNS(svgNS,'text');
+      numText.setAttribute('x', x + 18); numText.setAttribute('y', y + 20);
+      numText.setAttribute('text-anchor','middle'); numText.setAttribute('font-size','13'); numText.setAttribute('font-weight','800');
+      numText.setAttribute('fill','#3A2600'); numText.textContent = (i+1);
+      g.appendChild(numText);
+
+      var rect = document.createElementNS(svgNS,'rect');
+      rect.setAttribute('x', x); rect.setAttribute('y', y + 30); rect.setAttribute('width', w); rect.setAttribute('height', h - 30);
+      rect.setAttribute('rx', 12); rect.setAttribute('fill', cardColor); rect.setAttribute('stroke', borderColor);
+      g.appendChild(rect);
+
+      var title = document.createElementNS(svgNS,'text');
+      title.setAttribute('x', x + 14); title.setAttribute('y', y + 56);
+      title.setAttribute('font-size','13.5'); title.setAttribute('font-weight','800'); title.setAttribute('fill', primary);
+      wrapText(title, n.menu, 22, svgNS);
+      g.appendChild(title);
+
+      var who = document.createElementNS(svgNS,'text');
+      who.setAttribute('x', x + 14); who.setAttribute('y', y + h - 12);
+      who.setAttribute('font-size','12'); who.setAttribute('fill', softColor); who.setAttribute('font-weight','600');
+      who.textContent = n.who;
+      g.appendChild(who);
+
+      svg.appendChild(g);
+
+      if(i < nodes.length - 1){
+        var ax1 = x + w, ax2 = x + w + gap;
+        var ay = y + 30 + (h-30)/2;
+        var line = document.createElementNS(svgNS,'line');
+        line.setAttribute('x1', ax1); line.setAttribute('y1', ay); line.setAttribute('x2', ax2 - 8); line.setAttribute('y2', ay);
+        line.setAttribute('stroke', primary); line.setAttribute('stroke-width','2');
+        svg.appendChild(line);
+        var arrow = document.createElementNS(svgNS,'path');
+        arrow.setAttribute('d', 'M ' + (ax2-8) + ' ' + (ay-5) + ' L ' + ax2 + ' ' + ay + ' L ' + (ax2-8) + ' ' + (ay+5) + ' Z');
+        arrow.setAttribute('fill', primary);
+        svg.appendChild(arrow);
+      }
+    });
+    el.innerHTML = '';
+    el.appendChild(svg);
+  }
+
+  function wrapText(textEl, str, maxChars, svgNS){
+    var words = str.split(' ');
+    var lines = [];
+    var cur = '';
+    words.forEach(function(word){
+      var test = cur ? cur + ' ' + word : word;
+      if(test.length > maxChars && cur){ lines.push(cur); cur = word; }
+      else { cur = test; }
+    });
+    if(cur) lines.push(cur);
+    lines = lines.slice(0,3);
+    var x = textEl.getAttribute('x');
+    lines.forEach(function(line, i){
+      var tspan = document.createElementNS(svgNS,'tspan');
+      tspan.setAttribute('x', x);
+      tspan.setAttribute('dy', i === 0 ? 0 : 15);
+      tspan.textContent = line;
+      textEl.appendChild(tspan);
+    });
+  }
+
+  buildFlow('wf1', [
+    {menu:'Tiket Gangguan', who:'Dispatcher/Supervisor'},
+    {menu:'Papan Dispatch', who:'Dispatcher'},
+    {menu:'Work Order (HP)', who:'Teknisi'},
+    {menu:'Foto Bukti (HP)', who:'Teknisi'},
+    {menu:'Verifikasi WO', who:'Supervisor'},
+    {menu:'Laporan SLA', who:'Sistem'},
+    {menu:'Penalti SLA', who:'Staf Commerce'}
+  ]);
+  buildFlow('wf2', [
+    {menu:'Kontrak & SPK', who:'Staf Commerce'},
+    {menu:'Survey, DRM, BoQ Plan', who:'PM / QC'},
+    {menu:'Permintaan Material', who:'Staf Inventory'},
+    {menu:'Pemasangan & Progres', who:'Teknisi, PM'},
+    {menu:'Quality Control', who:'QC'},
+    {menu:'BAST & RFS → BAST', who:'PM/QC, Commerce'},
+    {menu:'Invoice Pelanggan (AR)', who:'Staf Commerce'}
+  ]);
+  buildFlow('wf3', [
+    {menu:'Purchase Request', who:'Unit pemohon'},
+    {menu:'Persetujuan PR', who:'Manager Procurement'},
+    {menu:'RFQ & Penawaran', who:'Staf Procurement'},
+    {menu:'Purchase Order', who:'Staf & Manager Procurement'},
+    {menu:'Good Receive', who:'Staf Inventory/Procurement'},
+    {menu:'Invoice Vendor (3-way)', who:'Staf Procurement'},
+    {menu:'Hutang & Bayar Mitra (AP)', who:'Staf Finance'}
+  ]);
+  buildFlow('wf4', [
+    {menu:'Absensi / Poin Mitra (HP)', who:'Teknisi, Mitra'},
+    {menu:'Koreksi data', who:'Staf HR'},
+    {menu:'Payroll / Payout Mitra', who:'Manager HR'},
+    {menu:'Persetujuan', who:'Manager HR, Direktur'},
+    {menu:'Hutang & Bayar Mitra (AP)', who:'Staf Finance'}
+  ]);
+})();
+</script>
