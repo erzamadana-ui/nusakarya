@@ -1,3 +1,25 @@
+# Cara membangun APK NUSAKARYA Teknisi
+
+## Cara yang dipakai sekarang — tanpa akun Expo
+Workflow `.github/workflows/android-apk.yml` membangun APK langsung di runner
+GitHub memakai Gradle. Runner `ubuntu-latest` sudah memuat Android SDK dan JDK,
+jadi tidak perlu akun Expo, tidak perlu EAS, dan tidak perlu token apa pun.
+
+**Menjalankannya:**
+1. Buka https://github.com/erzamadana-ui/nusakarya/actions
+2. Pilih workflow **Build APK NUSAKARYA Teknisi**
+3. Tekan **Run workflow**, pilih varian `release`, lalu jalankan.
+4. Setelah selesai (sekitar 10–15 menit), APK tersedia di dua tempat:
+   - lampiran artefak pada halaman run tersebut, dan
+   - halaman **Releases** repo, dengan tautan yang bisa dibuka langsung dari ponsel.
+
+**Catatan penandatanganan.** APK ditandatangani dengan kunci debug bawaan
+React Native. Cukup untuk dipasang dan dipakai internal, tetapi **tidak bisa
+diunggah ke Google Play**. Untuk Play Store nanti diperlukan keystore unggah
+tersendiri yang disimpan sebagai secret repo.
+
+---
+
 # Cara Build APK NUSAKARYA Teknisi (lewat EAS Build)
 
 Dokumen ini untuk **pemilik akun/repo** (`erzamadana-ui/nusakarya`). Setelah langkah

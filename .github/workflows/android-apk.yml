@@ -1,0 +1,103 @@
+name: Build APK NUSAKARYA Teknisi
+
+# Membangun APK Android langsung di runner GitHub memakai Gradle.
+# Runner ubuntu-latest sudah memuat Android SDK dan JDK, sehingga TIDAK perlu
+# akun Expo maupun EAS. Hasilnya diunggah sebagai artefak workflow dan
+# diterbitkan sebagai GitHub Release agar bisa diunduh langsung dari ponsel.
+
+on:
+  workflow_dispatch:
+    inputs:
+      varian:
+        description: 'Varian build'
+        type: choice
+        options: [release, debug]
+        default: release
+  push:
+    tags: ['apk-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Pasang dependensi
+        working-directory: apps/mobile
+        run: npm ci
+
+      - name: Siapkan proyek Android (expo prebuild)
+        working-directory: apps/mobile
+        env:
+          EXPO_NO_TELEMETRY: '1'
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Tentukan nomor build
+        id: ver
+        run: echo "build=$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Bangun APK
+        working-directory: apps/mobile/android
+        env:
+          VARIAN: ${{ github.event.inputs.varian || 'release' }}
+        run: |
+          chmod +x gradlew
+          if [ "$VARIAN" = "debug" ]; then
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          else
+            # Template React Native memakai keystore debug untuk release bila
+            # belum ada keystore unggah sendiri — cukup untuk distribusi internal,
+            # tetapi TIDAK bisa diunggah ke Google Play.
+            ./gradlew assembleRelease --no-daemon --stacktrace || ./gradlew assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: Kumpulkan hasil
+        id: apk
+        run: |
+          APK=$(find apps/mobile/android/app/build/outputs/apk -name "*.apk" | head -1)
+          echo "Ditemukan: $APK"
+          mkdir -p dist-apk
+          cp "$APK" "dist-apk/nusakarya-teknisi-${{ steps.ver.outputs.build }}.apk"
+          ls -lh dist-apk
+          echo "path=dist-apk/nusakarya-teknisi-${{ steps.ver.outputs.build }}.apk" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nusakarya-teknisi-apk
+          path: dist-apk/*.apk
+          retention-days: 30
+
+      - name: Terbitkan sebagai Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ steps.ver.outputs.build }}
+          name: NUSAKARYA Teknisi ${{ steps.ver.outputs.build }}
+          body: |
+            APK aplikasi lapangan NUSAKARYA.
+
+            **Cara memasang di Android**
+            1. Unduh berkas `.apk` di bawah lewat peramban ponsel.
+            2. Saat muncul peringatan "sumber tidak dikenal", izinkan Chrome memasang aplikasi.
+            3. Buka berkas yang sudah terunduh, lalu tekan Pasang.
+            4. Masuk memakai email dan kata sandi dari administrator.
+
+            Ditandatangani dengan kunci debug — cukup untuk pemakaian internal,
+            belum bisa diunggah ke Google Play.
+          files: dist-apk/*.apk
+          fail_on_unmatched_files: true

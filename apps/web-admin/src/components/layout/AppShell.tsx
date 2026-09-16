@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation, Outlet, Link } from 'react-router-do
 import {
   LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
   Settings, Circle, ChevronsLeft, ChevronsRight, Menu, Search, Sun, Moon, Bell, LogOut,
-  CornerDownLeft, AlertTriangle, Rocket, Facebook, Instagram, Youtube, Linkedin, X as XIcon,
+  CornerDownLeft, AlertTriangle, Facebook, Instagram, Youtube, Linkedin, X as XIcon, ChevronDown,
   Gauge, BadgeCheck, CalendarClock, CalendarDays, PlaneTakeoff, Coins, UserPlus, GraduationCap,
   Gavel, Star, Receipt, FileText, FileSignature, ClipboardList, ClipboardCheck, PackageSearch,
   Warehouse, ScanBarcode, ArrowLeftRight, PackageCheck, ClipboardPen, Car, Hammer, Ticket,
@@ -16,7 +16,7 @@ import {
 import { useAuth, ROLE_LABEL } from '@/lib/auth'
 import { NAV, ALL_ITEMS } from '@/lib/nav'
 import { inisial } from '@/lib/format'
-import { getMode, setMode } from '@/lib/theme'
+import { getMode, setMode, getTheme, THEMES } from '@/lib/theme'
 import { cx, Badge } from '@/components/ui'
 
 const ICONS: Record<string, any> = {
@@ -92,11 +92,20 @@ function Footer() {
 export default function AppShell() {
   const { profile, company, signOut, can } = useAuth()
   const nav = useNavigate(); const loc = useLocation()
+  const theme = getTheme()
   const [open, setOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [cmd, setCmd] = useState(false)
   const [q, setQ] = useState('')
   const [dark, setDark] = useState(() => getMode() === 'dark')
+  const [promoOpen, setPromoOpen] = useState(() => {
+    try { return localStorage.getItem('nk-promo') !== 'tutup' } catch { return true }
+  })
+  const togglePromo = () => setPromoOpen(v => {
+    const n = !v
+    try { localStorage.setItem('nk-promo', n ? 'buka' : 'tutup') } catch {}
+    return n
+  })
 
   useEffect(() => { setMode(dark ? 'dark' : 'light') }, [dark])
 
@@ -152,14 +161,24 @@ export default function AppShell() {
       </nav>
 
       {!collapsed && (
-        <div className="mx-3 mb-3 rounded-md bg-primary-50 p-4 text-center">
-          <div className="mx-auto mb-2 w-10 h-10 rounded-md bg-primary-500 text-white grid place-items-center"><Rocket size={18} /></div>
-          <div className="text-[11px] font-bold uppercase tracking-wide text-primary-700">Template Operations</div>
-          <p className="mt-1 text-caption text-ink-500 leading-snug">Ganti tampilan kapan saja di Pengaturan.</p>
-          <button onClick={() => nav('/pengaturan/tampilan')}
-            className="mt-3 w-full h-9 rounded-sm bg-primary-500 text-white text-caption font-semibold hover:bg-primary-600">
-            Atur Tampilan
+        <div className="mx-3 mb-3 rounded-md bg-primary-50 overflow-hidden">
+          <button onClick={togglePromo} aria-expanded={promoOpen}
+            className="w-full flex items-center gap-2 px-3 h-10 text-left hover:bg-primary-100/60">
+            <Palette size={15} className="text-primary-600 shrink-0" />
+            <span className="flex-1 text-[11px] font-bold uppercase tracking-wide text-primary-700 truncate">Tampilan</span>
+            <ChevronDown size={15} className={cx('text-primary-600 transition-transform', !promoOpen && '-rotate-90')} />
           </button>
+          {promoOpen && (
+            <div className="px-3 pb-3">
+              <p className="text-caption text-ink-500 leading-snug">
+                Template aktif: <span className="font-semibold text-ink-700">{THEMES.find(t => t.value === theme)?.label ?? 'Operations'}</span>.
+                Ganti template dan mode terang/gelap kapan saja.
+              </p>
+              <button onClick={() => nav('/pengaturan/tampilan')}
+                className="mt-2.5 w-full h-9 rounded-sm bg-primary-500 text-white text-caption font-semibold hover:bg-primary-600">
+                Atur Tampilan
+              </button>
+            </div>)}
         </div>)}
 
       <div className="border-t border-sidebar-border">
