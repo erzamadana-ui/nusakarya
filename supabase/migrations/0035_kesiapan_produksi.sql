@@ -1,3 +1,7 @@
+-- Kolom penanda data contoh. Ditaruh di sini karena file inilah yang pertama memakainya;
+-- tanpa baris ini, migrasi dari nol gagal di 0035. Idempoten: aman dijalankan ulang.
+alter table public.companies add column if not exists is_demo boolean not null default false;
+
 -- =====================================================================
 -- 0035_kesiapan_produksi.sql
 -- Halaman "Kesiapan Produksi": satu tempat yang menunjukkan apa saja

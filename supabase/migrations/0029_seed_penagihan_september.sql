@@ -1,3 +1,28 @@
+-- =====================================================================
+-- CATATAN SINKRONISASI (ditambahkan 16 September 2026)
+-- ---------------------------------------------------------------------
+-- Berkas ini ADA di repositori tapi TIDAK tercatat di riwayat migrasi
+-- basis data (supabase_migrations.schema_migrations) — tidak ada entri
+-- bernama 0029 di sana. Meskipun begitu, DATANYA SUDAH ADA di basis data,
+-- jadi seed ini pernah dijalankan di luar mekanisme migrasi. Diperiksa
+-- langsung ke basis data pada 16 September 2026:
+--   * ar_invoices dengan inv_no LIKE 'INV/2026/09%'          : 6 baris
+--   * ar_payments dengan payment_no LIKE 'RCV/2026/09%'      : 2 baris
+--   * cash_flows 'Pelunasan INV/2026/09...' (ref_type ar_invoice) : 2 baris
+-- Jumlah itu persis sama dengan yang dihasilkan skrip di bawah (limit 6
+-- progress_claims, 2 di antaranya berstatus 'lunas').
+--
+-- JANGAN dijalankan ulang terhadap basis data yang sedang berjalan.
+-- Seluruh perintah di bawah memakai `on conflict do nothing`, tapi
+-- ar_invoices hanya unik pada (company_id, inv_no) — kalau daftar
+-- progress_claims yang terpilih berubah, nomor invoice bisa jatuh ke
+-- klaim yang berbeda dan menghasilkan baris ganda yang menyesatkan.
+--
+-- Berkas ini tetap disimpan supaya lingkungan baru (basis data kosong)
+-- bisa menghasilkan data contoh yang sama. Untuk basis data produksi,
+-- lewati saja — ini DATA CONTOH.
+-- =====================================================================
+
 -- 0029 : Penagihan September 2026
 -- Data contoh sebelumnya berhenti di Agustus sehingga seluruh KPI "bulan berjalan"
 -- pada dashboard tampil Rp 0 dan margin kosong. Migrasi ini menambahkan penagihan

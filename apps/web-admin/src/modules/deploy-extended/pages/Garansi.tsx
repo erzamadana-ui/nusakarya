@@ -41,7 +41,7 @@ export default function Garansi() {
  const [w, extra, spk, alertRows, tkt] = await Promise.all([
  list('warranty_periods', { order: { col: 'end_date', asc: true }, limit: 2000 }),
  fetchProjectsAndEmployees(),
- list('spk', { select: 'id,spk_no,title,project_id', order: { col: 'spk_no', asc: false }, limit: 2000 }),
+ list('spk', { select: 'id,spk_no,title', order: { col: 'spk_no', asc: false }, limit: 2000 }),
  list('v_warranty_alert', { order: { col: 'days_remaining', asc: true }, limit: 500 }),
  list('tickets', { select: 'id,ticket_no,reported_at,category,severity,status,branch_id,description', order: { col: 'reported_at', asc: false }, limit: 5000 }),
  ])
