@@ -30,8 +30,9 @@ import { getOne, insert, list, nextDocNo, signedUrl, update, uploadFile } from '
 import { ambilLokasi, bukaGoogleMaps } from '@/lib/location'
 import { num, todayISO, tglJam } from '@/lib/format'
 import type { Attachment, Bast, ItemCatalog, MaterialUsage, PunchList, Serial, WoChecklist, WorkOrder } from '@/types/db'
+import { WO, WO_LANGKAH, labelWo } from '@/lib/status'
 
-const LANGKAH = ['ditugaskan', 'diterima', 'berjalan', 'selesai']
+const LANGKAH = WO_LANGKAH
 const JENIS_LABEL: Record<string, string> = {
   instalasi: 'Instalasi',
   assurance: 'Assurance',
@@ -141,8 +142,8 @@ export default function DetailWorkOrder() {
     }
   }
 
-  const terima = () => ubahStatus({ status: 'diterima', assigned_at: wo?.assigned_at ?? new Date().toISOString() })
-  const mulai = () => ubahStatus({ status: 'berjalan', started_at: new Date().toISOString() })
+  const terima = () => ubahStatus({ status: WO.DITERIMA, assigned_at: wo?.assigned_at ?? new Date().toISOString() })
+  const mulai = () => ubahStatus({ status: WO.BERJALAN, started_at: new Date().toISOString() })
 
   const checklistBelumLengkap = checklist.filter((c) => c.is_mandatory && !isiKosong(c))
   const evidenceKurang = Math.max(0, 2 - evidence.length)
@@ -165,7 +166,7 @@ export default function DetailWorkOrder() {
         onPress: () => {
           const mulaiMs = wo?.started_at ? new Date(wo.started_at).getTime() : Date.now()
           ubahStatus({
-            status: 'selesai',
+            status: WO.SELESAI,
             finished_at: new Date().toISOString(),
             duration_minutes: Math.max(0, Math.round((Date.now() - mulaiMs) / 60000)),
           })
@@ -179,7 +180,7 @@ export default function DetailWorkOrder() {
       Alert.alert('Alasan wajib diisi', 'Isi alasan kegagalan pekerjaan.')
       return
     }
-    ubahStatus({ status: 'gagal', fail_reason: alasanGagal.trim(), finished_at: new Date().toISOString() }).then(() => {
+    ubahStatus({ status: WO.GAGAL, fail_reason: alasanGagal.trim(), finished_at: new Date().toISOString() }).then(() => {
       setGagalMode(false)
       setAlasanGagal('')
     })
@@ -422,7 +423,7 @@ export default function DetailWorkOrder() {
     return <KesalahanState pesan="Work Order tidak ditemukan." onCoba={muat} />
   }
 
-  const langkahAktif = wo.status === 'gagal' ? -1 : LANGKAH.indexOf(wo.status)
+  const langkahAktif = wo.status === WO.GAGAL ? -1 : (LANGKAH as readonly string[]).indexOf(wo.status)
 
   return (
     <ScrollView
@@ -465,13 +466,13 @@ export default function DetailWorkOrder() {
         <Text style={[styles.judulKartu, { color: t.text }]}>Status Pekerjaan</Text>
         <View style={styles.stepperRow}>
           {LANGKAH.map((s, i) => {
-            const tercapai = wo.status === 'selesai' ? true : wo.status === 'gagal' ? i === 0 : i <= langkahAktif
+            const tercapai = wo.status === WO.SELESAI ? true : wo.status === WO.GAGAL ? i === 0 : i <= langkahAktif
             return (
               <React.Fragment key={s}>
                 <View style={styles.stepDotWrap}>
                   <View style={[styles.stepDot, { backgroundColor: tercapai ? t.primary : t.border }]} />
                   <Text style={[styles.stepLabel, { color: tercapai ? t.text : t.textMuted }]} numberOfLines={1}>
-                    {s}
+                    {labelWo(s)}
                   </Text>
                 </View>
                 {i < LANGKAH.length - 1 ? <View style={[styles.stepLine, { backgroundColor: tercapai ? t.primary : t.border }]} /> : null}
@@ -479,19 +480,19 @@ export default function DetailWorkOrder() {
             )
           })}
         </View>
-        {wo.status === 'gagal' ? (
+        {wo.status === WO.GAGAL ? (
           <View style={{ marginTop: 10 }}>
-            <Lencana>gagal</Lencana>
+            <Lencana>Gagal</Lencana>
             <Text style={{ color: t.textMuted, marginTop: 6, fontSize: 14 }}>Alasan: {wo.fail_reason ?? '-'}</Text>
           </View>
         ) : null}
 
         <View style={{ marginTop: 14, gap: 10 }}>
-          {(wo.status === 'draft' || wo.status === 'ditugaskan') && (
+          {(wo.status === WO.DRAFT || wo.status === WO.DITUGASKAN) && (
             <Tombol label="Terima Work Order" onPress={terima} loading={aksiProses} full />
           )}
-          {wo.status === 'diterima' && <Tombol label="Mulai Pekerjaan" onPress={mulai} loading={aksiProses} full />}
-          {wo.status === 'berjalan' && !gagalMode && (
+          {wo.status === WO.DITERIMA && <Tombol label="Mulai Pekerjaan" onPress={mulai} loading={aksiProses} full />}
+          {(wo.status === WO.BERJALAN || wo.status === WO.TUNGGU_MATERIAL) && !gagalMode && (
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <Tombol label="Selesai" onPress={selesaikan} loading={aksiProses} full />
@@ -501,7 +502,7 @@ export default function DetailWorkOrder() {
               </View>
             </View>
           )}
-          {wo.status === 'berjalan' && gagalMode && (
+          {(wo.status === WO.BERJALAN || wo.status === WO.TUNGGU_MATERIAL) && gagalMode && (
             <View style={{ gap: 10 }}>
               <Ladang label="Alasan Kegagalan" wajib multiline value={alasanGagal} onChangeText={setAlasanGagal} placeholder="Jelaskan kendala di lapangan..." />
               <View style={{ flexDirection: 'row', gap: 10 }}>

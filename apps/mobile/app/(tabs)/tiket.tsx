@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth'
 import { list } from '@/lib/db'
 import { sisaWaktu } from '@/lib/format'
 import type { Ticket } from '@/types/db'
+import { TIKET } from '@/lib/status'
 
 export default function DaftarTiket() {
   const t = useTheme()
@@ -49,7 +50,7 @@ export default function DaftarTiket() {
   )
 
   const warnaSla = (dueISO?: string | null, status?: string) => {
-    if (!dueISO || status === 'closed' || status === 'selesai') return t.textMuted
+    if (!dueISO || status === TIKET.DITUTUP || status === TIKET.SELESAI) return t.textMuted
     const sisaMin = (new Date(dueISO).getTime() - Date.now()) / 60000
     if (sisaMin < 0) return t.bahaya
     if (sisaMin <= 120) return t.peringatan

@@ -14,6 +14,7 @@ import { ambilLokasi, Koordinat } from '@/lib/location'
 import { tgl, todayISO } from '@/lib/format'
 import { JENIS_INSIDEN } from '@/lib/k3'
 import type { Branch, WorkOrder } from '@/types/db'
+import { WO_AKTIF } from '@/lib/status'
 
 export default function LaporInsiden() {
   const t = useTheme()
@@ -54,7 +55,7 @@ export default function LaporInsiden() {
       try {
         const wos = await list<WorkOrder>('work_orders', {
           eq: { assigned_to: employee?.id },
-          in: { status: ['ditugaskan', 'diterima', 'berjalan'] },
+          in: { status: WO_AKTIF as unknown as string[] },
           order: { col: 'scheduled_at', asc: false },
           limit: 30,
         })

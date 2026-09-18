@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth'
 import supabase from '@/lib/supabase'
 import { num, periodCode, sisaWaktu, todayISO, tgl } from '@/lib/format'
 import type { Attendance } from '@/types/db'
+import { WO } from '@/lib/status'
 
 type Ringkasan = {
   woHariIni: number
@@ -40,8 +41,8 @@ export default function Beranda() {
       const [absRes, woHariIniRes, woSelesaiRes, woPoinRes, prodRes, tiketRes] = await Promise.all([
         supabase.from('attendances').select('*').eq('employee_id', employee.id).eq('work_date', today).maybeSingle(),
         supabase.from('work_orders').select('id', { count: 'exact', head: true }).eq('assigned_to', employee.id).gte('scheduled_at', `${today}T00:00:00`).lte('scheduled_at', `${today}T23:59:59`),
-        supabase.from('work_orders').select('id', { count: 'exact', head: true }).eq('assigned_to', employee.id).eq('status', 'selesai').gte('finished_at', `${today}T00:00:00`).lte('finished_at', `${today}T23:59:59`),
-        supabase.from('work_orders').select('points,finished_at').eq('assigned_to', employee.id).eq('status', 'selesai').gte('finished_at', `${today}T00:00:00`).lte('finished_at', `${today}T23:59:59`),
+        supabase.from('work_orders').select('id', { count: 'exact', head: true }).eq('assigned_to', employee.id).eq('status', WO.SELESAI).gte('finished_at', `${today}T00:00:00`).lte('finished_at', `${today}T23:59:59`),
+        supabase.from('work_orders').select('points,finished_at').eq('assigned_to', employee.id).eq('status', WO.SELESAI).gte('finished_at', `${today}T00:00:00`).lte('finished_at', `${today}T23:59:59`),
         supabase.from('v_dashboard_productivity').select('total_points,target_points').eq('employee_id', employee.id).eq('period_code', periodCode()).maybeSingle(),
         supabase.from('tickets').select('id,sla_due_at,status').eq('assigned_to', employee.id).not('status', 'in', '(closed,selesai,resolved)'),
       ])

@@ -15,11 +15,15 @@ import { getOne, insert, list, uploadFile } from '@/lib/db'
 import { rupiah, tgl, todayISO } from '@/lib/format'
 import type { BusinessTrip, TripExpense } from '@/types/db'
 
+// Nilai WAJIB sama dengan CHECK constraint trip_expenses_category_check:
+// transport | penginapan | makan | bbm | tol | lain
 const KATEGORI_BIAYA: Opsi[] = [
-  { value: 'transportasi', label: 'Transportasi' },
-  { value: 'akomodasi', label: 'Akomodasi / Penginapan' },
+  { value: 'transport', label: 'Transportasi' },
+  { value: 'penginapan', label: 'Akomodasi / Penginapan' },
   { value: 'makan', label: 'Makan & Minum' },
-  { value: 'lain_lain', label: 'Lain-lain' },
+  { value: 'bbm', label: 'BBM' },
+  { value: 'tol', label: 'Tol & Parkir' },
+  { value: 'lain', label: 'Lain-lain' },
 ]
 
 const STATUS_BISA_TAMBAH = ['diajukan', 'disetujui', 'berjalan']

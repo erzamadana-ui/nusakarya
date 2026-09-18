@@ -136,6 +136,14 @@ export default function InvoiceVendor() {
  const newPaid = Number(detail.paid_amount) + Number(payForm.amount)
  const newStatus = newPaid >= Number(detail.total) - 0.5 ? 'lunas' : 'dibayar_sebagian'
  await update('vendor_invoices', detail.id, { paid_amount: newPaid, status: newStatus })
+ // Setiap pembayaran vendor wajib muncul di arus kas; sebelumnya jalur ini tidak
+ // mencatatnya sama sekali sehingga dashboard kas tidak mencerminkan pengeluaran nyata.
+ await insert('cash_flows', {
+ company_id: profile!.company_id, flow_date: payForm.payment_date, direction: 'out',
+ category: 'Pembayaran Vendor (AP)', description: `${detail.inv_no} — pembayaran invoice vendor`,
+ amount: Number(payForm.amount), ref_type: 'ap_payments', ref_id: (created as any).id,
+ created_by: profile!.id,
+ })
  setPayments(v => [created, ...v]); setDetail({ ...detail, paid_amount: newPaid, status: newStatus })
  setPayForm({ payment_date: todayISO(), amount: Number(detail.total) - newPaid, method: 'transfer', bank_ref: '', note: '' })
  toast.push('Pembayaran dicatat'); load()

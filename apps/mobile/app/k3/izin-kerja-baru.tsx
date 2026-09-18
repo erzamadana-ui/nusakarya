@@ -12,6 +12,7 @@ import { insert, list, nextDocNo } from '@/lib/db'
 import { tglJam } from '@/lib/format'
 import { JENIS_IZIN_KERJA, templateIzin } from '@/lib/k3'
 import type { WorkOrder } from '@/types/db'
+import { WO_AKTIF } from '@/lib/status'
 
 const DURASI_OPSI = [
   { label: '4 Jam', jam: 4 },
@@ -40,7 +41,7 @@ export default function IzinKerjaBaru() {
     if (!employee?.id) return
     list<WorkOrder>('work_orders', {
       eq: { assigned_to: employee.id },
-      in: { status: ['ditugaskan', 'diterima', 'berjalan'] },
+      in: { status: WO_AKTIF as unknown as string[] },
       order: { col: 'scheduled_at', asc: false },
       limit: 30,
     })

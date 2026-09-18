@@ -58,7 +58,9 @@ export default function PO() {
  const [v, w, pr, it] = await Promise.all([
  list('vendors', { eq: { status: 'aktif' }, order: { col: 'name', asc: true } }),
  list('warehouses', { eq: { is_active: true }, order: { col: 'name', asc: true } }),
- list('purchase_requests', { order: { col: 'pr_no', asc: false } }),
+ // Hanya PR yang sudah sah boleh jadi dasar PO. Sebelumnya SEMUA PR dimuat —
+ // termasuk yang masih draft, baru diajukan, bahkan yang sudah ditolak.
+ list('purchase_requests', { in: { status: ['disetujui', 'sebagian_po'] }, order: { col: 'pr_no', asc: false } }),
  list('item_catalog', { eq: { is_active: true }, order: { col: 'name', asc: true } }),
  ])
  setVendors(v); setWarehouses(w); setPrs(pr); setItems(it)

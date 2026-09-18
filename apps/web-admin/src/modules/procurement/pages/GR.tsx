@@ -94,6 +94,18 @@ export default function GR() {
  })
  const poItem = await list('po_items', { eq: { id: r.po_item_id } })
  if (poItem[0]) await update('po_items', r.po_item_id, { qty_received: Number(poItem[0].qty_received) + Number(r.qty_received) })
+ // Penerimaan barang HARUS menambah saldo gudang. Sebelumnya tidak ada pencatatan
+ // pergerakan stok sama sekali, sehingga stok tidak pernah bertambah dari penerimaan.
+ if (Number(r.qty_received) > 0 && po?.warehouse_id) {
+ const moveNo = await nextDocNo(profile!.company_id, 'MV')
+ await insert('stock_movements', {
+ company_id: profile!.company_id, move_no: moveNo, move_date: grDate, move_type: 'GR',
+ item_id: r.item_id, qty: Number(r.qty_received), uom: r.uom,
+ to_warehouse_id: po.warehouse_id, price: Number(poItem[0]?.price ?? 0),
+ ref_type: 'goods_receipts', ref_id: gr.id,
+ note: `Penerimaan ${gr_no} dari ${po?.po_no ?? 'PO'}`, created_by: profile!.id,
+ })
+ }
  }
  const allItems = await list('po_items', { eq: { po_id: selectedPoId } })
  const fully = allItems.every((r: any) => Number(r.qty_received) >= Number(r.qty) - 0.0001)

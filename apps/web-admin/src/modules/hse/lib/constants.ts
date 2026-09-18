@@ -10,6 +10,7 @@ export const INCIDENT_TYPES: (Opt & { rank: number })[] = [
   { value: 'sedang', label: 'Cedera Sedang', tone: 'orange', rank: 2 },
   { value: 'berat', label: 'Cedera Berat', tone: 'red', rank: 3 },
   { value: 'fatal', label: 'Fatal', tone: 'red', rank: 4 },
+  { value: 'kerusakan_aset', label: 'Kerusakan Aset/Properti', tone: 'amber', rank: 1 },
 ]
 export const incidentTypeLabel = (v?: string) => INCIDENT_TYPES.find(t => t.value === v)?.label ?? (v || '-')
 export const incidentTypeTone = (v?: string) => INCIDENT_TYPES.find(t => t.value === v)?.tone ?? 'slate'
@@ -78,6 +79,7 @@ export function computeInspectionResult(items: ChecklistItem[]): { score: number
 
 /* ---------------- Izin Kerja (Work Permit) ---------------- */
 export const PERMIT_TYPES: Opt[] = [
+  { value: 'umum', label: 'Izin Kerja Umum' },
   { value: 'kerja_ketinggian', label: 'Kerja di Ketinggian' },
   { value: 'galian', label: 'Galian' },
   { value: 'listrik', label: 'Kerja Listrik' },

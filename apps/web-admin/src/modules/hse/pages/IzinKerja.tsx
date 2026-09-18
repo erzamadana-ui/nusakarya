@@ -34,6 +34,9 @@ export default function IzinKerja() {
  const [tab, setTab] = useState('semua')
  const [permits, setPermits] = useState<any[]>([])
  const [employees, setEmployees] = useState<any[]>([])
+ // Kolom work_permits.requested_by ber-FK ke auth.users, BUKAN ke employees.
+ // Sebelumnya UI mengirim employees.id sehingga insert melanggar FK.
+ const [users, setUsers] = useState<any[]>([])
  const [workOrders, setWorkOrders] = useState<any[]>([])
  const [projects, setProjects] = useState<any[]>([])
 
@@ -51,19 +54,21 @@ export default function IzinKerja() {
  async function loadAll() {
  setLoading(true)
  try {
- const [pm, emp, wo, pr] = await Promise.all([
+ const [pm, emp, usr, wo, pr] = await Promise.all([
  list('work_permits', { eq: { company_id: profile!.company_id }, order: { col: 'valid_from', asc: false }, limit: 2000 }),
  list('employees', { select: 'id,full_name,position', eq: { company_id: profile!.company_id, status: 'aktif' }, order: { col: 'full_name', asc: true }, limit: 1000 }),
+ list('profiles', { select: 'id,full_name,role', eq: { company_id: profile!.company_id, is_active: true }, order: { col: 'full_name', asc: true }, limit: 1000 }),
  list('work_orders', { select: 'id,wo_no,title', eq: { company_id: profile!.company_id }, order: { col: 'created_at', asc: false }, limit: 500 }),
  list('projects', { select: 'id,project_name', eq: { company_id: profile!.company_id }, order: { col: 'created_at', asc: false }, limit: 500 }),
  ])
- setPermits(pm); setEmployees(emp); setWorkOrders(wo); setProjects(pr)
- setForm((f: any) => ({ ...f, requested_by: f.requested_by || (profile as any)?.employee_id || '' }))
+ setPermits(pm); setEmployees(emp); setUsers(usr); setWorkOrders(wo); setProjects(pr)
+ setForm((f: any) => ({ ...f, requested_by: f.requested_by || (profile as any)?.id || '' }))
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat data izin kerja', 'error') }
  finally { setLoading(false) }
  }
 
  const empName = (id?: string) => employees.find(e => e.id === id)?.full_name ?? '-'
+ const userName = (id?: string) => users.find(u => u.id === id)?.full_name ?? '-'
  const woLabel = (id?: string) => { const w = workOrders.find(x => x.id === id); return w ? `${w.wo_no} — ${w.title ?? ''}` : '-' }
  const projLabel = (id?: string) => projects.find(p => p.id === id)?.project_name ?? '-'
 
@@ -85,7 +90,7 @@ export default function IzinKerja() {
  const menungguPersetujuan = useMemo(() => permits.filter(p => p.status === 'diajukan').length, [permits])
 
  /* ---------------- Form baru ---------------- */
- function openNew() { setForm(newForm((profile as any)?.employee_id || '')); setNewOpen(true) }
+ function openNew() { setForm(newForm((profile as any)?.id || '')); setNewOpen(true) }
  function onTypeChange(type: string) {
  const checklist: ChecklistItem[] = (PERMIT_SAFETY_CHECKLISTS[type] ?? []).map(item => ({ item, checked: false }))
  setForm((f: any) => ({ ...f, permit_type: type, checklist }))
@@ -201,7 +206,7 @@ export default function IzinKerja() {
  { key: 'permit_no', header: 'No Izin' },
  { key: 'permit_type', header: 'Jenis', render: r => permitTypeLabel(r.permit_type) },
  { key: 'location', header: 'Lokasi' },
- { key: 'requested_by', header: 'Pemohon', render: r => empName(r.requested_by) },
+ { key: 'requested_by', header: 'Pemohon', render: r => userName(r.requested_by) },
  { key: 'valid_to', header: 'Sisa Masa Berlaku', render: r => <PermitCountdown validTo={r.valid_to} /> },
  ]}
  />
@@ -219,7 +224,7 @@ export default function IzinKerja() {
  { key: 'permit_no', header: 'No Izin' },
  { key: 'permit_type', header: 'Jenis', render: r => permitTypeLabel(r.permit_type) },
  { key: 'location', header: 'Lokasi' },
- { key: 'requested_by', header: 'Pemohon', render: r => empName(r.requested_by) },
+ { key: 'requested_by', header: 'Pemohon', render: r => userName(r.requested_by) },
  { key: 'valid_from', header: 'Mulai Berlaku', render: r => tglJam(r.valid_from) },
  { key: 'valid_to', header: 'Sisa Masa Berlaku', render: r => <PermitCountdown validTo={r.valid_to} closedAt={r.status === 'ditutup' ? r.updated_at : null} /> },
  { key: 'status', header: 'Status', render: r => <Badge tone={permitStatusTone(r.status)}>{permitStatusLabel(r.status)}</Badge> },
@@ -236,7 +241,7 @@ export default function IzinKerja() {
  <Field label="Jenis Izin" required><Select options={PERMIT_TYPES} value={form.permit_type} onChange={(e: any) => onTypeChange(e.target.value)} /></Field>
  <Field label="Tautan Work Order"><Select options={workOrders.map(w => ({ value: w.id, label: `${w.wo_no} — ${w.title ?? ''}` }))} value={form.work_order_id} onChange={(e: any) => setForm({ ...form, work_order_id: e.target.value })} /></Field>
  <Field label="Tautan Proyek"><Select options={projects.map(p => ({ value: p.id, label: p.project_name }))} value={form.project_id} onChange={(e: any) => setForm({ ...form, project_id: e.target.value })} /></Field>
- <Field label="Pemohon" required><Select options={employees.map(e => ({ value: e.id, label: `${e.full_name} — ${e.position ?? ''}` }))} value={form.requested_by} onChange={(e: any) => setForm({ ...form, requested_by: e.target.value })} /></Field>
+ <Field label="Pemohon" required><Select options={users.map(u => ({ value: u.id, label: `${u.full_name} — ${u.role ?? ''}` }))} value={form.requested_by} onChange={(e: any) => setForm({ ...form, requested_by: e.target.value })} /></Field>
  <Field label="Lokasi" required><Input value={form.location} onChange={(e: any) => setForm({ ...form, location: e.target.value })} /></Field>
  <Field label="Latitude" hint="Isi manual atau tangkap otomatis">
  <div className="flex gap-2">
@@ -287,7 +292,7 @@ export default function IzinKerja() {
  <Desc cols={2} items={[
  { label: 'Status', value: <Badge tone={permitStatusTone(selected.status)}>{permitStatusLabel(selected.status)}</Badge> },
  { label: 'Jenis', value: permitTypeLabel(selected.permit_type) },
- { label: 'Pemohon', value: empName(selected.requested_by) },
+ { label: 'Pemohon', value: userName(selected.requested_by) },
  { label: 'Disetujui Oleh', value: selected.approved_by ? empName(selected.approved_by) : '-' },
  { label: 'Tautan Work Order', value: woLabel(selected.work_order_id) },
  { label: 'Tautan Proyek', value: projLabel(selected.project_id) },

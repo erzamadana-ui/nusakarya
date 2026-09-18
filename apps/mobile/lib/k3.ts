@@ -23,7 +23,7 @@ export const JENIS_IZIN_KERJA: { value: string; label: string; checklist: Checkl
     ],
   },
   {
-    value: 'ketinggian',
+    value: 'kerja_ketinggian',
     label: 'Bekerja di Ketinggian',
     checklist: [
       { label: 'Sertifikat kerja di ketinggian masih berlaku' },

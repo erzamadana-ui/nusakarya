@@ -63,7 +63,7 @@ export default function InspeksiApd() {
       const row = await insert('hse_inspections', {
         company_id: profile.company_id,
         inspection_no: inspectionNo,
-        inspection_type: 'apd',
+        inspection_type: 'APD',
         inspection_date: todayISO(),
         branch_id: branch?.id ?? employee?.branch_id ?? null,
         inspector_id: employee?.id ?? null,

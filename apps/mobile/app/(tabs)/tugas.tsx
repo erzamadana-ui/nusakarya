@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth'
 import supabase from '@/lib/supabase'
 import { tglJam, todayISO } from '@/lib/format'
 import type { WorkOrder } from '@/types/db'
+import { WO_AKTIF, WO_TUTUP } from '@/lib/status'
 
 type TabKey = 'hari_ini' | 'berjalan' | 'selesai'
 
@@ -42,9 +43,9 @@ export default function DaftarTugas() {
       if (tab === 'hari_ini') {
         q = q.gte('scheduled_at', `${today}T00:00:00`).lte('scheduled_at', `${today}T23:59:59`).order('scheduled_at', { ascending: true })
       } else if (tab === 'berjalan') {
-        q = q.in('status', ['ditugaskan', 'diterima', 'berjalan', 'dikerjakan']).order('scheduled_at', { ascending: true })
+        q = q.in('status', WO_AKTIF as unknown as string[]).order('scheduled_at', { ascending: true })
       } else {
-        q = q.in('status', ['selesai', 'gagal']).order('finished_at', { ascending: false }).limit(60)
+        q = q.in('status', WO_TUTUP as unknown as string[]).order('finished_at', { ascending: false }).limit(60)
       }
       const { data: rows, error: err } = await q
       if (err) throw err

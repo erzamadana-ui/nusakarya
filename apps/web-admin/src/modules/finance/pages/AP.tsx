@@ -109,7 +109,11 @@ export default function AP() {
  category: 'Pembayaran Vendor (AP)', description: `${detail.inv_no} — ${detail.vendor?.name ?? ''}`,
  amount, ref_type: 'ap_payments', ref_id: payment.id,
  })
- } catch { /* pencatatan kas gagal tidak membatalkan pembayaran yang sudah tercatat */ }
+ } catch (eKas: any) {
+ // Pembayaran sudah tercatat sehingga tidak dibatalkan — tetapi kegagalan ini TIDAK
+ // boleh disembunyikan: arus kas yang tidak tercatat membuat proyeksi kas salah.
+ toast.push(`Pembayaran tersimpan, tetapi pencatatan arus kas GAGAL: ${eKas?.message ?? 'penyebab tidak diketahui'}. Catat manual di menu Arus Kas.`, 'error')
+ }
  toast.push('Pembayaran berhasil dicatat.', 'success')
  setPayOpen(false); setDetail(null); await load()
  } catch (e: any) { toast.push(pesanGagalRls(e, 'mencatat pembayaran'), 'error') } finally { setBusy(false) }
