@@ -28,10 +28,10 @@ export default function PlatformTenant() {
   useEffect(() => { if (isPlatformAdmin) load() }, [isPlatformAdmin])
 
   const ringkas = useMemo(() => {
-    const bayar = rows.filter(r => r.status === 'active' || r.status === 'past_due')
+    const bayar = rows.filter(r => (r.status === 'active' || r.status === 'past_due') && !r.is_demo)
     return {
       tenant: rows.length, trial: rows.filter(r => r.status === 'trial').length, bayar: bayar.length,
-      mrr: bayar.filter(r => !r.is_demo).reduce((a, r) => a + Number(r.harga_bulanan ?? 0), 0),
+      mrr: bayar.reduce((a, r) => a + Number(r.harga_bulanan ?? 0), 0),
       risiko: rows.filter(r => r.skor_kesehatan < 50).length,
     }
   }, [rows])
