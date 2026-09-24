@@ -1,4 +1,8 @@
-export type NavItem = { path: string; label: string; module: string; badge?: string }
+export type NavItem = { path: string; label: string; module: string; badge?: string
+  /** Hanya tampil untuk pemilik aplikasi (platform admin). */
+  platform?: boolean
+  /** Hanya tampil untuk Super Admin tenant. */
+  superOnly?: boolean }
 export type NavGroup = { key: string; label: string; icon: string; unit: string; items: NavItem[] }
 
 /** Struktur menu Panel Admin NUSAKARYA.
@@ -7,12 +11,14 @@ export const NAV: NavGroup[] = [
   { key: 'exec', label: 'Eksekutif', icon: 'LayoutDashboard', unit: 'EXECUTIVE', items: [
     { path: '/dashboard', label: 'Ringkasan Perusahaan', module: 'DASHBOARD' },
     { path: '/eksekutif', label: 'Portal Eksekutif', module: 'EXECUTIVE' },
+    { path: '/inbox', label: 'Inbox Kerja', module: 'CORE' },
     { path: '/persetujuan', label: 'Inbox Persetujuan', module: 'DASHBOARD' },
     { path: '/notifikasi', label: 'Notifikasi', module: 'DASHBOARD' },
   ]},
   { key: 'hr', label: 'Human Resource', icon: 'Users', unit: 'HR', items: [
     { path: '/hr/dashboard', label: 'Dashboard HR', module: 'HR' },
     { path: '/hr/karyawan', label: 'Data Karyawan', module: 'HR' },
+    { path: '/hr/formasi', label: 'Formasi & Jabatan', module: 'HR' },
     { path: '/hr/sertifikasi', label: 'Kontrak & Sertifikasi', module: 'HR' },
     { path: '/hr/absensi', label: 'Absensi Lapangan', module: 'HR' },
     { path: '/hr/roster', label: 'Roster & Shift', module: 'HR' },
@@ -122,6 +128,17 @@ export const NAV: NavGroup[] = [
     { path: '/deploy/garansi', label: 'Masa Garansi', module: 'DEPLOYMENT' },
     { path: '/deploy/subkon', label: 'Paket Subkontraktor', module: 'DEPLOYMENT' },
   ]},
+  { key: 'workspace', label: 'Workspace', icon: 'Rocket', unit: 'CORE', items: [
+    { path: '/onboarding', label: 'Siapkan Workspace', module: 'CORE', superOnly: true },
+    { path: '/pengaturan/langganan', label: 'Paket & Pemakaian', module: 'CORE' },
+    { path: '/pengaturan/undang', label: 'Undang Tim', module: 'CORE' },
+    { path: '/pengaturan/field-kustom', label: 'Field Kustom', module: 'CORE' },
+    { path: '/pengaturan/alur-kerja', label: 'Status, SLA & Alur', module: 'CORE' },
+    { path: '/pengaturan/tabel-kustom', label: 'Tabel Kustom', module: 'CORE' },
+    { path: '/pengaturan/preferensi', label: 'Pengaturan Perusahaan', module: 'CORE' },
+    { path: '/pengaturan/ekspor', label: 'Ekspor & Cadangan', module: 'CORE' },
+    { path: '/platform', label: 'Panel Pemilik Aplikasi', module: 'CORE', platform: true },
+  ]},
   { key: 'setting', label: 'Pengaturan', icon: 'Settings', unit: 'CORE', items: [
     { path: '/pengaturan/pengguna', label: 'Pengguna', module: 'CORE' },
     { path: '/pengaturan/hak-akses', label: 'Hak Akses Jabatan', module: 'CORE' },
@@ -129,6 +146,7 @@ export const NAV: NavGroup[] = [
     { path: '/pengaturan/perusahaan', label: 'Profil Perusahaan', module: 'CORE' },
     { path: '/pengaturan/tampilan', label: 'Tampilan & Template', module: 'CORE' },
     { path: '/pengaturan/master', label: 'Data Master Referensi', module: 'CORE' },
+    { path: '/pengaturan/impor', label: 'Impor Data', module: 'CORE' },
     { path: '/pengaturan/kesiapan', label: 'Kesiapan Produksi', module: 'CORE' },
     { path: '/pengaturan/audit', label: 'Log Audit', module: 'CORE' },
   ]},

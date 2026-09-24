@@ -1,17 +1,51 @@
 /** Opsi & konstanta bersama modul HR/Payroll/Produktivitas. */
 
-export const EMPLOYMENT_TYPE_OPTIONS = ['PKWT', 'PKWTT', 'MITRA', 'HARIAN']
-export const EMPLOYEE_STATUS_OPTIONS = ['aktif', 'nonaktif', 'resign']
+/** WAJIB sama dengan CHECK employees.employment_type. */
+export const EMPLOYMENT_TYPE_OPTIONS = ['PKWT', 'PKWTT', 'MITRA', 'OUTSOURCE', 'MAGANG']
+/** WAJIB sama dengan CHECK employees.status. */
+export const EMPLOYEE_STATUS_OPTIONS = ['aktif', 'cuti', 'nonaktif', 'resign']
 export const GENDER_OPTIONS = [
   { value: 'L', label: 'Laki-laki' },
   { value: 'P', label: 'Perempuan' },
 ]
+/** WAJIB sama dengan CHECK employees.ptkp_status — K/I/* TIDAK diterima database. */
 export const PTKP_OPTIONS = [
   'TK/0', 'TK/1', 'TK/2', 'TK/3',
   'K/0', 'K/1', 'K/2', 'K/3',
-  'K/I/0', 'K/I/1', 'K/I/2', 'K/I/3',
 ]
 export const TER_CATEGORY_OPTIONS = ['A', 'B', 'C']
+
+/* ---- Skema karyawan WFP (migrasi 0045) — nilai sesuai CHECK constraint ---- */
+/** CHECK employees.kemitraan */
+export const KEMITRAAN_OPTIONS = ['TELKOM AKSES', 'MITRA', 'RIFO FIX', 'RIFO VARIABLE']
+/** CHECK employees.group_wfp */
+export const GROUP_WFP_OPTIONS = ['RKAP', 'MITRA', 'RIFO', 'NFO']
+/** CHECK employees.status_teknisi */
+export const STATUS_TEKNISI_OPTIONS = ['PERFORMANCE BASED', 'RESOURCE BASED']
+/** CHECK employees.status_salary */
+export const STATUS_SALARY_OPTIONS = ['FIXED', 'VARIABLE']
+/** CHECK employees.payroll_scheme */
+export const PAYROLL_SCHEME_OPTIONS = [
+  { value: 'fix_salary', label: 'Gaji Tetap' },
+  { value: 'freelance', label: 'Freelance / Borongan' },
+  { value: 'campuran', label: 'Campuran' },
+]
+/** employees.level_jabatan tidak punya CHECK — daftar ini hanya SARAN (datalist), bukan pembatas. */
+export const LEVEL_JABATAN_SARAN = [
+  'GM/VP/PM/PMO', 'Manager', 'Officer 1', 'Officer 2', 'Officer 3',
+  'Staff', 'Korlap', 'Teknisi', 'Helpdesk', 'Drafter', 'Surveyor', 'HSA',
+]
+/** employees.skill (text[]) tidak punya CHECK — daftar ini hanya SARAN. */
+export const SKILL_SARAN = [
+  'PT1', 'PT2', 'ASSURANCE', 'DESIGN', 'MTC', 'KONFIGURASI',
+  'PROVISIONING', 'QE', 'EDITOR', 'ADMINISTRASI', 'AI',
+]
+/** CHECK employee_positions.status_penugasan */
+export const STATUS_PENUGASAN_OPTIONS = ['DEFINITIF', 'PGS', 'POH']
+/** CHECK employee_positions.object_id: 17 digit angka, atau MTR-#### */
+export const OBJECT_ID_HINT = '17 digit angka (mis. 00000000000123456) atau MTR-1234'
+export const objectIdValid = (v?: string | null) =>
+  !v || /^[0-9]{17}$/.test(v) || /^MTR-[0-9]{4}$/.test(v)
 export const CERT_TYPE_OPTIONS = ['K3', 'Kompetensi Teknis', 'BNSP', 'Vendor/Mitra', 'Lainnya']
 /** Nilai WAJIB sama dengan CHECK constraint leave_requests.leave_type. */
 export const LEAVE_TYPE_OPTIONS = [

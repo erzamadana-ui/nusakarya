@@ -41,8 +41,10 @@ export const ADVANCE_STATUS_TABS = [
 export const DISBURSEMENT_METHOD_OPTIONS = ['Transfer Bank', 'Tunai', 'Lainnya']
 
 /* --------- Rekrutmen --------- */
-export const VACANCY_STATUS_OPTIONS = ['draft', 'dibuka', 'ditutup']
-export const EMPLOYMENT_TYPE_OPTIONS = ['PKWT', 'PKWTT', 'MITRA', 'HARIAN']
+/** WAJIB sama dengan CHECK job_vacancies.status. */
+export const VACANCY_STATUS_OPTIONS = ['draft', 'dibuka', 'ditutup', 'batal']
+/** WAJIB sama dengan CHECK job_vacancies.employment_type — 'HARIAN' TIDAK diterima database. */
+export const EMPLOYMENT_TYPE_OPTIONS = ['PKWT', 'PKWTT', 'MITRA', 'OUTSOURCE', 'MAGANG']
 export const APPLICANT_STAGES = [
   { value: 'baru', label: 'Baru' },
   { value: 'seleksi_berkas', label: 'Seleksi Berkas' },

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Button, Input, Field } from '@/components/ui'
 import { ShieldCheck, Activity, Boxes, Wallet } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function Login() {
  const { signIn } = useAuth()
@@ -41,7 +42,7 @@ export default function Login() {
  <span className="font-display font-bold text-lg">NUSAKARYA</span>
  </div>
  <h1 className="font-display text-[26px] font-bold text-ink-900">Masuk</h1>
- <p className="text-body text-ink-500 mt-1 mb-6">Gunakan akun yang diberikan administrator.</p>
+ <p className="text-body text-ink-500 mt-1 mb-6">Gunakan akun yang diberikan administrator, atau akun dari tautan undangan.</p>
  <div className="space-y-4">
  <Field label="Email" required><Input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@perusahaan.id" required /></Field>
  <Field label="Kata Sandi" required><Input type="password" autoComplete="current-password" value={pw} onChange={e => setPw(e.target.value)} placeholder="••••••••" required /></Field>
@@ -49,6 +50,10 @@ export default function Login() {
  {err && <div className="mt-4 p-3 rounded-sm bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-body">{err}</div>}
  <Button type="submit" size="lg" loading={busy} className="w-full mt-6">Masuk</Button>
  <p className="mt-6 text-caption text-ink-400 text-center">Lupa kata sandi? Hubungi administrator perusahaan Anda.</p>
+ <div className="mt-6 rounded-md border border-primary-200 bg-primary-50 p-3 text-center text-body text-primary-800">
+ Perusahaan Anda belum terdaftar? <Link to="/daftar" className="font-semibold underline">Buat workspace — uji coba 30 hari</Link>
+ </div>
+ <p className="mt-3 text-[11px] text-ink-400 text-center">Lingkungan STAGING — belum production-ready.</p>
  </form>
  </div>
  </div>

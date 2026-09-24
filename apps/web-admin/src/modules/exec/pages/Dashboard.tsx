@@ -4,7 +4,7 @@ import {
  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
  PieChart, Pie, Cell, BarChart, LabelList,
 } from 'recharts'
-import { Wallet, Receipt, Percent, Ticket, ShieldCheck, Users, CalendarClock, Boxes, ArrowRight, ClipboardList } from 'lucide-react'
+import { Wallet, Receipt, Percent, Ticket, ShieldCheck, Users, CalendarClock, Boxes, ArrowRight, ClipboardList, ListTodo, AlarmClock } from 'lucide-react'
 import supabase from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { list, insert, nextDocNo } from '@/lib/db'
@@ -12,6 +12,7 @@ import { rupiah, num, pct, tgl, tglJam, todayISO } from '@/lib/format'
 import { Card, CardHeader, PageHeader, KpiCard, Skeleton, EmptyState, Button, Modal, Field, Select, Input, Textarea, useToast, Plus } from '@/components/ui'
 import { fetchMonthlyFinance, fetchTicketRows, fetchPendingApprovals, type MonthlyFinance, type PendingItem, type TicketRow } from '../lib/data'
 import { chartColors, chartSeries } from '@/lib/theme'
+import MulaiDiSini from '@/modules/saas/components/MulaiDiSini'
 
 type Kpi = { key: string; label: string; value: string; sub?: string; icon: React.ReactNode; module: string }
 
@@ -55,6 +56,7 @@ export default function Dashboard() {
  const [productivity, setProductivity] = useState<any[]>([])
  const [pending, setPending] = useState<PendingItem[]>([])
  const [kpiRaw, setKpiRaw] = useState<Record<string, number>>({})
+ const [inbox, setInbox] = useState<{ saya: number; terlambat: number } | null>(null)
  const [drawn, setDrawn] = useState<string>('')
 
  useEffect(() => {
@@ -93,6 +95,27 @@ export default function Dashboard() {
  }).catch(() => {}).finally(() => alive && setLoading(false))
  return () => { alive = false }
  }, [profile])
+
+ /* Ringkasan Inbox Kerja (v_inbox_kerja). RLS sudah membatasi baris yang boleh
+    dilihat, jadi cukup menghitung tanpa penyaringan kepemilikan tambahan. */
+ useEffect(() => {
+ if (!profile?.company_id) return
+ let alive = true
+ const aktif = ['terbuka', 'dikerjakan']
+ const milikSaya: string[] = []
+ if (profile.employee_id) milikSaya.push(`pic_employee_id.eq.${profile.employee_id}`)
+ if (profile.role) milikSaya.push(`pic_role.eq.${profile.role}`)
+ const qSaya = milikSaya.length
+ ? supabase.from('v_inbox_kerja').select('id', { count: 'exact', head: true })
+ .in('status', aktif).or(milikSaya.join(',')).then(r => r.count ?? 0)
+ : Promise.resolve(0)
+ const qTerlambat = supabase.from('v_inbox_kerja').select('id', { count: 'exact', head: true })
+ .in('status', aktif).eq('keterlambatan', 'terlambat').then(r => r.count ?? 0)
+ Promise.all([qSaya, qTerlambat])
+ .then(([saya, terlambat]) => { if (alive) setInbox({ saya, terlambat }) })
+ .catch(() => { if (alive) setInbox(null) })
+ return () => { alive = false }
+ }, [profile?.company_id, profile?.employee_id, profile?.role])
 
  useEffect(() => {
  if (!profile?.company_id) return
@@ -196,6 +219,7 @@ export default function Dashboard() {
  return (
  <div>
  <PageHeader title="Ringkasan Perusahaan" subtitle="Sekilas kondisi operasional & keuangan seluruh unit hari ini" />
+ <MulaiDiSini />
 
  {(can('HR', 'write') || can('FINANCE', 'write') || can('PROCUREMENT', 'write')) && (
  <div className="flex flex-wrap gap-2 mb-6">
@@ -294,6 +318,29 @@ export default function Dashboard() {
  </Card>
  )}
  </div>
+
+ <Card className="mb-6">
+ <CardHeader title="Inbox Kerja" subtitle="Pekerjaan yang belum lengkap dan menunggu ditindaklanjuti"
+ action={<Link to="/inbox" className="inline-flex items-center gap-1 text-caption font-semibold text-primary-600 hover:text-primary-700">
+ Buka Inbox Kerja <ArrowRight size={14} />
+ </Link>} />
+ <div className="grid grid-cols-2 divide-x divide-ink-200">
+ <Link to="/inbox" className="flex items-center gap-3 px-5 py-4 hover:bg-primary-50/50 transition-colors">
+ <span className="w-10 h-10 rounded-full bg-primary-50 text-primary-700 grid place-items-center shrink-0"><ListTodo size={18} /></span>
+ <div className="min-w-0">
+ <p className="text-caption text-ink-400">Tugas Saya</p>
+ <p className="font-display text-[22px] leading-7 font-bold text-ink-900 tabular">{inbox ? num(inbox.saya) : '-'}</p>
+ </div>
+ </Link>
+ <Link to="/inbox" className="flex items-center gap-3 px-5 py-4 hover:bg-primary-50/50 transition-colors">
+ <span className="w-10 h-10 rounded-full bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 grid place-items-center shrink-0"><AlarmClock size={18} /></span>
+ <div className="min-w-0">
+ <p className="text-caption text-ink-400">Terlambat</p>
+ <p className="font-display text-[22px] leading-7 font-bold text-ink-900 tabular">{inbox ? num(inbox.terlambat) : '-'}</p>
+ </div>
+ </Link>
+ </div>
+ </Card>
 
  <Card className="mb-6">
  <CardHeader title="Butuh Tindakan Anda" subtitle="Dokumen menunggu persetujuan Anda" />

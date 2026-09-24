@@ -13,3 +13,8 @@ credentials*.md
 
 # cache build TypeScript — bukan sumber
 *.tsbuildinfo
+
+# DATA PRIBADI NYATA — tidak boleh masuk repo publik (UU PDP). Muat lewat Pusat Impor.
+supabase/migrations/0047_data_karyawan_sumbagteng.sql
+*.csv
+!apps/**/templates/*.csv

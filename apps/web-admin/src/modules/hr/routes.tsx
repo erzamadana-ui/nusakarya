@@ -2,6 +2,7 @@ import React from 'react'
 import type { AppRoute } from '@/App'
 import DashboardHR from './pages/DashboardHR'
 import Karyawan from './pages/Karyawan'
+import Formasi from './pages/Formasi'
 import Sertifikasi from './pages/Sertifikasi'
 import Absensi from './pages/Absensi'
 import Roster from './pages/Roster'
@@ -13,6 +14,7 @@ import Produktivitas from './pages/Produktivitas'
 const routes: AppRoute[] = [
  { path: '/hr/dashboard', module: 'HR', element: <DashboardHR /> },
  { path: '/hr/karyawan', module: 'HR', element: <Karyawan /> },
+ { path: '/hr/formasi', module: 'HR', element: <Formasi /> },
  { path: '/hr/sertifikasi', module: 'HR', element: <Sertifikasi /> },
  { path: '/hr/absensi', module: 'HR', element: <Absensi /> },
  { path: '/hr/roster', module: 'HR', element: <Roster /> },

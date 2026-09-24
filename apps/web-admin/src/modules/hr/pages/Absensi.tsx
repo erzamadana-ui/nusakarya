@@ -5,7 +5,7 @@ import {
  PageHeader, DataTable, Badge, Button, Modal, Field, Select, Input, FilterBar,
  KpiCard, useToast, Plus,
 } from '@/components/ui'
-import { tgl, tglJam, todayISO } from '@/lib/format'
+import { tgl, tglJam, todayISO, durasi } from '@/lib/format'
 import { mapsLink } from '../lib/constants'
 import { MapPin, Image as ImageIcon, Users } from 'lucide-react'
 
@@ -205,6 +205,8 @@ export default function Absensi() {
  { key: 'check_out_at', header: 'Jam Keluar', render: r => r.check_out_at ? r.check_out_at.slice(11, 16) : '-' },
  { key: 'status', header: 'Status', render: r => <Badge>{r.status}</Badge> },
  { key: 'late_minutes', header: 'Terlambat', align: 'right', render: r => `${r.late_minutes ?? 0} mnt` },
+ { key: 'work_minutes', header: 'Jam Kerja', align: 'right', render: r => durasi(r.work_minutes) },
+ { key: 'overtime_minutes', header: 'Lembur', align: 'right', render: r => durasi(r.overtime_minutes) },
  { key: 'lokasi', header: 'Lokasi', render: r => { const link = mapsLink(r.check_in_lat, r.check_in_lng); return link
  ? <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary-600 hover:underline"><MapPin size={13} />Peta</a>
  : <span className="text-ink-300">-</span> } },

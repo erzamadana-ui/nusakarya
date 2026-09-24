@@ -6,8 +6,12 @@ import AppShell from '@/components/layout/AppShell'
 import ErrorBoundary from '@/components/layout/ErrorBoundary'
 import Login from '@/pages/Login'
 import Forbidden from '@/pages/Forbidden'
+import Daftar, { TerimaUndangan, BuatWorkspace } from '@/pages/Daftar'
+import UpgradeGate from '@/modules/saas/components/UpgradeGate'
+import { MODUL_LABEL } from '@/modules/saas/lib/konstanta'
 
 import execRoutes from '@/modules/exec/routes'
+import inboxRoutes from '@/modules/inbox/routes'
 import hrRoutes from '@/modules/hr/routes'
 import commerceRoutes from '@/modules/commerce/routes'
 import procurementRoutes from '@/modules/procurement/routes'
@@ -29,24 +33,28 @@ import morningBmonRoutes from '@/modules/morning-bmon/routes'
 import setelanPayrollRoutes from '@/modules/setelan-payroll/routes'
 import referensiPajakRoutes from '@/modules/referensi-pajak/routes'
 import kesiapanRoutes from '@/modules/kesiapan/routes'
+import imporRoutes from '@/modules/impor/routes'
+import saasRoutes from '@/modules/saas/routes'
 
 export type AppRoute = { path: string; element: React.ReactNode; module: string }
 const ROUTES: AppRoute[] = [
- ...execRoutes, ...hrRoutes, ...commerceRoutes, ...procurementRoutes, ...financeRoutes,
+ ...execRoutes, ...inboxRoutes, ...hrRoutes, ...commerceRoutes, ...procurementRoutes, ...financeRoutes,
  ...inventoryRoutes, ...operationsRoutes, ...deploymentRoutes, ...settingsRoutes,
  ...hrExtendedRoutes, ...payrollFreelanceRoutes, ...hseRoutes, ...financeExtendedRoutes,
  ...opsExtendedRoutes, ...deployExtendedRoutes, ...commerceProcExtendedRoutes, ...coreExtendedRoutes,
   ...tampilanRoutes, ...morningBmonRoutes, ...setelanPayrollRoutes, ...referensiPajakRoutes, ...kesiapanRoutes,
+  ...imporRoutes, ...saasRoutes,
 ]
 
 function Guard({ module, children }: { module: string; children: React.ReactNode }) {
- const { can } = useAuth()
+ const { can, modulDalamPaket } = useAuth()
+ if (!modulDalamPaket(module)) return <UpgradeGate modul={`Modul ${MODUL_LABEL[module] ?? module}`} />
  if (!can(module, 'read')) return <Forbidden module={module} />
  return <>{children}</>
 }
 
 function Gate() {
- const { loading, session, profile } = useAuth()
+ const { loading, session, profile, onboarding } = useAuth()
  if (loading) return (
  <div className="min-h-screen grid place-items-center bg-ink-50">
  <div className="w-full max-w-sm space-y-3 px-6">
@@ -54,18 +62,22 @@ function Gate() {
  <Skeleton className="h-3 w-3/4 mx-auto" /><Skeleton className="h-3 w-1/2 mx-auto" />
  </div>
  </div>)
- if (!session) return <Login />
+ if (!session) return (
+ <Routes>
+ <Route path="/daftar" element={<Daftar />} />
+ <Route path="/undangan/:token" element={<TerimaUndangan />} />
+ <Route path="*" element={<Login />} />
+ </Routes>)
  if (!profile) return (
- <div className="min-h-screen grid place-items-center p-6 text-center bg-ink-50">
- <div className="max-w-md">
- <h2 className="font-display text-xl font-bold">Profil belum disiapkan</h2>
- <p className="mt-2 text-body text-ink-500">Akun Anda belum ditautkan ke perusahaan mana pun. Hubungi administrator.</p>
- </div>
- </div>)
+ <Routes>
+ <Route path="/undangan/:token" element={<TerimaUndangan />} />
+ <Route path="*" element={<BuatWorkspace />} />
+ </Routes>)
+ const awal = profile.role === 'super_admin' && onboarding && !onboarding.activated_at ? '/onboarding' : '/dashboard'
  return (
  <Routes>
  <Route element={<AppShell />}>
- <Route index element={<Navigate to="/dashboard" replace />} />
+ <Route index element={<Navigate to={awal} replace />} />
  {ROUTES.map(r => (
  <Route key={r.path} path={r.path}
  element={<Guard module={r.module}><Suspense fallback={<Skeleton className="h-64 w-full" />}>{r.element}</Suspense></Guard>} />

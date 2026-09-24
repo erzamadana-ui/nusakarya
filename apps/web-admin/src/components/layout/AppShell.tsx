@@ -11,7 +11,8 @@ import {
   MapPinned, ListChecks, ShieldCheck, Handshake as HandshakeIcon, Building2, History, Palette,
   Database, Inbox, BellRing, Landmark, BookOpenCheck, Percent, PiggyBank, Banknote, Calculator,
   TrendingUp, MessageSquareWarning, FileWarning, Undo2, FileBox, Ruler, CircleDollarSign,
-  UserCog, KeySquare, Store, Target, Layers, Blocks,
+  UserCog, KeySquare, Store, Target, Layers, Blocks, ListTodo, Upload,
+  Rocket, CreditCard, SlidersHorizontal, Workflow, Table2, Download, Crown,
 } from 'lucide-react'
 import { useAuth, ROLE_LABEL } from '@/lib/auth'
 import { NAV, ALL_ITEMS } from '@/lib/nav'
@@ -21,7 +22,7 @@ import { cx, Badge } from '@/components/ui'
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Handshake, ShoppingCart, Wallet, Boxes, Truck, Wrench, Map, HardHat,
-  Settings, ChevronsLeft, ChevronsRight, Circle,
+  Settings, ChevronsLeft, ChevronsRight, Circle, Rocket,
 }
 const Icon = ({ name, ...p }: any) => {
   const C = ICONS[name] ?? Circle
@@ -31,8 +32,13 @@ const Icon = ({ name, ...p }: any) => {
 /** Ikon per menu, dipetakan dari path. Referensi memberi tiap menu ikonnya sendiri,
  *  bukan ikon kelompok yang berulang. */
 const ITEM_ICON: Record<string, any> = {
-  '/dashboard': Gauge, '/eksekutif': TrendingUp, '/persetujuan': Inbox, '/notifikasi': BellRing,
-  '/hr/dashboard': Gauge, '/hr/karyawan': Users, '/hr/sertifikasi': BadgeCheck,
+  '/onboarding': Rocket, '/pengaturan/langganan': CreditCard, '/pengaturan/undang': UserPlus,
+  '/pengaturan/field-kustom': SlidersHorizontal, '/pengaturan/alur-kerja': Workflow, '/pengaturan/tabel-kustom': Table2,
+  '/pengaturan/preferensi': Settings, '/pengaturan/ekspor': Download, '/platform': Crown,
+  '/dashboard': Gauge, '/eksekutif': TrendingUp, '/inbox': ListTodo,
+  '/persetujuan': Inbox, '/notifikasi': BellRing,
+  '/hr/dashboard': Gauge, '/hr/formasi': Network,
+  '/hr/karyawan': Users, '/hr/sertifikasi': BadgeCheck,
   '/hr/absensi': CalendarCheck, '/hr/roster': CalendarDays, '/hr/cuti': CalendarClock,
   '/hr/komponen-gaji': Coins, '/hr/payroll': Banknote, '/hr/produktivitas': Target,
   '/hr/freelance': UserCog, '/hr/payroll-freelance': CircleDollarSign, '/hr/lembur': CalendarClock,
@@ -67,7 +73,7 @@ const ITEM_ICON: Record<string, any> = {
   '/deploy/subkon': HandshakeIcon,
   '/pengaturan/pengguna': Users, '/pengaturan/hak-akses': KeySquare, '/pengaturan/cabang': MapPinned,
   '/pengaturan/perusahaan': Building2, '/pengaturan/tampilan': Palette,
-  '/pengaturan/master': Database, '/pengaturan/audit': History,
+  '/pengaturan/master': Database, '/pengaturan/impor': Upload, '/pengaturan/audit': History,
 }
 
 function Footer() {
@@ -90,7 +96,7 @@ function Footer() {
 }
 
 export default function AppShell() {
-  const { profile, company, signOut, can } = useAuth()
+  const { profile, company, signOut, can, isPlatformAdmin, langganan, hanyaBaca, onboarding } = useAuth()
   const nav = useNavigate(); const loc = useLocation()
   const theme = getTheme()
   const [open, setOpen] = useState(false)
@@ -119,8 +125,9 @@ export default function AppShell() {
   useEffect(() => { setOpen(false); setCmd(false) }, [loc.pathname])
 
   const groups = useMemo(
-    () => NAV.map(g => ({ ...g, items: g.items.filter(i => can(i.module, 'read')) })).filter(g => g.items.length > 0),
-    [profile, can])
+    () => NAV.map(g => ({ ...g, items: g.items.filter(i => can(i.module, 'read')
+      && (!i.platform || isPlatformAdmin) && (!i.superOnly || profile?.role === 'super_admin')) })).filter(g => g.items.length > 0),
+    [profile, can, isPlatformAdmin])
 
   const results = useMemo(() => {
     const allowed = ALL_ITEMS.filter(i => can(i.module, 'read'))
@@ -229,6 +236,21 @@ export default function AppShell() {
           </div>
         </header>
 
+        {hanyaBaca && (
+          <div className="shrink-0 bg-red-50 border-b border-red-200 px-4 py-1.5 text-caption font-medium text-red-700 flex items-center gap-2">
+            <AlertTriangle size={13} /> Workspace hanya-baca ({langganan?.status === 'trial_berakhir' ? 'masa uji coba berakhir' : 'langganan ditangguhkan'}). Data aman & bisa diekspor.
+            <Link to="/pengaturan/langganan" className="underline ml-1">Lihat paket</Link>
+          </div>)}
+        {!hanyaBaca && langganan?.status === 'trial' && langganan.trial_ends_at && (
+          <div className="shrink-0 bg-blue-50 border-b border-blue-200 px-4 py-1.5 text-caption font-medium text-blue-700 flex items-center gap-2">
+            Uji coba paket {langganan.plan_name} — sisa {Math.max(0, Math.ceil((+new Date(langganan.trial_ends_at) - Date.now()) / 86400000))} hari.
+            <Link to="/pengaturan/langganan" className="underline ml-1">Detail</Link>
+          </div>)}
+        {profile?.role === 'super_admin' && onboarding && !onboarding.activated_at && loc.pathname !== '/onboarding' && (
+          <div className="shrink-0 bg-primary-50 border-b border-primary-200 px-4 py-1.5 text-caption font-medium text-primary-700 flex items-center gap-2">
+            <Rocket size={13} /> Workspace belum diaktifkan — {onboarding.langkah_selesai?.length ?? 0}/7 langkah selesai.
+            <Link to="/onboarding" className="underline ml-1">Lanjutkan onboarding</Link>
+          </div>)}
         {company?.is_demo && (
           <div className="shrink-0 bg-accent-50 border-b border-accent-300/50 px-4 py-1.5 text-caption font-medium text-accent-700 flex items-center gap-2">
             <AlertTriangle size={13} /> Data contoh untuk peragaan — bersihkan sebelum dipakai produksi.

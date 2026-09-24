@@ -53,7 +53,7 @@ export default function AP() {
  setLoading(true)
  try {
  const data = await list('vendor_invoices', {
- select: 'id,inv_no,vendor_invoice_no,invoice_date,due_date,total,paid_amount,match_status,match_note,status,po_id,gr_id,faktur_pajak_no,vendor_id,file_url,vendor:vendors(id,name,bank_name,bank_account,bank_holder,payment_term_days),po:purchase_orders(po_no),gr:goods_receipts(gr_no)',
+ select: 'id,inv_no,vendor_invoice_no,invoice_date,due_date,dpp,ppn,pph23,total,paid_amount,match_status,match_note,status,po_id,gr_id,faktur_pajak_no,vendor_id,file_url,vendor:vendors(id,name,bank_name,bank_account,bank_holder,payment_term_days),po:purchase_orders(po_no),gr:goods_receipts(gr_no)',
  eq: { company_id: profile!.company_id }, order: { col: 'invoice_date', asc: false }, limit: 2000,
  })
  setRows(data)
@@ -232,6 +232,9 @@ export default function AP() {
  { key: 'vendor', header: 'Vendor', render: (r) => r.vendor?.name ?? '-' },
  { key: 'invoice_date', header: 'Tanggal', render: (r) => tgl(r.invoice_date) },
  { key: 'due_date', header: 'Jatuh Tempo', render: (r) => tgl(r.due_date) },
+ { key: 'dpp', header: 'DPP', align: 'right', render: (r) => rp(r.dpp) },
+ { key: 'ppn', header: 'PPN', align: 'right', render: (r) => rp(r.ppn) },
+ { key: 'pph23', header: 'PPh 23', align: 'right', render: (r) => rp(r.pph23) },
  { key: 'total', header: 'Total', align: 'right', render: (r) => rp(r.total) },
  { key: 'paid_amount', header: 'Sudah Dibayar', align: 'right', render: (r) => rp(r.paid_amount) },
  { key: '_sisa', header: 'Sisa', align: 'right', render: (r) => <span className="font-medium">{rp(r._sisa)}</span> },

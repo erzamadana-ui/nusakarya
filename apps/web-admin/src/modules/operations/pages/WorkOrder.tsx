@@ -9,12 +9,17 @@ import { tglJam, durasi, rupiah, num } from '@/lib/format'
 import { WO_TYPES, WO_STATUSES, woStatusLabel, woStatusTone } from '../lib/constants'
 import { WO_STATUS } from '../lib/status'
 import { tautanPeta } from '../lib/helpers'
+import { useFieldKustom, InputFieldKustom, kolomFieldKustom, periksaFieldKustom, useLabelStatus } from '@/lib/konfigurasi'
 
 export default function WorkOrder() {
  const { profile, can } = useAuth()
  const toast = useToast()
  const writable = can('OPERATIONS', 'write')
  const approver = can('OPERATIONS', 'approve')
+ const fieldKustom = useFieldKustom('work_orders')
+ const labelStatus = useLabelStatus('work_orders')
+ const badgeStatus = (st: string) => labelStatus.rows.length ? labelStatus.badge(st) : <Badge tone={woStatusTone(st)}>{woStatusLabel(st)}</Badge>
+ const [customEdit, setCustomEdit] = useState<Record<string, unknown> | null>(null)
 
  const [loading, setLoading] = useState(true)
  const [wos, setWos] = useState<any[]>([])
@@ -37,7 +42,7 @@ export default function WorkOrder() {
  const [qcNote, setQcNote] = useState('')
 
  function newForm() {
- return { wo_type: '', job_type_id: '', title: '', customer_name: '', customer_no: '', address: '', lat: '', lng: '', branch_id: '', scheduled_at: '', description: '' }
+ return { wo_type: '', job_type_id: '', title: '', customer_name: '', customer_no: '', address: '', lat: '', lng: '', branch_id: '', scheduled_at: '', description: '', custom: {} }
  }
 
  useEffect(() => { if (profile?.company_id) load() }, [profile?.company_id])
@@ -76,12 +81,14 @@ export default function WorkOrder() {
  } catch (e: any) { toast.push(e.message ?? 'Gagal memuat detail work order', 'error') }
  finally { setDrawerLoading(false) }
  }
- function closeDrawer() { setSelected(null); setQcOpen(null); setQcNote('') }
+ function closeDrawer() { setSelected(null); setQcOpen(null); setQcNote(''); setCustomEdit(null) }
 
  async function submitNew() {
  if (!form.wo_type || !form.job_type_id || !form.title || !form.customer_name || !form.branch_id) {
  toast.push('Lengkapi jenis, jenis pekerjaan (job type), judul, pelanggan dan cabang terlebih dahulu', 'error'); return
  }
+ const galatKustom = periksaFieldKustom(fieldKustom, form.custom)
+ if (galatKustom) { toast.push(galatKustom, 'error'); return }
  setSaving(true)
  try {
  const woNo = await nextDocNo(profile!.company_id, 'WO')
@@ -90,7 +97,7 @@ export default function WorkOrder() {
  description: form.description || null, customer_name: form.customer_name, customer_no: form.customer_no || null,
  address: form.address || null, lat: form.lat || null, lng: form.lng || null, branch_id: form.branch_id,
  scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
- status: WO_STATUS.DRAFT, qc_status: 'belum', created_by: profile!.id,
+ status: WO_STATUS.DRAFT, qc_status: 'belum', created_by: profile!.id, custom: form.custom ?? {},
  })
  toast.push(`Work order ${woNo} berhasil dibuat`, 'success'); setNewOpen(false); setForm(newForm()); await load()
  } catch (e: any) { toast.push(e.message ?? 'Gagal menyimpan work order', 'error') }
@@ -140,7 +147,13 @@ export default function WorkOrder() {
  { key: 'branch_id', header: 'Cabang', render: r => branchName(r.branch_id) },
  { key: 'assigned_to', header: 'Teknisi', render: r => empName(r.assigned_to) },
  { key: 'scheduled_at', header: 'Jadwal', render: r => r.scheduled_at ? tglJam(r.scheduled_at) : '-' },
- { key: 'status', header: 'Status', render: r => <Badge tone={woStatusTone(r.status)}>{woStatusLabel(r.status)}</Badge> },
+ { key: 'started_at', header: 'Mulai', render: r => r.started_at ? tglJam(r.started_at) : '-' },
+ { key: 'finished_at', header: 'Selesai', render: r => r.finished_at ? tglJam(r.finished_at) : '-' },
+ { key: 'duration_minutes', header: 'Durasi', align: 'right', render: r => durasi(r.duration_minutes) },
+ { key: 'evidence_count', header: 'Bukti', align: 'right', render: r => num(r.evidence_count) },
+ ...kolomFieldKustom(fieldKustom),
+ { key: 'status', header: 'Status', render: r => badgeStatus(r.status) },
+ { key: 'fail_reason', header: 'Alasan Gagal', render: r => r.fail_reason || '-' },
  { key: 'qc_status', header: 'QC', render: r => <Badge>{r.qc_status}</Badge> },
  ]}
  />
@@ -160,7 +173,7 @@ export default function WorkOrder() {
  { label: 'Cabang', value: branchName(selected.branch_id) },
  { label: 'Teknisi', value: empName(selected.assigned_to) },
  { label: 'Alamat', value: <>{selected.address || '-'}{peta && <a href={peta} target="_blank" rel="noreferrer" className="block text-primary-600 mt-0.5">Lihat di Google Maps</a>}</> },
- { label: 'Status', value: <Badge tone={woStatusTone(selected.status)}>{woStatusLabel(selected.status)}</Badge> },
+ { label: 'Status', value: badgeStatus(selected.status) },
  ]} />
  </Section>
  <Section title="Hasil & Produktivitas">
@@ -174,6 +187,17 @@ export default function WorkOrder() {
  ]} />
  <p className="mt-2 text-caption text-ink-400">Catatan: work order berstatus Selesai secara otomatis membentuk entri produktivitas teknisi pada modul Produktivitas Teknisi (HR).</p>
  </Section>
+ {fieldKustom.length > 0 && (
+ <Section title="Data Tambahan Perusahaan">
+ <InputFieldKustom defs={fieldKustom} value={customEdit ?? selected.custom} judul="Field kustom (diatur di Pengaturan → Field Kustom)"
+ onChange={v => writable && setCustomEdit(v)} />
+ {writable && customEdit && <div className="mt-2 flex justify-end"><Button size="sm" onClick={async () => {
+ const galat = periksaFieldKustom(fieldKustom, customEdit)
+ if (galat) { toast.push(galat, 'error'); return }
+ try { await update('work_orders', selected.id, { custom: customEdit }); setSelected({ ...selected, custom: customEdit }); setCustomEdit(null); toast.push('Data tambahan disimpan', 'success'); load() }
+ catch (e: any) { toast.push(e.message, 'error') }
+ }}>Simpan data tambahan</Button></div>}
+ </Section>)}
  <Section title="Checklist Pekerjaan">
  {checklist.length === 0 ? <p className="text-caption text-ink-400">Tidak ada checklist untuk work order ini.</p> : (
  <div className="space-y-3">
@@ -212,6 +236,7 @@ export default function WorkOrder() {
  <Field label="Latitude"><Input value={form.lat} onChange={(e: any) => setForm({ ...form, lat: e.target.value })} /></Field>
  <Field label="Longitude"><Input value={form.lng} onChange={(e: any) => setForm({ ...form, lng: e.target.value })} /></Field>
  <Field label="Deskripsi" className="sm:col-span-2"><Textarea value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} /></Field>
+ <div className="sm:col-span-2"><InputFieldKustom defs={fieldKustom} value={form.custom} onChange={v => setForm({ ...form, custom: v })} /></div>
  </div>
  </Modal>
  </div>

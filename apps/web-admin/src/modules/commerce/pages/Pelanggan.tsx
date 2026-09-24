@@ -7,6 +7,7 @@ import {
  Badge, Button, useToast, TableSkeleton, EmptyState, Section, Desc, Plus,
 } from '@/components/ui'
 import { CUSTOMER_TYPE_OPTIONS, CUSTOMER_STATUS_OPTIONS } from '../lib/constants'
+import { useFieldKustom, InputFieldKustom, kolomFieldKustom, periksaFieldKustom } from '@/lib/konfigurasi'
 
 const emptyForm = {
  code: '', name: '', customer_type: 'korporat', npwp: '', address: '', city: '',
@@ -21,6 +22,7 @@ export default function Pelanggan() {
  const [modal, setModal] = useState(false)
  const [editing, setEditing] = useState<any>(null)
  const [form, setForm] = useState<any>(emptyForm)
+ const fieldKustom = useFieldKustom('customers')
  const [saving, setSaving] = useState(false)
  const [detail, setDetail] = useState<any>(null)
  const [delId, setDelId] = useState<string | null>(null)
@@ -55,20 +57,22 @@ export default function Pelanggan() {
 
  const save = async () => {
  if (!form.code || !form.name) { toast.push('Kode dan nama pelanggan wajib diisi', 'error'); return }
+ const galatKustom = periksaFieldKustom(fieldKustom, form.custom)
+ if (galatKustom) { toast.push(galatKustom, 'error'); return }
  setSaving(true)
  try {
  if (editing) {
  await update('customers', editing.id, {
  code: form.code, name: form.name, customer_type: form.customer_type, npwp: form.npwp,
  address: form.address, city: form.city, phone: form.phone, email: form.email,
- pic_name: form.pic_name, payment_term_days: Number(form.payment_term_days) || 0, status: form.status,
+ pic_name: form.pic_name, payment_term_days: Number(form.payment_term_days) || 0, status: form.status, custom: form.custom ?? {},
  })
  toast.push('Pelanggan diperbarui', 'success')
  } else {
  await insert('customers', {
  company_id: profile!.company_id, code: form.code, name: form.name, customer_type: form.customer_type,
  npwp: form.npwp, address: form.address, city: form.city, phone: form.phone, email: form.email,
- pic_name: form.pic_name, payment_term_days: Number(form.payment_term_days) || 0, status: form.status,
+ pic_name: form.pic_name, payment_term_days: Number(form.payment_term_days) || 0, status: form.status, custom: form.custom ?? {},
  })
  toast.push('Pelanggan ditambahkan', 'success')
  }
@@ -108,7 +112,7 @@ export default function Pelanggan() {
  actions={can('COMMERCE', 'write') && <Button icon={<Plus size={16} />} onClick={openAdd}>Tambah Pelanggan</Button>} />
 
  {loading ? <Card><TableSkeleton /></Card> : (
- <DataTable columns={columns} rows={rows} searchable searchKeys={['code', 'name', 'pic_name', 'npwp']}
+ <DataTable columns={[...columns, ...kolomFieldKustom(fieldKustom)]} rows={rows} searchable searchKeys={['code', 'name', 'pic_name', 'npwp']}
  exportName="pelanggan" onRowClick={openDetail}
  emptyTitle="Belum ada pelanggan" emptyMessage="Tambahkan pelanggan pertama untuk mulai mengelola kontrak."
  emptyAction={can('COMMERCE', 'write') && <Button size="sm" icon={<Plus size={16} />} onClick={openAdd}>Tambah Pelanggan</Button>} />
@@ -128,6 +132,7 @@ export default function Pelanggan() {
  <Field label="Kota"><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} /></Field>
  <Field label="Status"><Select value={form.status} options={CUSTOMER_STATUS_OPTIONS} onChange={(e: any) => setForm({ ...form, status: e.target.value })} /></Field>
  <Field label="Alamat" className="sm:col-span-2"><Textarea value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></Field>
+ <div className="sm:col-span-2"><InputFieldKustom defs={fieldKustom} value={form.custom} onChange={v => setForm({ ...form, custom: v })} /></div>
  </div>
  </Modal>
 

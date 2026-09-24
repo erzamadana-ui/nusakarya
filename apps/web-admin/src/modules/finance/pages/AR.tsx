@@ -38,7 +38,7 @@ export default function AR() {
  setLoading(true)
  try {
  const data = await list('ar_invoices', {
- select: 'id,inv_no,invoice_date,due_date,total,paid_amount,status,faktur_pajak_no,customer_id,customer:customers(id,name,pic_name,phone,email)',
+ select: 'id,inv_no,invoice_date,due_date,dpp,ppn,pph23,total,paid_amount,status,faktur_pajak_no,customer_id,customer:customers(id,name,pic_name,phone,email)',
  eq: { company_id: profile!.company_id }, order: { col: 'invoice_date', asc: false }, limit: 2000,
  })
  setRows(data)
@@ -130,12 +130,16 @@ export default function AR() {
  { key: 'customer', header: 'Pelanggan', render: (r) => r.customer?.name ?? '-' },
  { key: 'invoice_date', header: 'Tanggal', render: (r) => tgl(r.invoice_date) },
  { key: 'due_date', header: 'Jatuh Tempo', render: (r) => tgl(r.due_date) },
+ { key: 'dpp', header: 'DPP', align: 'right', render: (r) => rp(r.dpp) },
+ { key: 'ppn', header: 'PPN', align: 'right', render: (r) => rp(r.ppn) },
+ { key: 'pph23', header: 'PPh 23', align: 'right', render: (r) => rp(r.pph23) },
  { key: 'total', header: 'Total', align: 'right', render: (r) => rp(r.total) },
  { key: 'paid_amount', header: 'Sudah Dibayar', align: 'right', render: (r) => rp(r.paid_amount) },
  { key: '_sisa', header: 'Sisa', align: 'right', render: (r) => <span className="font-medium">{rp(r._sisa)}</span> },
  { key: '_umur', header: 'Umur Piutang', render: (r) => <Badge tone={r._umur.tone}>{r._umur.label}</Badge> },
  { key: '_tindakLanjut', header: 'Rekomendasi Tindak Lanjut' },
  { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
+ { key: 'faktur_pajak_no', header: 'No. Faktur Pajak', render: (r) => r.faktur_pajak_no || '-' },
  ]}
  />
  <p className="text-caption text-ink-400 mt-2">Kolom "Rekomendasi Tindak Lanjut" adalah panduan otomatis berdasarkan umur piutang (bukan catatan tersimpan). Ditarik: {tgl(todayISO())}.</p>

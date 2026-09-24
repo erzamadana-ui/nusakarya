@@ -255,13 +255,26 @@ export default function Vendor() {
  {tab === 'po' && (
  <DataTable searchable={false} rows={pos}
  columns={[{ key: 'po_no', header: 'No. PO' }, { key: 'po_date', header: 'Tanggal', render: (r: any) => tgl(r.po_date) },
- { key: 'total', header: 'Total', align: 'right', render: (r: any) => rupiah(r.total) }, { key: 'status', header: 'Status', render: (r: any) => <Badge>{r.status}</Badge> }]}
+ { key: 'delivery_date', header: 'Tgl Kirim', render: (r: any) => tgl(r.delivery_date) },
+ { key: 'subtotal', header: 'Subtotal', align: 'right', render: (r: any) => rupiah(r.subtotal) },
+ { key: 'discount', header: 'Diskon', align: 'right', render: (r: any) => rupiah(r.discount) },
+ { key: 'ppn', header: 'PPN', align: 'right', render: (r: any) => rupiah(r.ppn) },
+ { key: 'total', header: 'Total', align: 'right', render: (r: any) => rupiah(r.total) },
+ { key: 'payment_term_days', header: 'Termin', align: 'right', render: (r: any) => `${num(r.payment_term_days)} hari` },
+ { key: 'status', header: 'Status', render: (r: any) => <Badge>{r.status}</Badge> }]}
  emptyTitle="Belum ada PO untuk vendor ini" />
  )}
  {tab === 'invoice' && (
  <DataTable searchable={false} rows={invs}
- columns={[{ key: 'inv_no', header: 'No. Invoice' }, { key: 'invoice_date', header: 'Tanggal', render: (r: any) => tgl(r.invoice_date) },
+ columns={[{ key: 'inv_no', header: 'No. Invoice', render: (r: any) => <div><div className="font-medium text-ink-900">{r.inv_no}</div>{r.vendor_invoice_no && <div className="text-caption text-ink-400">{r.vendor_invoice_no}</div>}</div> },
+ { key: 'invoice_date', header: 'Tanggal', render: (r: any) => tgl(r.invoice_date) },
+ { key: 'due_date', header: 'Jatuh Tempo', render: (r: any) => tgl(r.due_date) },
+ { key: 'dpp', header: 'DPP', align: 'right', render: (r: any) => rupiah(r.dpp) },
+ { key: 'ppn', header: 'PPN', align: 'right', render: (r: any) => rupiah(r.ppn) },
+ { key: 'pph23', header: 'PPh 23', align: 'right', render: (r: any) => rupiah(r.pph23) },
  { key: 'total', header: 'Total', align: 'right', render: (r: any) => rupiah(r.total) },
+ { key: 'paid_amount', header: 'Sudah Dibayar', align: 'right', render: (r: any) => rupiah(r.paid_amount) },
+ { key: 'faktur_pajak_no', header: 'No. Faktur Pajak', render: (r: any) => r.faktur_pajak_no || '-' },
  { key: 'match_status', header: '3-Way Match', render: (r: any) => <Badge>{r.match_status}</Badge> },
  { key: 'status', header: 'Status', render: (r: any) => <Badge>{r.status}</Badge> }]}
  emptyTitle="Belum ada invoice untuk vendor ini" />
