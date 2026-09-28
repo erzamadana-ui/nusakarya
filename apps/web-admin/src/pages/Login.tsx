@@ -53,7 +53,7 @@ export default function Login() {
  <div className="mt-6 rounded-md border border-primary-200 bg-primary-50 p-3 text-center text-body text-primary-800">
  Perusahaan Anda belum terdaftar? <Link to="/daftar" className="font-semibold underline">Buat workspace — uji coba 30 hari</Link>
  </div>
- <p className="mt-3 text-[11px] text-ink-400 text-center">Lingkungan STAGING — belum production-ready.</p>
+ <p className="mt-3 text-[11px] text-ink-400 text-center">Lingkungan STAGING — belum production-ready. · <a href="../" className="underline">Tentang NUSAKARYA</a></p>
  </form>
  </div>
  </div>

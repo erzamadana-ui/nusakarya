@@ -58,4 +58,4 @@ export const rupiah = (n: number | null | undefined) =>
 export const slug = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/^(\d)/, 'f_$1').slice(0, 40) || 'field'
 
-export const APP_URL = 'https://erzamadana-ui.github.io/nusakarya/'
+export const APP_URL = 'https://erzamadana-ui.github.io/nusakarya/app/'
