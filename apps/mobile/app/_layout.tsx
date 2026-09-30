@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, View, Text, Pressable } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router'
@@ -9,7 +9,7 @@ import { useTheme } from '@/components/theme'
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
 function Gerbang() {
-  const { loading, session } = useAuth()
+  const { loading, session, profile, company, signOut } = useAuth()
   const segments = useSegments()
   const router = useRouter()
   const t = useTheme()
@@ -18,7 +18,8 @@ function Gerbang() {
     if (loading) return
     SplashScreen.hideAsync().catch(() => {})
     const diLogin = segments[0] === 'login'
-    if (!session && !diLogin) router.replace('/login')
+    const callback = segments[0] === 'auth' && segments[1] === 'callback'
+    if (!session && !diLogin && !callback) router.replace('/login')
     else if (session && diLogin) router.replace('/')
   }, [loading, session, segments, router])
 
@@ -30,6 +31,7 @@ function Gerbang() {
     )
   }
 
+  if (session && (!profile || !company) && segments[0] !== 'auth') return <View style={{ flex: 1, justifyContent: 'center', padding: 28, backgroundColor: t.bg }}><Text style={{ fontSize: 22, fontWeight: '700', color: t.text, marginBottom: 14 }}>Akses perusahaan belum tersedia</Text><Text style={{ color: t.textMuted, marginBottom: 20 }}>Akun Anda belum ditautkan ke workspace aktif, atau akses sedang ditinjau. Hubungi administrator perusahaan.</Text><Pressable onPress={signOut}><Text style={{ color: t.primary }}>Keluar dan gunakan akun perusahaan</Text></Pressable></View>
   return (
     <Stack
       screenOptions={{
@@ -40,6 +42,7 @@ function Gerbang() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="absensi" options={{ title: 'Absensi' }} />
       <Stack.Screen name="wo/[id]" options={{ title: 'Detail Work Order' }} />
