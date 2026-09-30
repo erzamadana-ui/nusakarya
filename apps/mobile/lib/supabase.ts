@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
@@ -23,8 +24,17 @@ export const supabase = createClient(url, key, {
     storage: AsyncStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: Platform.OS === 'web',
   },
 })
 
 export default supabase
+
+export async function getAuthMethods(): Promise<{ google: boolean; phone: boolean }> {
+ try {
+  const response = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } })
+  if (!response.ok) return { google: false, phone: false }
+  const data = await response.json()
+  return { google: data.external?.google === true, phone: data.external?.phone === true }
+ } catch { return { google: false, phone: false } }
+}

@@ -1,8 +1,8 @@
 # NUSAKARYA — Operational Control & Supervision Tools
 
-> **Status: STAGING / PROTOTYPE LANJUT — belum production-ready.** Lihat
+> **Status: RILIS PILOT KOMERSIAL TERBATAS.** Landing menerima permintaan demo/penawaran; penggunaan operasional produksi penuh memerlukan UAT, restore, privasi dan SLA yang disepakati. Lihat
 > [`docs/AUDIT-SAAS-2026-09-24.md`](docs/AUDIT-SAAS-2026-09-24.md) untuk temuan, bukti uji, dan backlog.
-> Live staging: https://erzamadana-ui.github.io/nusakarya/ · Daftar workspace: `#/daftar`
+> Landing dan akses pilot: https://erzamadana-ui.github.io/nusakarya/ · Daftar workspace: `#/daftar`
 
 Aplikasi operasional untuk perusahaan **Project Deployment & Manage Service Fiber Optic**.
 Multi-tenant: satu aplikasi melayani banyak perusahaan mitra kerja.
@@ -56,3 +56,14 @@ Skema dan kebijakan RLS ada di `supabase/migrations/`. Terapkan berurutan
 Tarif PPh 21 (TER), iuran BPJS, dan tarif PPN/PPh 23 yang tersimpan di basis data
 adalah **tabel referensi yang wajib diverifikasi** ke peraturan yang berlaku sebelum
 dipakai membayar. Price list pekerjaan pada data contoh bukan tarif kontrak riil.
+
+## Rilis 1 Oktober 2026
+- Landing: manfaat per peran, harga indikatif berbasis skenario COGS, proses pilot dan formulir demo. Kontak tersimpan di `commercial_leads`, hanya untuk platform admin (tab Permintaan demo di `/platform`).
+- Pendaftaran email wajib verifikasi lewat Supabase Auth; endpoint lama yang auto-confirm sudah ditutup. Setelah email terverifikasi, pengguna membuat workspace lewat RPC tenant yang terikat `auth.uid()`.
+- UI Google/SMS otomatis membaca provider aktif; provider nonaktif ditampilkan belum tersedia. Google membutuhkan OAuth client dan redirect allowlist; SMS membutuhkan provider dan nomor Auth terverifikasi. Keduanya metode alternatif; belum ada enforcement MFA.
+- Tenant demo dengan pengenal pribadi dikarantina; akun anggota kehilangan scope tenant, pemilik platform tetap bisa meninjau data. Tidak ada penghapusan data.
+- Privileged RPC dibatasi authenticated/service; RPC dengan UUID tenant menolak tenant lain, termasuk jika caller adalah super admin perusahaan lain.
+- Public invitation lookup disengaja dan hanya untuk token acak yang masih berlaku serta tenant tidak dikarantina.
+- Dependensi produksi web: SheetJS 0.20.3 dari CDN resmi, React Router 7.18.4; audit produksi web 0 advisory saat build lokal.
+- `release.json` pada situs memuat commit deployment untuk pengecekan setelah CI.
+- Provider Google/SMS, sandi bocor, rotasi kredensial yang terekspos, pentest, restore, invoice collection dan UAT tetap perlu bukti penutupan.

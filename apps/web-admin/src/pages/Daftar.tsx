@@ -28,7 +28,7 @@ function Kerangka({ judul, sub, children }: { judul: string; sub: string; childr
             [Sparkles, 'Uji coba 30 hari, tanpa kartu kredit']].map(([I, t]: any, i) => (
             <div key={i} className="flex items-start gap-2.5 text-body text-white/80"><I size={17} className="text-primary-300 shrink-0 mt-0.5" />{t}</div>))}
         </div>
-        <p className="text-caption text-white/40">Status layanan: STAGING — belum production-ready. Jangan unggah data pribadi nyata selama uji coba tanpa perjanjian pemrosesan data.</p>
+        <p className="text-caption text-white/40">Akses pilot perusahaan. Gunakan data contoh untuk evaluasi; unggah data pribadi setelah ruang lingkup dan perjanjian pemrosesan data disepakati.</p>
       </div>
       <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
@@ -47,17 +47,22 @@ export default function Daftar() {
   const nav = useNavigate()
   const [f, setF] = useState({ perusahaan: '', full_name: '', email: '', telepon: '', password: '', paket: 'professional', template: 'fo_telkom_akses', data_contoh: true, setuju: false, situs_web: '' })
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false)
+ const [confirmation, setConfirmation] = useState(false)
   const kirim = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(''); setBusy(true)
     try {
-      const { data, error } = await supabase.functions.invoke('saas-publik', { body: { action: 'daftar', ...f } })
-      const pesan = (data as any)?.error ?? (error ? await (error as any).context?.json?.().then((j: any) => j?.error).catch(() => null) : null) ?? error?.message
-      if (pesan) throw new Error(pesan)
-      await signIn(f.email.trim().toLowerCase(), f.password)
-      nav('/onboarding')
+      if (f.situs_web) return
+      if (!f.setuju || f.password.length < 12) throw new Error('Setujui ketentuan dan gunakan kata sandi minimal 12 karakter.')
+      const { data, error } = await supabase.auth.signUp({ email: f.email.trim().toLowerCase(), password: f.password,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname,
+          data: { full_name: f.full_name, phone: f.telepon, perusahaan: f.perusahaan, paket: f.paket, template: f.template, sumber: 'daftar_mandiri' } } })
+      if (error) throw error
+      if (!data.session) { setConfirmation(true); return }
+      nav('/')
     } catch (x: any) { setErr(x?.message ?? 'Pendaftaran gagal') } finally { setBusy(false) }
   }
   const s = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value })
+  if (confirmation) return <Kerangka judul="Periksa email kerja Anda" sub="Buka tautan verifikasi di email. Setelah terverifikasi, masuk dan lanjutkan pembuatan workspace. Jika email sudah terdaftar, gunakan halaman masuk."><Link className="text-primary-600 underline" to="/">Kembali ke halaman masuk</Link></Kerangka>
   return (
     <Kerangka judul="Buat workspace perusahaan" sub="Satu workspace = satu perusahaan mitra. Anda menjadi Super Admin-nya.">
       <form onSubmit={kirim} className="space-y-3.5">
@@ -66,12 +71,12 @@ export default function Daftar() {
           <Field label="Nama Anda" required><Input value={f.full_name} onChange={s('full_name')} required /></Field>
           <Field label="No. WhatsApp"><Input value={f.telepon} onChange={s('telepon')} placeholder="08…" /></Field></div>
         <Field label="Email kerja" required><Input type="email" autoComplete="username" value={f.email} onChange={s('email')} required /></Field>
-        <Field label="Kata sandi" required hint="Minimal 8 karakter, berisi huruf dan angka."><Input type="password" autoComplete="new-password" value={f.password} onChange={s('password')} required /></Field>
+        <Field label="Kata sandi" required hint="Minimal 12 karakter; gunakan kata sandi yang unik."><Input type="password" autoComplete="new-password" value={f.password} onChange={s('password')} required /></Field>
         <Field label="Paket uji coba (30 hari)"><Select value={f.paket} onChange={s('paket')} options={PAKET} placeholder="" /></Field>
         <Field label="Template bisnis"><Select value={f.template} onChange={s('template')} placeholder="" options={[{ value: 'fo_telkom_akses', label: 'Mitra Fiber Optic Telkom Akses' }, { value: 'kontraktor_umum', label: 'Kontraktor Jaringan Umum' }]} /></Field>
         <input className="hidden" tabIndex={-1} autoComplete="off" value={f.situs_web} onChange={s('situs_web')} aria-hidden />
         <Checkbox label="Isi dengan data contoh (fiktif) agar bisa langsung dicoba — bisa dihapus tuntas kapan saja" checked={f.data_contoh} onChange={(e: any) => setF({ ...f, data_contoh: e.target.checked })} />
-        <Checkbox label="Saya menyetujui ketentuan uji coba: layanan berstatus staging, dan saya bertanggung jawab atas dasar hukum data pribadi yang saya unggah (UU PDP)." checked={f.setuju} onChange={(e: any) => setF({ ...f, setuju: e.target.checked })} />
+        <Checkbox label="Saya menyetujui ketentuan uji coba: layanan dalam program pilot, dan saya bertanggung jawab atas dasar hukum data pribadi yang saya unggah (UU PDP)." checked={f.setuju} onChange={(e: any) => setF({ ...f, setuju: e.target.checked })} />
         {err && <div className="p-3 rounded-sm bg-red-50 text-red-700 text-body">{err}</div>}
         <Button type="submit" size="lg" loading={busy} className="w-full" disabled={!f.setuju}>Buat workspace</Button>
         <p className="text-caption text-ink-400 text-center">Sudah punya akun? <Link to="/" className="text-primary-600">Masuk</Link></p>
@@ -127,7 +132,7 @@ export function TerimaUndangan() {
 /** Pengguna sudah login tetapi belum punya workspace. */
 export function BuatWorkspace() {
   const { signOut, refresh, session } = useAuth()
-  const [f, setF] = useState({ nama: '', paket: 'professional', template: 'fo_telkom_akses', contoh: true })
+  const [f, setF] = useState({ nama: String(session?.user?.user_metadata?.perusahaan ?? ''), paket: 'professional', template: 'fo_telkom_akses', contoh: true })
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false)
   const kirim = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(''); setBusy(true)

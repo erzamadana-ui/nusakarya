@@ -4,7 +4,7 @@
 //   terima_undangan  : buat akun dari tautan undangan lalu tautkan ke workspace pengundang
 // Pengaman: validasi masukan, honeypot anti-bot, batas pendaftaran per hari (di SQL),
 // company/role HANYA ditentukan server (app_metadata / fungsi SQL), tidak pernah dari klien.
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2.116.0'
 
 const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -24,41 +24,42 @@ Deno.serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   let body: any = {}
-  try { body = await req.json() } catch { /* kosong */ }
+  try {
+    const raw = await req.text()
+    if (raw.length > 16384) return json({ error: 'Permintaan terlalu besar' }, 413)
+    body = JSON.parse(raw)
+  } catch { return json({ error: 'Permintaan tidak valid' }, 400) }
   if (body?.situs_web) return json({ ok: true }) // honeypot: bot mengisi kolom tersembunyi
 
   try {
     if (body?.action === 'daftar') {
-      const email = String(body.email ?? '').trim().toLowerCase()
-      const full_name = String(body.full_name ?? '').trim()
-      const perusahaan = String(body.perusahaan ?? '').trim()
-      const telepon = body.telepon ? String(body.telepon).trim().slice(0, 30) : null
-      const template = ['fo_telkom_akses', 'kontraktor_umum'].includes(body.template) ? body.template : 'fo_telkom_akses'
-      const paket = ['starter', 'professional', 'enterprise'].includes(body.paket) ? body.paket : 'professional'
-      const data_contoh = !!body.data_contoh
-      if (!emailSah(email)) return json({ error: 'Email tidak valid' }, 400)
-      if (full_name.length < 3) return json({ error: 'Nama lengkap minimal 3 karakter' }, 400)
-      if (perusahaan.length < 3 || perusahaan.length > 120) return json({ error: 'Nama perusahaan 3–120 karakter' }, 400)
-      if (!sandiKuat(body.password)) return json({ error: 'Kata sandi minimal 8 karakter serta mengandung huruf dan angka' }, 400)
-      if (!body.setuju) return json({ error: 'Anda perlu menyetujui ketentuan uji coba & pemrosesan data' }, 400)
+      return json({ error: 'Gunakan halaman pendaftaran terbaru dan verifikasi email kerja sebelum membuat workspace.' }, 410)
+    }
 
-      const { data: dibuat, error: e1 } = await admin.auth.admin.createUser({
-        email, password: body.password, email_confirm: true,
-        user_metadata: { full_name, phone: telepon, sumber: 'daftar_mandiri' },
+    if (body?.action === 'minat') {
+      const company_name = String(body.company_name ?? '').trim()
+      const contact_name = String(body.contact_name ?? '').trim()
+      const email = String(body.email ?? '').trim().toLowerCase()
+      const phone = String(body.phone ?? '').trim()
+      const notes = String(body.notes ?? '').trim()
+      const plan = String(body.plan ?? 'belum_tahu')
+      const technicians = Number(body.technicians)
+      const work_orders_month = Number(body.work_orders_month)
+      if (company_name.length < 3 || company_name.length > 120 || contact_name.length < 2 || contact_name.length > 100
+        || !emailSah(email) || email.length > 254 || phone.length > 30 || notes.length > 2000
+        || !['starter','professional','enterprise','managed','belum_tahu'].includes(plan)
+        || !Number.isInteger(technicians) || technicians < 1 || technicians > 100000
+        || !Number.isInteger(work_orders_month) || work_orders_month < 0 || work_orders_month > 10000000
+        || body.consent !== true) return json({ error: 'Periksa data kontak, volume tim, dan persetujuan Anda.' }, 400)
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+      const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',
+        new TextEncoder().encode(`${new Date().toISOString().slice(0,10)}:${ip}`))))
+        .map(x => x.toString(16).padStart(2,'0')).join('')
+      const { data: id, error } = await admin.rpc('fn_submit_commercial_lead', {
+        p_data: { company_name,contact_name,email,phone,plan,technicians,work_orders_month,notes,consent:true }, p_hash:hash,
       })
-      if (e1 || !dibuat.user) {
-        const pesan = /already/i.test(e1?.message ?? '') ? 'Email sudah terdaftar. Silakan masuk.' : (e1?.message ?? 'Gagal membuat akun')
-        return json({ error: pesan }, /already/i.test(e1?.message ?? '') ? 409 : 400)
-      }
-      const { data: companyId, error: e2 } = await admin.rpc('fn__buat_workspace', {
-        p_user: dibuat.user.id, p_nama: perusahaan, p_template: template, p_paket: paket,
-        p_nama_admin: full_name, p_telepon: telepon, p_data_contoh: data_contoh,
-      })
-      if (e2) {
-        await admin.auth.admin.deleteUser(dibuat.user.id) // jangan tinggalkan akun yatim
-        return json({ error: e2.message }, 400)
-      }
-      return json({ ok: true, company_id: companyId })
+      if (error) return json({ error: error.code === 'P0429' ? 'Terlalu banyak permintaan. Silakan coba lagi besok.' : 'Permintaan belum tersimpan. Coba lagi nanti.' }, error.code === 'P0429' ? 429 : 500)
+      return json({ ok: true, reference: id })
     }
 
     if (body?.action === 'terima_undangan') {
@@ -70,6 +71,8 @@ Deno.serve(async (req) => {
       if (!inv || inv.accepted_at || inv.revoked_at || new Date(inv.expires_at) < new Date()) {
         return json({ error: 'Undangan tidak berlaku, sudah dipakai, atau kedaluwarsa' }, 400)
       }
+      const { data: tenant } = await admin.from('companies').select('privacy_quarantined').eq('id', inv.company_id).maybeSingle()
+      if (!tenant || tenant.privacy_quarantined) return json({ error: 'Workspace sedang ditinjau. Hubungi pemilik platform.' }, 403)
       const { data: kuota } = await admin.rpc('fn_cek_kuota', {
         p_company: inv.company_id, p_metrik: ['teknisi', 'mitra'].includes(inv.role) ? 'teknisi' : 'users', p_tambah: 1,
       })

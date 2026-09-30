@@ -18,3 +18,12 @@ export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 })
 export default supabase
+
+export async function getAuthMethods(): Promise<{ google: boolean; phone: boolean }> {
+ try {
+  const response = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } })
+  if (!response.ok) return { google: false, phone: false }
+  const data = await response.json()
+  return { google: data.external?.google === true, phone: data.external?.phone === true }
+ } catch { return { google: false, phone: false } }
+}

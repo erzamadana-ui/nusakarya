@@ -150,6 +150,9 @@
     .kpis{grid-template-columns:repeat(2,1fr)} .row{grid-template-columns:1fr}
     .navcta .btn-out{display:none} .pilot{padding:28px}
   }
+
+  .outcome{grid-template-columns:repeat(3,1fr)}.role-label{display:block;font-size:11px;color:var(--pri);font-weight:800;letter-spacing:.08em;margin-bottom:16px}.outcome h3{font-size:21px;margin-bottom:12px}.deliverable{border-top:1px solid var(--line);margin-top:22px;padding-top:15px;font-size:12px;color:var(--pri);font-weight:700}.example-path{margin-top:26px;border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:var(--card)}.example-path>span{font-size:12px;color:var(--ink-3)}.example-path i{font-style:normal;color:var(--pri)}.example-path p{width:100%;font-size:12px;color:var(--ink-3);margin:0}.demo-steps{padding-left:22px}.demo-steps li{margin:20px 0;padding-left:8px}.demo-steps span{display:block;font-size:14px;color:var(--ink-2);margin-top:4px}.lead-form{display:grid;gap:15px;box-shadow:0 20px 60px rgba(20,20,43,.08);padding:28px}.lead-form h3{font-size:23px}.lead-form label{display:grid;gap:6px;font-size:13px;font-weight:600}.lead-form input,.lead-form select,.lead-form textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:11px 12px;width:100%}.lead-form input:focus,.lead-form select:focus,.lead-form textarea:focus{outline:2px solid var(--pri);outline-offset:2px}.lead-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lead-form .consent{display:flex;gap:10px;font-size:12px;font-weight:400;color:var(--ink-2);align-items:flex-start}.lead-form .consent input{width:18px;height:18px;flex:none;margin-top:3px}.consent a{text-decoration:underline}.lead-form .trap{display:none}.lead-form button{justify-content:center;cursor:pointer}.lead-form button:disabled{opacity:.6;cursor:wait}#demo-result{padding:12px;border-radius:9px;background:var(--pri-50);border:1px solid var(--pri-100);font-size:13px;word-break:break-word}.btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:4px}@media(max-width:800px){.outcome{grid-template-columns:1fr}}@media(max-width:420px){.lead-form .form-row{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -179,7 +182,7 @@
     </div>
     <div class="navcta">
       <a class="btn btn-out btn-sm" href="app/">Masuk</a>
-      <a class="btn btn-pri btn-sm" href="app/#/daftar">Coba 30 hari</a>
+      <a class="btn btn-pri btn-sm" href="#demo">Jadwalkan demo</a>
     </div>
   </div>
 </nav>
@@ -187,17 +190,17 @@
 <header class="hero">
   <div class="wrap hero-g">
     <div>
-      <span class="eyebrow"><span class="dot"></span>Program pilot dibuka · kuota mitra terbatas</span>
+      <span class="eyebrow"><span class="dot"></span>Untuk kontraktor fiber optic · pilot perusahaan</span>
       <h1>Dari work order sampai <em>uang masuk</em> — satu sistem untuk kontraktor fiber optic.</h1>
       <p class="lead">NUSAKARYA menyatukan WO, evidence lapangan bergeotag, QC, BAST, penagihan, stok NTE ber-serial, dan payroll teknisi. Supervisor tahu apa yang terjadi di lapangan hari ini, finance tahu apa yang bisa ditagih minggu ini.</p>
       <div class="ctas">
-        <a class="btn btn-pri" href="app/#/daftar">Buat workspace gratis</a>
-        <a class="btn btn-out" href="#pilot">Lihat program pilot 30 hari</a>
+        <a class="btn btn-pri" href="#demo">Diskusikan kebutuhan Anda <span aria-hidden="true">↗</span></a>
+        <a class="btn btn-out" href="#alur">Lihat cara kerjanya</a>
       </div>
       <div class="trust">
-        <span><svg><use href="#i-check"/></svg>Tanpa kartu kredit</span>
+        <span><svg><use href="#i-check"/></svg>Mulai dari satu cabang</span>
         <span><svg><use href="#i-check"/></svg>Impor dari Excel Anda</span>
-        <span><svg><use href="#i-check"/></svg>Data bisa diekspor kapan saja</span>
+        <span><svg><use href="#i-check"/></svg>Bukti, biaya & tagihan terhubung</span>
       </div>
     </div>
     <div class="mock" aria-label="Contoh tampilan dashboard NUSAKARYA (data ilustrasi)">
@@ -273,6 +276,17 @@
   </div>
 </section>
 
+<section id="hasil" class="soft">
+ <div class="wrap"><div class="head"><span class="eyebrow">Satu data, setiap peran</span><h2>Apa yang berubah dalam hari kerja Anda?</h2><p class="lead">Informasi pekerjaan dapat ditelusuri sampai dokumen penagihan. Setiap peran melihat keputusan yang perlu diambilnya.</p></div>
+ <div class="grid outcome">
+ <article class="card"><span class="role-label">DIREKTUR & PEMILIK</span><h3>Ketahui pekerjaan yang menghambat kas</h3><p>Pantau progres cabang, WO tertahan, material dan invoice. Bedakan pekerjaan selesai dengan pekerjaan yang telah diterima dan siap ditagih.</p><div class="deliverable">Output: ringkasan cabang & daftar hambatan</div></article>
+ <article class="card"><span class="role-label">SUPERVISOR & DISPATCHER</span><h3>Kurangi bolak-balik bukti lapangan</h3><p>Atur penugasan, pantau status, periksa foto dan checklist, lalu kembalikan pekerjaan yang perlu dilengkapi sebelum diteruskan.</p><div class="deliverable">Output: antrean pekerjaan & QC</div></article>
+ <article class="card"><span class="role-label">FINANCE & COMMERCE</span><h3>Susun tagihan dari pekerjaan yang dapat ditelusuri</h3><p>Hubungkan kontrak dan tarif, penerimaan pekerjaan, BAST serta invoice. Rekonsiliasi dilakukan berdasarkan referensi dokumen yang sama.</p><div class="deliverable">Output: BAST, invoice & posisi piutang</div></article>
+ </div>
+ <div class="example-path"><span>Contoh alur</span><b>WO selesai</b><i>→</i><b>Evidence lengkap</b><i>→</i><b>QC diterima</b><i>→</i><b>BAST</b><i>→</i><b>Invoice</b><p>Durasi dan hasil mengikuti kelengkapan dokumen serta proses persetujuan perusahaan. Bukan jaminan percepatan pembayaran principal.</p></div>
+ </div>
+</section>
+
 <section id="migrasi">
   <div class="wrap split">
     <div>
@@ -307,7 +321,7 @@
       <div class="card"><div class="ic"><svg><use href="#i-log"/></svg></div><h3>Jejak audit</h3><p>Perubahan konfigurasi, data master, transaksi utama, impor, dan ekspor tercatat siapa & kapan.</p></div>
       <div class="card"><div class="ic"><svg><use href="#i-lock"/></svg></div><h3>Berkas privat</h3><p>Foto evidence & dokumen tersimpan privat dan dibuka lewat tautan bertanda tangan yang kedaluwarsa.</p></div>
       <div class="card"><div class="ic"><svg><use href="#i-dl"/></svg></div><h3>Ekspor kapan saja</h3><p>Unduh seluruh data ke Excel/JSON dari halaman pengaturan. Tidak ada kunci vendor.</p></div>
-      <div class="card"><div class="ic"><svg><use href="#i-server"/></svg></div><h3>Server Asia Tenggara</h3><p>Basis data PostgreSQL terkelola di wilayah Singapura. Pentest eksternal dijadwalkan sebelum rilis umum.</p></div>
+      <div class="card"><div class="ic"><svg><use href="#i-server"/></svg></div><h3>Server Asia Tenggara</h3><p>Basis data PostgreSQL terkelola di wilayah Singapura. Evaluasi keamanan, retensi dan pemulihan data menjadi bagian persiapan pilot operasional.</p></div>
     </div>
   </div>
 </section>
@@ -315,27 +329,27 @@
 <section id="harga">
   <div class="wrap">
     <div class="head"><span class="eyebrow">Harga</span><h2>Bayar sesuai skala tim Anda</h2>
-      <p class="lead">Semua paket dimulai dengan uji coba 30 hari. Ganti paket kapan saja tanpa migrasi data.</p></div>
+      <p class="lead">Pilih dari jumlah teknisi, volume WO, dan kebutuhan penagihan. Angka berikut adalah indikasi penawaran; biaya final dan ruang lingkup disepakati sebelum aktivasi berbayar.</p></div>
     <div class="grid price">
       <div class="card plan"><h3>Starter</h3><p class="sub">Rapikan WO, evidence, absensi & material tim lapangan.</p>
-        <div class="amt">Rp 2,5 jt<small> /bulan</small></div><div class="setup">Setup Rp 5 jt</div>
-        <ul><li><svg><use href="#i-check"/></svg>10 pengguna panel · 30 teknisi</li><li><svg><use href="#i-check"/></svg>1.000 WO/bulan · 20 GB</li><li><svg><use href="#i-check"/></svg>Operations, HR & absensi, Inventory, Produktivitas</li><li><svg><use href="#i-check"/></svg>Impor mandiri & field kustom</li><li><svg><use href="#i-check"/></svg>Dukungan email, 1 hari kerja</li></ul>
-        <a class="btn btn-out" href="app/#/daftar">Mulai uji coba</a></div>
-      <div class="card plan hot"><span class="tag">Paling cocok untuk mitra</span><h3>Professional</h3><p class="sub">WO sampai uang masuk: BAST, invoice, AP/AR, payroll.</p>
+        <div class="amt">Rp 3,5 jt<small> /bulan</small></div><div class="setup">Setup Rp 5 jt</div>
+        <ul><li><svg><use href="#i-check"/></svg>10 pengguna panel · 30 teknisi</li><li><svg><use href="#i-check"/></svg>1.000 WO/bulan · 20 GB</li><li><svg><use href="#i-check"/></svg>Operations, HR & absensi, Inventory, Produktivitas</li><li><svg><use href="#i-check"/></svg>Impor mandiri & field kustom</li><li><svg><use href="#i-check"/></svg>Dukungan jam kerja; scope di penawaran</li></ul>
+        <a class="btn btn-out" href="#demo">Minta penawaran</a></div>
+      <div class="card plan hot"><span class="tag">Alur lengkap sampai invoice</span><h3>Professional</h3><p class="sub">WO sampai uang masuk: BAST, invoice, AP/AR, payroll.</p>
         <div class="amt">Rp 7,5 jt<small> /bulan</small></div><div class="setup">Setup Rp 15 jt</div>
         <ul><li><svg><use href="#i-check"/></svg>30 pengguna · 150 teknisi</li><li><svg><use href="#i-check"/></svg>5.000 WO/bulan · 100 GB</li><li><svg><use href="#i-check"/></svg>Semua modul termasuk Commerce, Finance, Payroll</li><li><svg><use href="#i-check"/></svg>Label status, SLA & jenjang persetujuan</li><li><svg><use href="#i-check"/></svg>WhatsApp jam kerja · migrasi Excel dibantu</li></ul>
-        <a class="btn btn-pri" href="app/#/daftar">Mulai uji coba</a></div>
+        <a class="btn btn-pri" href="#demo">Minta penawaran</a></div>
       <div class="card plan"><h3>Enterprise</h3><p class="sub">Multi-cabang besar, alur & tabel kustom, integrasi.</p>
-        <div class="amt">Rp 20 jt<small> /bulan, mulai</small></div><div class="setup">Setup mulai Rp 40 jt</div>
-        <ul><li><svg><use href="#i-check"/></svg>100 pengguna · 500 teknisi</li><li><svg><use href="#i-check"/></svg>20.000 WO/bulan · 500 GB</li><li><svg><use href="#i-check"/></svg>Tabel kustom & alur transisi status</li><li><svg><use href="#i-check"/></svg>API & SSO (roadmap)</li><li><svg><use href="#i-check"/></svg>CSM dedicated · prioritas P1</li></ul>
-        <a class="btn btn-out" href="#pilot">Diskusikan kebutuhan</a></div>
+        <div class="amt">Rp 25 jt<small> /bulan, mulai</small></div><div class="setup">Setup mulai Rp 30 jt</div>
+        <ul><li><svg><use href="#i-check"/></svg>100 pengguna · 500 teknisi</li><li><svg><use href="#i-check"/></svg>20.000 WO/bulan · 500 GB</li><li><svg><use href="#i-check"/></svg>Tabel kustom & alur transisi status</li><li><svg><use href="#i-check"/></svg>Integrasi dibahas terpisah (roadmap)</li><li><svg><use href="#i-check"/></svg>PIC implementasi & SLA sesuai kontrak</li></ul>
+        <a class="btn btn-out" href="#demo">Diskusikan kebutuhan</a></div>
       <div class="card plan"><h3>Managed Service</h3><p class="sub">Tim kami ikut menjalankan admin data & rekonsiliasi.</p>
-        <div class="amt">Rp 35 jt<small> /bulan, mulai</small></div><div class="setup">Kontrak minimal 12 bulan</div>
+        <div class="amt">Rp 45 jt<small> /bulan, mulai</small></div><div class="setup">Setup & tenaga layanan sesuai scope</div>
         <ul><li><svg><use href="#i-check"/></svg>Semua fitur Enterprise</li><li><svg><use href="#i-check"/></svg>Input & validasi data oleh tim NUSAKARYA</li><li><svg><use href="#i-check"/></svg>Rekonsiliasi BA / invoice</li><li><svg><use href="#i-check"/></svg>Laporan bulanan & pendampingan audit</li></ul>
-        <a class="btn btn-out" href="#pilot">Diskusikan kebutuhan</a></div>
+        <a class="btn btn-out" href="#demo">Diskusikan kebutuhan</a></div>
     </div>
-    <div class="addon"><span>Teknisi ekstra Rp15.000/bln</span><span>WO ekstra Rp500</span><span>Storage +50 GB Rp150.000</span><span>Training on-site Rp3,5 jt/hari</span><span>Integrasi kustom mulai Rp25 jt</span><span>Bayar tahunan hemat 10%</span></div>
-    <p class="note">Harga peluncuran, belum termasuk PPN, dan dapat berubah sebelum rilis umum.</p>
+    <div class="addon"><span>Biaya setup terpisah dari langganan</span><span>SMS, tambahan storage & integrasi sesuai pemakaian yang disepakati</span><span>Penambahan pengguna dibahas sebelum tagihan</span></div>
+    <p class="note">Indikasi harga per perusahaan per bulan, sebelum pajak yang berlaku. Tidak ada penagihan otomatis dari formulir demo. Batas paket dan SLA harus tercantum di penawaran tertulis.</p>
   </div>
 </section>
 
@@ -345,18 +359,35 @@
       <div>
         <span class="eyebrow" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25)"><span class="dot"></span>Program pilot</span>
         <h2 style="margin:16px 0 12px">Buktikan dulu di satu cabang, 30 hari</h2>
-        <p>Lisensi gratis selama pilot. Kami ukur bersama dengan angka Anda sendiri: persentase WO dengan evidence lengkap, waktu dari WO selesai ke BA, waktu dari BA ke invoice, dan adopsi teknisi harian.</p>
-        <p>Bila tidak berlanjut, seluruh data diekspor untuk Anda lalu dihapus dari sistem.</p>
-        <div class="ctas"><a class="btn btn-pri" href="app/#/daftar">Daftar pilot</a></div>
+        <p>Evaluasi 30 hari dengan data contoh dapat dilakukan tanpa biaya lisensi. Setup, migrasi dan pendampingan operasional berbayar hanya setelah penawaran disetujui. Kami ukur bersama dengan angka Anda sendiri: persentase WO dengan evidence lengkap, waktu dari WO selesai ke BA, waktu dari BA ke invoice, dan adopsi teknisi harian.</p>
+        <p>Keputusan perluasan didasarkan pada hasil pilot. Ruang lingkup, data yang digunakan, biaya layanan, ekspor, dan retensi disepakati sebelum pilot operasional.</p>
+        <div class="ctas"><a class="btn btn-pri" href="#demo">Ajukan pilot perusahaan</a></div>
       </div>
       <div class="weeks">
         <div><b>Minggu 0 — Persiapan</b>Pilih satu cabang/tim, siapkan file Excel WO, teknisi & material.</div>
         <div><b>Minggu 1 — Setup & impor</b>Template, impor data, undang supervisor & teknisi, latihan singkat.</div>
-        <div><b>Minggu 2–3 — Jalan penuh</b>Semua WO cabang pilot lewat NUSAKARYA, evaluasi mingguan.</div>
+        <div><b>Minggu 2–3 — Jalan penuh</b>Jalankan ruang lingkup WO yang disepakati, evaluasi evidence, QC dan kesiapan tagih setiap minggu.</div>
         <div><b>Minggu 4 — Keputusan</b>Bandingkan metrik sebelum–sesudah, putuskan lanjut atau berhenti.</div>
       </div>
     </div>
   </div>
+</section>
+
+<section id="demo" class="soft">
+ <div class="wrap split"><div><span class="eyebrow">Demo & penawaran</span><h2 style="margin-top:18px">Ceritakan skala tim.<br>Kami bantu pilih langkah awal.</h2><p class="lead">Permintaan Anda tercatat untuk ditinjau pemilik NUSAKARYA. Demo berfokus pada alur kerja, kebutuhan migrasi dan pilihan paket yang sesuai.</p><ol class="demo-steps"><li><b>Kenali kebutuhan</b><span>Cabang, jumlah teknisi, volume WO dan hambatan utama.</span></li><li><b>Lihat alur yang relevan</b><span>WO sampai QC, stok atau BAST dan invoice sesuai prioritas Anda.</span></li><li><b>Sepakati pilot & biaya</b><span>Scope, PIC, metrik, dukungan dan harga dituangkan dalam penawaran.</span></li></ol><p class="note" style="text-align:left">Formulir ini tidak membuat tagihan atau mengaktifkan langganan. Untuk evaluasi mandiri, <a href="app/#/daftar" style="text-decoration:underline">buat workspace dengan data contoh</a>.</p></div>
+ <form id="demo-form" class="card lead-form">
+ <h3>Minta demo / penawaran</h3>
+ <label>Perusahaan<input name="company_name" required minlength="3" maxlength="120" autocomplete="organization" placeholder="PT Contoh Fiber Nusantara"></label>
+ <div class="form-row"><label>Nama PIC<input name="contact_name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nama Anda"></label><label>WhatsApp / telepon (opsional)<input name="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+62 812…"></label></div>
+ <label>Email kerja<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="nama@perusahaan.co.id"></label>
+ <div class="form-row"><label>Teknisi aktif<input name="technicians" type="number" min="1" max="100000" required value="30"></label><label>WO per bulan<input name="work_orders_month" type="number" min="0" max="10000000" required value="1000"></label></div>
+ <label>Paket yang ingin dibahas<select name="plan"><option value="belum_tahu">Bantu saya memilih</option><option value="starter">Starter · indikasi Rp3,5 jt/bulan</option><option value="professional">Professional · indikasi Rp7,5 jt/bulan</option><option value="enterprise">Enterprise · mulai Rp25 jt/bulan</option><option value="managed">Managed Service · mulai Rp45 jt/bulan</option></select></label>
+ <label>Kebutuhan utama (opsional)<textarea name="notes" maxlength="2000" rows="3" placeholder="Misalnya: 2 cabang, evidence tersebar, BAST sering terlambat. Jangan masukkan data karyawan atau dokumen rahasia."></textarea></label>
+ <label class="trap" aria-hidden="true">Situs web<input name="situs_web" tabindex="-1" autocomplete="off"></label>
+ <label class="consent"><input name="consent" type="checkbox" required><span>Saya setuju kontak bisnis ini disimpan dan digunakan NUSAKARYA untuk menindaklanjuti demo atau penawaran. <a href="#privasi">Baca penjelasan privasi.</a></span></label>
+ <button class="btn btn-pri" type="submit" id="demo-submit">Kirim permintaan demo <span aria-hidden="true">↗</span></button>
+ <p id="demo-result" role="status" aria-live="polite" hidden></p>
+ </form></div>
 </section>
 
 <section id="faq" class="soft">
@@ -368,6 +399,9 @@
       <details><summary>Perangkat apa yang dibutuhkan teknisi?</summary><p>Ponsel Android dengan kamera dan GPS. Aplikasi teknisi bisa dipasang dari browser (PWA) tanpa Play Store. Catatan jujur: mode antrean offline penuh untuk area sinyal lemah masih dalam pengembangan.</p></details>
       <details><summary>Bagaimana keamanan data kami dari perusahaan lain?</summary><p>Isolasi ditegakkan di basis data per baris data, hak akses diatur per jabatan, dan seluruh perubahan penting tercatat. Anda juga bisa mengekspor seluruh data kapan saja. Selama pilot, gunakan data operasional; perjanjian pemrosesan data pribadi (UU PDP) ditandatangani sebelum data karyawan lengkap dimuat.</p></details>
       <details><summary>Apakah bisa mengikuti SOP perusahaan kami?</summary><p>Ya, dalam batas yang aman: field tambahan, istilah status dan jabatan, SLA tiket, jenjang persetujuan, hak akses, dan tabel kustom diatur sendiri dari menu Pengaturan. Kebutuhan di luar itu dibahas sebagai integrasi kustom.</p></details>
+      <details><summary>Apakah Google atau nomor telepon dapat dipakai untuk masuk?</summary><p>Halaman masuk mendukung Google dan OTP SMS ketika layanan tersebut telah diaktifkan. Google menggunakan email yang sama dengan akun perusahaan; nomor HP harus sudah terverifikasi pada akun. SMS adalah metode login alternatif. Penggunaan faktor kedua memerlukan pengaturan MFA terpisah.</p></details>
+      <details><summary>Bagaimana harga dan biaya tambahan ditentukan?</summary><p>Harga pada halaman ini merupakan indikasi penawaran, bukan tagihan otomatis. Volume teknisi, WO, storage evidence, kebutuhan support, integrasi, setup dan migrasi dibahas sebelum kontrak. Kuota, SLA, biaya tambahan dan pajak yang berlaku harus dituliskan dalam penawaran.</p></details>
+      <details id="privasi"><summary>Bagaimana kontak pada formulir demo digunakan?</summary><p>Nama PIC, perusahaan, email, telepon opsional dan kebutuhan bisnis digunakan untuk menghubungi Anda tentang demo atau penawaran. Data ini hanya dapat dilihat pemilik platform dan tidak dipublikasikan. Jangan kirim NIK, data karyawan atau dokumen rahasia lewat formulir. Anda dapat meminta koreksi atau penghapusan saat tindak lanjut kontak. Pemrosesan data operasional perusahaan dibahas terpisah dalam perjanjian pilot.</p></details>
       <details><summary>Bagaimana jika kami berhenti berlangganan?</summary><p>Workspace menjadi hanya-baca, data tetap bisa diekspor ke Excel/JSON. Setelah Anda konfirmasi, data dihapus dari sistem.</p></details>
     </div>
   </div>
@@ -376,8 +410,8 @@
 <section>
   <div class="wrap"><div class="head" style="margin:0">
     <h2>Mulai rapikan operasional minggu ini</h2>
-    <p class="lead">Buat workspace, pilih template mitra fiber optic, isi dengan data contoh atau langsung impor Excel Anda.</p>
-    <div class="ctas"><a class="btn btn-pri" href="app/#/daftar">Buat workspace gratis</a><a class="btn btn-out" href="app/">Masuk</a></div>
+    <p class="lead">Mulai dengan demo alur Anda. Tentukan satu cabang, satu PIC operasional, dan ukuran keberhasilan sebelum memperluas pemakaian.</p>
+    <div class="ctas"><a class="btn btn-pri" href="#demo">Diskusikan kebutuhan Anda <span aria-hidden="true">↗</span></a><a class="btn btn-out" href="app/">Masuk</a></div>
   </div></div>
 </section>
 
@@ -385,11 +419,38 @@
   <div class="wrap foot">
     <div><div class="logo" style="margin-bottom:8px"><i>N</i> NUSAKARYA</div>Sistem operasi untuk kontraktor deployment & managed service fiber optic.</div>
     <div style="display:grid;gap:8px;justify-items:end">
-      <span class="status"><i></i>Tahap pilot — layanan belum untuk produksi skala penuh</span>
+      <span class="status"><i></i>Program pilot perusahaan · onboarding didampingi</span>
       <span><a href="app/">Panel admin</a> · <a href="teknisi/">Aplikasi teknisi</a> · <a href="app/#/daftar">Daftar</a></span>
       <span>© 2026 NUSAKARYA.</span>
     </div>
   </div>
 </footer>
+
+<script>
+const demoForm = document.getElementById('demo-form');
+demoForm.addEventListener('submit', async event => {
+ event.preventDefault();
+ const button = document.getElementById('demo-submit'), output = document.getElementById('demo-result');
+ const values = Object.fromEntries(new FormData(demoForm));
+ if (values.situs_web) return;
+ button.disabled = true; output.hidden = false; output.textContent = 'Menyimpan permintaan…';
+ try {
+  const response = await fetch('https://idlhsxamdkipnmyvewbp.supabase.co/functions/v1/saas-publik', {
+   method:'POST', headers:{'Content-Type':'application/json',apikey:'sb_publishable_-9Cai7RVFQ4UmQjTgjNS8w_Q84U-vc8'},
+   body:JSON.stringify({...values,action:'minat',consent:values.consent==='on',technicians:Number(values.technicians),work_orders_month:Number(values.work_orders_month)})
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok || !data.reference) throw new Error(data.error || 'Permintaan belum tersimpan. Coba lagi.');
+  output.textContent = 'Permintaan tersimpan. Referensi: '+data.reference+'. Pemilik NUSAKARYA akan meninjau kebutuhan dan menghubungi kontak yang Anda berikan. Belum ada tagihan yang dibuat.';
+  demoForm.reset();
+ } catch (error) { output.textContent = error.message || 'Koneksi gagal. Coba lagi.'; }
+ finally { button.disabled=false; }
+});
+document.querySelectorAll('.plan .btn').forEach(button => button.addEventListener('click', () => {
+ const heading = button.closest('.plan').querySelector('h3').textContent;
+ document.querySelector('[name="plan"]').value = ({Starter:'starter',Professional:'professional',Enterprise:'enterprise','Managed Service':'managed'})[heading] || 'belum_tahu';
+}));
+</script>
+
 </body>
 </html>

@@ -18,3 +18,6 @@ credentials*.md
 supabase/migrations/0047_data_karyawan_sumbagteng.sql
 *.csv
 !apps/**/templates/*.csv
+
+# Generated Supabase CLI workspace metadata
+supabase/.temp/
