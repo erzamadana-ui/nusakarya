@@ -11,6 +11,7 @@ export default function PlatformTenant() {
   const toast = useToast()
   const [rows, setRows] = useState<any[]>([])
   const [paket, setPaket] = useState<any[]>([])
+  const [leads, setLeads] = useState<any[]>([])
   const [tagihan, setTagihan] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [pilih, setPilih] = useState<any>(null)
@@ -18,11 +19,14 @@ export default function PlatformTenant() {
 
   const load = async () => {
     setLoading(true)
-    const [{ data, error }, { data: p }, { data: t }] = await Promise.all([
+    const [{ data, error }, { data: p }, { data: t }, { data: l, error: leadError }] = await Promise.all([
       supabase.rpc('fn_platform_tenant'), supabase.from('saas_plans').select('*').order('sort_order'),
       supabase.from('saas_invoices').select('*, companies(name)').order('period_start', { ascending: false }).limit(500),
+      supabase.from('commercial_leads').select('id,created_at,company_name,contact_name,email,phone,plan,technicians,work_orders_month,notes,status').order('created_at', { ascending: false }).limit(500),
     ])
     if (error) toast.push(error.message, 'error')
+    if (leadError) toast.push('Daftar prospek belum dapat dimuat: ' + leadError.message, 'error')
+    setLeads(l ?? [])
     setRows(data ?? []); setPaket(p ?? []); setTagihan(t ?? []); setLoading(false)
   }
   useEffect(() => { if (isPlatformAdmin) load() }, [isPlatformAdmin])
@@ -76,13 +80,25 @@ export default function PlatformTenant() {
         <KpiCard label="MRR (non-demo)" value={rupiah(ringkas.mrr)} icon={<FileText size={16} />} sub="dari harga paket" />
         <KpiCard label="Kesehatan < 50" value={ringkas.risiko} icon={<Activity size={16} />} tone="red" />
       </div>
-      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'tenant', label: 'Tenant' }, { value: 'tagihan', label: 'Tagihan' }, { value: 'paket', label: 'Katalog Paket' }]} />
+      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'tenant', label: 'Tenant' }, { value: 'tagihan', label: 'Tagihan' }, { value: 'paket', label: 'Katalog Paket' }, { value: 'prospek', label: `Permintaan demo (${leads.length})` }]} />
       {tab === 'tenant' && <>
         <DataTable columns={cols} rows={rows} loading={loading} onRowClick={setPilih} exportName="tenant-nusakarya" searchKeys={['nama', 'kode', 'paket', 'status']} />
         <p className="text-caption text-ink-500">Skor kesehatan (0–100) = login 7 hari (maks 30) + aktivitas WO 7 hari (30) + onboarding aktif (20) + dalam batas paket (20) − impor gagal 7 hari (10). Rumus awal — kalibrasi dengan data churn nyata.</p>
       </>}
       {tab === 'tagihan' && <DataTable columns={kolomTagihan} rows={tagihan} exportName="tagihan-saas" emptyTitle="Belum ada tagihan" emptyMessage="Buat draft dari detail tenant." />}
-      {tab === 'paket' && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{paket.map(p => (
+      {tab === 'prospek' && <DataTable rows={leads} searchKeys={['company_name','contact_name','email','plan','status']} exportName="prospek-nusakarya" emptyTitle="Belum ada permintaan demo" emptyMessage="Permintaan dari landing page akan muncul di sini." columns={[
+        { key: 'created_at', header: 'Masuk', render: r => new Date(r.created_at).toLocaleString('id-ID') },
+        { key: 'company_name', header: 'Perusahaan', render: r => <div><b>{r.company_name}</b><div>{r.contact_name}</div></div> },
+        { key: 'email', header: 'Kontak', render: r => <div>{r.email}<div>{r.phone || '—'}</div></div> },
+        { key: 'plan', header: 'Minat paket' },
+        { key: 'technicians', header: 'Volume', render: r => `${r.technicians} teknisi · ${r.work_orders_month} WO/bln` },
+        { key: 'notes', header: 'Kebutuhan' },
+        { key: 'status', header: 'Tindak lanjut', render: r => <select className="border rounded p-1 bg-surface" aria-label={`Status ${r.company_name}`} value={r.status} onChange={async e => {
+          const { error } = await supabase.from('commercial_leads').update({ status: e.target.value }).eq('id',r.id)
+          if (error) toast.push(error.message,'error'); else load()
+        }}>{['baru','dihubungi','demo','penawaran','menang','tidak_lanjut'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}</select> },
+      ]} />}
+      {tab === 'paket'  && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{paket.map(p => (
         <SectionCard key={p.code} title={p.name} subtitle={p.tagline}>
           <div className="text-body">{rupiah(p.price_monthly)}/bln · setup {rupiah(p.price_setup)}</div>
           <div className="text-caption text-ink-500 mt-1">{p.max_users ?? '∞'} pengguna · {p.max_technicians ?? '∞'} teknisi · {p.max_wo_month ?? '∞'} WO · {p.max_storage_gb} GB</div>

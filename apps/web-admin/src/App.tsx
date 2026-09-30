@@ -54,7 +54,7 @@ function Guard({ module, children }: { module: string; children: React.ReactNode
 }
 
 function Gate() {
- const { loading, session, profile, onboarding } = useAuth()
+ const { loading, session, profile, company, onboarding, signOut, refresh } = useAuth()
  if (loading) return (
  <div className="min-h-screen grid place-items-center bg-ink-50">
  <div className="w-full max-w-sm space-y-3 px-6">
@@ -73,6 +73,7 @@ function Gate() {
  <Route path="/undangan/:token" element={<TerimaUndangan />} />
  <Route path="*" element={<BuatWorkspace />} />
  </Routes>)
+ if (!company) return <div className="min-h-screen grid place-items-center bg-surface p-6"><div className="max-w-md text-center space-y-4"><h1 className="text-xl font-bold">Akses workspace belum tersedia</h1><p>Workspace Anda sedang diperiksa atau akun Anda dinonaktifkan. Hubungi pemilik platform untuk peninjauan akses dan data.</p><button className="underline" onClick={refresh}>Periksa lagi</button><button className="underline ml-4" onClick={signOut}>Keluar</button></div></div>
  const awal = profile.role === 'super_admin' && onboarding && !onboarding.activated_at ? '/onboarding' : '/dashboard'
  return (
  <Routes>

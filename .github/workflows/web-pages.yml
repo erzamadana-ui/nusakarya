@@ -32,7 +32,7 @@ jobs:
         working-directory: apps/web-admin
 
       # Aplikasi Teknisi (Expo web / PWA) — dipasang lewat "Tambahkan ke layar utama" di Chrome Android
-      - run: npm install
+      - run: npm ci
         working-directory: apps/mobile
       - run: npm run export:web
         working-directory: apps/mobile
@@ -43,6 +43,7 @@ jobs:
           cp -r apps/mobile/dist/. _site/teknisi/
           cp apps/landing/index.html _site/index.html
           cp apps/landing/index.html _site/404.html
+          node -e "require('fs').writeFileSync('_site/release.json', JSON.stringify({commit:process.env.GITHUB_SHA,run:process.env.GITHUB_RUN_ID,track:'commercial-pilot',builtAt:new Date().toISOString()}))"
 
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
